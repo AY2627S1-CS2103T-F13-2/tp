@@ -13,46 +13,49 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ### John Doe
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/naymin-gif.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+
+[[github](https://github.com/naymin-gif)]
+
 
 * Role: Project Advisor
 
-### Hein Lin Htet
+### Jane Doe
 
-<img src="images/henry336.png" width="200px">
+<img src="images/johndoe.png" width="200px">
 
-[[github](http://github.com/Henry336)]
+[[github](https://github.com/naymin-gif)]
+
 
 * Role: Team Lead
 * Responsibilities: UI
 
-### Alpha
+### Johnny Doe
 
-<img src="images/alpharion.png" width="200px">
+<img src="images/johndoe.png" width="200px">
 
-[[github](https://github.com/Alpharion)]
+[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
 
 * Role: Developer
 * Responsibilities: Data
 
-### That Li
+### Jean Doe
 
-<img src="images/thatli.png" width="200px">
+<img src="images/johndoe.png" width="200px">
 
-[[github](http://github.com/thatli)]
+[[github](http://github.com/johndoe)]
+[[portfolio](team/johndoe.md)]
 
 * Role: Developer
 * Responsibilities: Dev Ops + Threading
 
-### Jimmy
+### James Doe
 
-<img src="images/jimmylijy12.png" width="200px">
+<img src="images/johndoe.png" width="200px">
 
-[[github](http://github.com/jimmylijy12)]
+[[github](http://github.com/johndoe)]
+[[portfolio](team/johndoe.md)]
 
 * Role: Developer
 * Responsibilities: UI
