@@ -21,9 +21,9 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Advisor
 
-### Jane Doe
+### Hein Lin Htet
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/henry336.png" width="200px">
 
 [[github](https://github.com/naymin-gif)]
 
@@ -31,31 +31,29 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Team Lead
 * Responsibilities: UI
 
-### Johnny Doe
+### Alpha
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/alpharion.png" width="200px">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[github](https://github.com/Alpharion)]
 
 * Role: Developer
 * Responsibilities: Data
 
-### Jean Doe
+### That Li
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/thatli.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/thatli)]
 
 * Role: Developer
 * Responsibilities: Dev Ops + Threading
 
-### James Doe
+### Jimmy
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/jimmylijy12.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/jimmylijy12)]
 
 * Role: Developer
 * Responsibilities: UI
