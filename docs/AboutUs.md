@@ -11,21 +11,22 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### Nay Min Thar
+### John Doe
 
 <img src="images/naymin-gif.png" width="200px">
-
-[[github](https://github.com/naymin-gif)]
-
-* Role: Project Advisor
-
-### Jane Doe
 
 [[homepage](http://www.comp.nus.edu.sg/~damithch)]
 [[github](https://github.com/johndoe)]
 [[portfolio](team/johndoe.md)]
 
 * Role: Project Advisor
+
+### Jane Doe
+
+<img src="images/johndoe.png" width="200px">
+
+[[github](https://github.com/naymin-gif)]
+
 
 * Role: Team Lead
 * Responsibilities: UI
