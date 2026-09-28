@@ -296,32 +296,103 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `TuteeDex` and the **Actor** is the `private tutor`.)
 
-**Use case: Delete a person**
+**Use case: Add a student profile**
 
 **MSS**
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+1. Tutor requests to add a student profile with the student's details.
+2. TuteeDex validates the supplied details.
+3. TuteeDex saves the profile and confirms that it was added.
 
     Use case ends.
 
 **Extensions**
 
-* 2a. The list is empty.
+* 2a. One or more supplied details are invalid.
 
-  Use case ends.
+  * 2a1. TuteeDex shows the relevant validation error and does not add the profile.
 
-* 3a. The given index is invalid.
+    Use case resumes at step 1.
 
-    * 3a1. AddressBook shows an error message.
+* 2b. An identical profile already exists.
 
-      Use case resumes at step 2.
+  * 2b1. TuteeDex rejects the duplicate and informs the tutor.
 
-*{More to be added}*
+    Use case ends.
+
+**Use case: Locate and view a student profile**
+
+**MSS**
+
+1. Tutor requests to list all students or search for a student by name.
+2. TuteeDex displays the matching students with their names and phone numbers.
+3. Tutor selects a student using the index shown in the displayed list.
+4. Tutor requests to view the selected profile.
+5. TuteeDex displays the student's full profile, including available contact, subject, fee, and note details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. No students match the search, or the list is empty.
+
+  * 2a1. TuteeDex informs the tutor that there are no matching students.
+
+    Use case ends.
+
+* 3a. The selected index is invalid or outside the displayed list.
+
+  * 3a1. TuteeDex shows an error and does not display a profile.
+
+    Use case resumes at step 2.
+
+**Use case: Update a student profile**
+
+**MSS**
+
+1. Tutor searches for a student by name.
+2. TuteeDex displays matching students.
+3. Tutor selects a student using the index shown in the displayed list and supplies the details to update.
+4. TuteeDex validates the supplied details and applies the changes while preserving fields the tutor did not specify.
+5. TuteeDex refreshes the displayed profile and confirms the update.
+
+    Use case ends.
+
+**Extensions**
+
+* 4a. The index or one or more supplied details are invalid, or the edit would create an identical profile.
+
+  * 4a1. TuteeDex shows the relevant error and leaves the profile unchanged.
+
+    Use case resumes at step 2.
+
+**Use case: Delete a student profile**
+
+**MSS**
+
+1. Tutor requests to list all students or search for a student by name.
+2. TuteeDex displays the matching students.
+3. Tutor requests to delete a student using the index shown in the displayed list.
+4. TuteeDex permanently deletes the selected profile without a confirmation prompt.
+5. TuteeDex refreshes and re-numbers the displayed list, then confirms the deletion.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. No students match the search, or the list is empty.
+
+  * 2a1. TuteeDex informs the tutor that there are no matching students.
+
+    Use case ends.
+
+* 3a. The selected index is invalid or outside the displayed list.
+
+  * 3a1. TuteeDex shows an error and leaves all profiles unchanged.
+
+    Use case resumes at step 2.
 
 ### Non-Functional Requirements
 
