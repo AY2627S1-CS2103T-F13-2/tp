@@ -325,16 +325,23 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+1.  **Platform compatibility:** TuteeDex should work on Windows, macOS, and Linux.
+2.  **Java version:** TuteeDex should run on a computer with Java 25 installed.
+3.  **Command-based usability:** A private tutor who types quickly should be able to complete most common student-management tasks faster with typed commands than with a GUI-only workflow.
+4.  **Screen-size usability:** The GUI should work well at resolutions of 1920 x 1080 or higher with 100% or 125% display scaling. It should remain usable at resolutions of 1280 x 720 or higher with 150% scaling.
+5.  **Single-user operation:** TuteeDex should support one private tutor using their own local data. It should not depend on shared data files or a multi-user service.
+6.  **Local, editable storage:** Student data should be stored locally in a human-editable text file and remain available after the application is restarted.
+7.  **Standalone distribution:** TuteeDex should work without an installer or a team-operated remote server. Its deliverable should be packaged as one JAR file no larger than 100 MB.
 
 ### Glossary
 
-* **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **Private tutor**: The single user who uses TuteeDex to manage students they teach.
+* **Student (tutee)**: A learner whose tutoring and contact information is recorded in TuteeDex.
+* **Student profile**: A record for one student. It can contain the student's name, address, phone number, subjects, tuition start date, outstanding balance, guardian contact, education level, and notes.
+* **Guardian contact**: The phone number of a student's parent or guardian, recorded separately from the student's own phone number.
+* **Outstanding balance**: The amount, in Singapore dollars (SGD), that remains owed for a student's tuition. The amount cannot be negative. It represents the current balance, not a history of individual payments.
+* **Displayed index**: The one-based number shown beside a student in the current displayed list. After a search, the index refers to that search result list.
+* **Duplicate profile**: A new profile whose stored details are identical to an existing profile. TuteeDex rejects an exact duplicate; two profiles may have the same student name if their other details differ.
 
 --------------------------------------------------------------------------------------------------------------------
 
