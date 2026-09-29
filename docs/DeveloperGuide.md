@@ -270,13 +270,13 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Target user profile**:
 
-* has a need to manage a significant number of contacts
+* is a private tutor who teaches multiple students one-on-one
+* needs to keep track of student contact details, parent contact details, and fee payments
+* juggles many students at once and needs an easy way to avoid losing track of details
 * prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
 * is reasonably comfortable using CLI apps
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: Organizes the chaos that comes with tutoring many students privately — track each student's contact details, parent contacts, and fee payments in one place, so private tutors spend less time on admin and less time chasing missed payments.
 
 
 ### User stories
@@ -291,6 +291,16 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
 | `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
 | `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
+| `* * *`  | private tutor                              | add a student                | keep track of the students I teach                                     |
+| `* * *`  | private tutor                              | view a list of all my students | see all my students in one place                                     |
+| `* * *`  | private tutor                              | view a student's profile     | quickly access the student's information                               |
+| `* * *`  | private tutor                              | edit a student's details     | keep my records accurate when information changes                      |
+| `* * *`  | private tutor                              | delete a student             | remove records that are no longer needed                               |
+| `* * *`  | private tutor                              | check if a student has paid fees this month | track my payments timely                                 |
+| `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                       |
+| `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me       |
+| `* *`    | private tutor                              | visually see all the details I have of each student | know if I'm missing their parent's contact details or if they have special considerations to account for when teaching |
+| `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money |
 
 *{More to be added}*
 
