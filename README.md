@@ -1,7 +1,4 @@
-# TuteeDex 🔥
-
-[![CI Status](https://github.com/AY2627S1-CS2103T-F13-2/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-F13-2/tp/actions)
-
+[![Java CI](https://github.com/AY2627S1-CS2103T-F13-2/tp/actions/workflows/gradle.yml/badge.svg?branch=master&event=push)](https://github.com/AY2627S1-CS2103T-F13-2/tp/actions/workflows/gradle.yml)
 ![Ui](docs/images/Ui.png)
 
 * This is a project done for the module **CS2103T Software Engineering**.
