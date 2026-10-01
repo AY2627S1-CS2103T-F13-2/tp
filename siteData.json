@@ -129,7 +129,12 @@
     },
     {
       "src": "index.md",
-      "headings": {},
+      "title": "",
+      "headings": {
+        "tuteedex": "TuteeDex",
+        "features": "Features",
+        "documentation": "Documentation"
+      },
       "headingKeywords": {}
     },
     {
