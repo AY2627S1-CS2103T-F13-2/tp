@@ -84,8 +84,8 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
-        assertThrows(ParseException.class, ListCommandParser.MESSAGE_INVALID_PARAMETERS,
-            () -> parser.parseCommand(ListCommand.COMMAND_WORD + " 3"));
+        assertThrows(ParseException.class, ListCommandParser.MESSAGE_INVALID_PARAMETERS, () ->
+            parser.parseCommand(ListCommand.COMMAND_WORD + " 3"));
     }
 
     @Test
