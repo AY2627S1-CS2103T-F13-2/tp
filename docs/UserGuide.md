@@ -93,9 +93,12 @@ Examples:
 
 ### Listing all persons: `list`
 
-Shows a list of all persons in the address book.
+Shows every contact in the address book, displaying only each contact's name and phone number.
 
 Format: `list`
+
+* `list` takes no parameters. Entering any parameter (e.g. `list 3`) shows an error and the list is not changed.
+* The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
 ### Editing a person: `edit`
 
