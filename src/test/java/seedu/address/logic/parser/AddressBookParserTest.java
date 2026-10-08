@@ -54,8 +54,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_deleteWrongCase_throwsParseException() {
-        assertThrows(ParseException.class, DeleteCommand.MESSAGE_INVALID_COMMAND_FORMAT,
-                () -> parser.parseCommand("DELETE 1"));
+        assertThrows(ParseException.class, DeleteCommand.MESSAGE_INVALID_COMMAND_FORMAT, ()
+                -> parser.parseCommand("DELETE 1"));
     }
 
     @Test
