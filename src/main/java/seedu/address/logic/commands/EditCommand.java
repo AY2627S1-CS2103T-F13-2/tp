@@ -18,7 +18,6 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Address;
@@ -48,9 +47,11 @@ public class EditCommand extends Command {
             + PREFIX_PHONE + "91234567 "
             + PREFIX_EMAIL + "johndoe@example.com";
 
-    public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited person: %1$s";
-    public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
-    public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
+    public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited contact: %1$s";
+    public static final String MESSAGE_NO_CHANGES = "No changes made to contact: %1$s";
+    public static final String MESSAGE_NOT_EDITED = "At least one field must be provided to edit.";
+    public static final String MESSAGE_DUPLICATE_PERSON = "This contact already exists in TuteeDex.";
+    public static final String MESSAGE_CONTACT_NOT_FOUND = "No matching contact found at the specified index.";
 
     private final Index index;
     private final EditPersonDescriptor editPersonDescriptor;
@@ -73,11 +74,19 @@ public class EditCommand extends Command {
         List<Person> lastShownList = model.getFilteredPersonList();
 
         if (index.getZeroBased() >= lastShownList.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(MESSAGE_CONTACT_NOT_FOUND);
+        }
+
+        if (!editPersonDescriptor.isAnyFieldEdited()) {
+            throw new CommandException(MESSAGE_NOT_EDITED);
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
         Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
+
+        if (personToEdit.equals(editedPerson)) {
+            return new CommandResult(String.format(MESSAGE_NO_CHANGES, personToEdit.getName()));
+        }
 
         if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
@@ -85,7 +94,7 @@ public class EditCommand extends Command {
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
-        return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson)));
+        return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, editedPerson.getName()));
     }
 
     /**
