@@ -107,6 +107,10 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]... `
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
 * Fields that are not supplied remain unchanged.
+* Each field other than `t/` may appear only once. Repeating a single-valued field produces `Each contact field may be specified only once in an edit command.`
+* Prefixes are case-sensitive. Unknown prefixes, including uppercase variants such as `P/`, are rejected with `Invalid command format.` and the edit usage instructions.
+* Tokens such as `x/value` (a letter-led prefix followed by `/` at the start of the input or after whitespace) are interpreted as prefixes, even within an address. A slash elsewhere, such as in `#02/03`, remains part of the value.
+* A missing or invalid index produces `INDEX must be a positive integer! (e.g., 1, 2, 3, …)`. An index beyond the displayed list produces `No matching contact found at the specified index.`
 * A successful edit shows `Edited contact: <updated contact name>`.
 * If the supplied values are identical to the existing values, the command shows `No changes made to contact: <contact name>` and leaves the displayed list unchanged.
 * When editing tags, all of the person's existing tags are removed; adding tags is not cumulative.
