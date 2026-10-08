@@ -99,7 +99,6 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_exitWithArguments_throwsParseException() {
-        assertThrows(ParseException.class,
-                () -> parser.parseCommand(ExitCommand.COMMAND_WORD + " 3"));
+        assertThrows(ParseException.class, () -> parser.parseCommand(ExitCommand.COMMAND_WORD + " 3"));
     }
 }
