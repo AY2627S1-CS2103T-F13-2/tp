@@ -159,6 +159,93 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Shared student-profile foundation
+
+Add and Edit should use the same field types and `StudentProfileParserUtil`.
+This foundation supplies the model and storage APIs; the student command syntax
+and the View details table are implemented in their respective feature changes.
+
+**Creating a student profile**
+
+```java
+StudentDetails details = new StudentDetails(
+        StudentProfileParserUtil.parseSubjects(List.of("Maths", "Physics")),
+        StudentProfileParserUtil.parseStartDate("10-Aug"));
+Person student = new Person(
+        StudentProfileParserUtil.parseName("Peter Parker"),
+        StudentProfileParserUtil.parsePhone("91234567"),
+        StudentProfileParserUtil.parseAddress("32 Clementi Road"),
+        details);
+```
+
+The two-argument `StudentDetails` constructor supplies defaults for optional
+fields. Its full constructor accepts subjects, start date, outstanding amount,
+age, education, guardian contact, and note, in that order. All values are
+immutable; the subject set is copied and cannot be modified through a getter.
+
+| Prefix | Shared parser | Rule |
+|--------|---------------|------|
+| `n/` | `parseName` | ASCII letters and spaces; non-empty |
+| `a/` | `parseAddress` | Non-empty single-line text |
+| `p/` | `parsePhone` | Exactly eight ASCII digits |
+| `s/` | `parseSubjects` | Non-empty set; each value contains letters, digits, spaces or hyphens |
+| `d/` | `parseStartDate` | Two digits, a hyphen, three ASCII letters; calendar validity is not checked |
+| `o/` | `parseOutstandingAmount` | Non-negative decimal, at most two decimal places; blank means zero |
+| `ag/` | `parseAge` | Integer 1–120, without leading zeros; blank means absent |
+| `e/` | `parseEducation` | Printable ASCII text; blank means absent |
+| `g/` | `parseGuardianContact` | Eight ASCII digits; blank means absent |
+| `note/` | `parseNote` | Printable ASCII text; blank means absent |
+
+All methods in this table belong to `StudentProfileParserUtil`. They throw
+`ParseException` using the field's shared constraint message. Values are trimmed;
+case and internal spaces are preserved. Subjects use repeated prefixes such as
+`s/Maths s/Physics`; comma-separated input is invalid. Monetary values use
+`BigDecimal` and are stored at two decimal places without rounding.
+
+**Command responsibilities**
+
+Add must require name, address, phone, at least one subject, and start date.
+It should supply the documented defaults for omitted optional fields.
+Edit must distinguish a missing prefix (preserve the stored value) from an
+explicitly empty optional prefix (clear/reset it). Do not call a parser with an
+empty value merely because the prefix was omitted. Editing subjects replaces
+the entire set, and every supplied subject must be non-blank.
+
+Use the `PREFIX_SUBJECT`, `PREFIX_START_DATE`, `PREFIX_OUTSTANDING_AMOUNT`,
+`PREFIX_AGE`, `PREFIX_EDUCATION`, `PREFIX_GUARDIAN_CONTACT`, and `PREFIX_NOTE`
+constants in `CliSyntax`. The legacy `PREFIX_EMAIL` and new
+`PREFIX_EDUCATION` both spell `e/`: student command parsers must use education
+instead of email, not enable both meanings together.
+
+**Equality and migration**
+
+`Person.isSamePerson` compares every stored field, as does `equals`.
+Same-name profiles with different values are allowed. Subject order does not
+matter, but case and internal spaces do. Amounts such as `20` and `20.00`
+are equal. Missing optional student fields normalize to the same values as
+explicit blank input (or zero for the amount).
+
+`Person.getStudentDetails()` returns an `Optional<StudentDetails>`:
+old AB3 contacts have no tuition details, so no subjects or dates are invented.
+`Person.getEmail()` now returns `Optional<Email>`. The original five-argument
+constructor remains available for legacy contacts. New student profiles use
+the four-argument constructor shown above and do not need email or tags.
+The six-argument constructor preserves legacy fields when converting a contact
+to a student profile. Legacy email and tags still participate in equality.
+
+Legacy name/phone validation remains available for old records and commands.
+Student parsers must use `StudentProfileParserUtil` for the stricter rules;
+the student `Person` constructor also enforces these invariants.
+The existing Edit command preserves tuition details when editing legacy fields.
+Before adapting Edit to complete missing legacy tuition details, agree whether
+both required fields must be supplied together; do not silently invent defaults.
+
+JSON stores tuition fields in a nested `studentDetails` object. Its absence
+identifies a legacy record. Present objects require non-empty subjects and a
+valid-format start date. Missing optional values receive the defaults above.
+Invalid fields and normalized duplicate profiles are rejected during loading.
+Legacy and student profiles can coexist and survive a save/reload cycle.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
