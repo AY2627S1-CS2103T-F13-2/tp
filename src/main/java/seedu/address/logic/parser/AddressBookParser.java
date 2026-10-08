@@ -46,6 +46,11 @@ public class AddressBookParser {
         final String commandWord = matcher.group("commandWord");
         final String arguments = matcher.group("arguments");
 
+        if (commandWord.equalsIgnoreCase(DeleteCommand.COMMAND_WORD)
+                && !commandWord.equals(DeleteCommand.COMMAND_WORD)) {
+            throw new ParseException(DeleteCommand.MESSAGE_INVALID_COMMAND_FORMAT);
+        }
+
         // Note to developers: Change LOG_LEVEL in LogsCenter to enable lower level (i.e., FINE, FINER and lower)
         // log messages such as the one below.
         // Lower level log messages are used sparingly to minimize noise in the code.
