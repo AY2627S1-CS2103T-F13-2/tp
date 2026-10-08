@@ -138,7 +138,7 @@ Format: `delete INDEX`
 
 * `INDEX` is the one-based position in the currently displayed contact list, including search results.
 * `INDEX` must be one positive integer, such as `1`, `2`, or `3`; no other parameters are accepted.
-* A successful command displays `Deleted contact: <student name>`.
+* A successful command displays `Deleted person: <contact details>`.
 * If `INDEX` is invalid, the app explains that it must be a positive integer. If it is larger than the displayed list, the app reports that no matching contact was found.
 
 Examples:
