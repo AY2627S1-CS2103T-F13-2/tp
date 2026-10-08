@@ -17,6 +17,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -46,6 +47,11 @@ public class AddressBookParser {
         final String commandWord = matcher.group("commandWord");
         final String arguments = matcher.group("arguments");
 
+        if (commandWord.equalsIgnoreCase(DeleteCommand.COMMAND_WORD)
+                && !commandWord.equals(DeleteCommand.COMMAND_WORD)) {
+            throw new ParseException(DeleteCommand.MESSAGE_INVALID_COMMAND_FORMAT);
+        }
+
         // Note to developers: Change LOG_LEVEL in LogsCenter to enable lower level (i.e., FINE, FINER and lower)
         // log messages such as the one below.
         // Lower level log messages are used sparingly to minimize noise in the code.
@@ -57,9 +63,18 @@ public class AddressBookParser {
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case ClearCommand.COMMAND_WORD -> new ClearCommand();
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
-            case ListCommand.COMMAND_WORD -> new ListCommand();
-            case ExitCommand.COMMAND_WORD -> new ExitCommand();
+            case ListCommand.COMMAND_WORD -> new ListCommandParser().parse(arguments);
+            case ExitCommand.COMMAND_WORD -> {
+                new ExitCommand();
+                if (!arguments.isBlank()) {
+                    throw new ParseException(
+                            "Failed to exit the app. Please type only 'exit' if you wish to quit the program."
+                    );
+                }
+                yield new ExitCommand();
+            }
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
+            case ViewCommand.COMMAND_WORD -> new ViewCommandParser().parse(arguments);
             default -> {
                 logger.finer("This user input caused a ParseException: " + userInput);
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);

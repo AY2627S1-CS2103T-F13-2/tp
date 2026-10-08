@@ -270,58 +270,138 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Target user profile**:
 
-* has a need to manage a significant number of contacts
+* is a private tutor who teaches multiple students one-on-one
+* needs to keep track of student contact details, parent contact details, and fee payments
+* juggles many students at once and needs an easy way to avoid losing track of details
 * prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
 * is reasonably comfortable using CLI apps
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: Organizes the chaos that comes with tutoring many students privately — track each student's contact details, parent contacts, and fee payments in one place, so private tutors spend less time on admin and less time chasing missed payments.
 
 
 ### User stories
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
 
-| Priority | As a …                                    | I want to …                 | So that I can…                                                        |
-|----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
+| Priority | As a …                                    | I want to …                 | So that I can…                                                                                                         |
+|----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                                                                 |
+| `* * *`  | user                                       | add a new person             |                                                                                                                        |
+| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                                                                   |
+| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list                                                 |
+| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                                                                |
+| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                                                                 |
+| `* * *`  | private tutor                              | add a student                | keep track of the students I teach                                                                                     |
+| `* * *`  | private tutor                              | view a list of all my students | see all my students in one place                                                                                       |
+| `* * *`  | private tutor                              | view a student's profile     | quickly access the student's information                                                                               |
+| `* * *`  | private tutor                              | edit a student's details     | keep my records accurate when information changes                                                                      |
+| `* * *`  | private tutor                              | delete a student             | remove records that are no longer needed                                                                               |
+| `* * *`  | private tutor                              | check if a student has paid fees this month | track my payments in a timely manner                                                                                   |
+| `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                                                                       |
+| `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me                                                                                      |
+| `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
 
 *{More to be added}*
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `TuteeDex` and the **Actor** is the `private tutor`.)
 
-**Use case: Delete a person**
+**Use case: Add a student profile**
 
 **MSS**
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+1. Tutor requests to add a student profile with the student's details.
+2. TuteeDex validates the supplied details.
+3. TuteeDex saves the profile and confirms that it was added.
 
     Use case ends.
 
 **Extensions**
 
-* 2a. The list is empty.
+* 2a. One or more supplied details are invalid.
 
-  Use case ends.
+  * 2a1. TuteeDex shows the relevant validation error and does not add the profile.
 
-* 3a. The given index is invalid.
+    Use case resumes at step 1.
 
-    * 3a1. AddressBook shows an error message.
+* 2b. An identical profile already exists.
 
-      Use case resumes at step 2.
+  * 2b1. TuteeDex rejects the duplicate and informs the tutor.
 
-*{More to be added}*
+    Use case ends.
+
+**Use case: Locate and view a student profile**
+
+**MSS**
+
+1. Tutor requests to list all students or search for a student by name.
+2. TuteeDex displays the matching students with their names and phone numbers.
+3. Tutor selects a student using the index shown in the displayed list.
+4. Tutor requests to view the selected profile.
+5. TuteeDex displays the student's full profile, including available contact, subject, fee, and note details.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. No students match the search, or the list is empty.
+
+  * 2a1. TuteeDex informs the tutor that there are no matching students.
+
+    Use case ends.
+
+* 3a. The selected index is invalid or outside the displayed list.
+
+  * 3a1. TuteeDex shows an error and does not display a profile.
+
+    Use case resumes at step 2.
+
+**Use case: Update a student profile**
+
+**MSS**
+
+1. Tutor searches for a student by name.
+2. TuteeDex displays matching students.
+3. Tutor selects a student using the index shown in the displayed list and supplies the details to update.
+4. TuteeDex validates the supplied details and applies the changes while preserving fields the tutor did not specify.
+5. TuteeDex refreshes the displayed profile and confirms the update.
+
+    Use case ends.
+
+**Extensions**
+
+* 4a. The index or one or more supplied details are invalid, or the edit would create an identical profile.
+
+  * 4a1. TuteeDex shows the relevant error and leaves the profile unchanged.
+
+    Use case resumes at step 2.
+
+**Use case: Delete a student profile**
+
+**MSS**
+
+1. Tutor requests to list all students or search for a student by name.
+2. TuteeDex displays the matching students.
+3. Tutor requests to delete a student using the index shown in the displayed list.
+4. TuteeDex permanently deletes the selected profile without a confirmation prompt.
+5. TuteeDex refreshes and re-numbers the displayed list, then confirms the deletion.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. No students match the search, or the list is empty.
+
+  * 2a1. TuteeDex informs the tutor that there are no matching students.
+
+    Use case ends.
+
+* 3a. The selected index is invalid or outside the displayed list.
+
+  * 3a1. TuteeDex shows an error and leaves all profiles unchanged.
+
+    Use case resumes at step 2.
 
 ### Non-Functional Requirements
 
