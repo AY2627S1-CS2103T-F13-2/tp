@@ -11,6 +11,8 @@ public class Name {
 
     public static final String MESSAGE_CONSTRAINTS =
             "Names should only contain alphanumeric characters and spaces, and should not be blank";
+    public static final String STUDENT_MESSAGE_CONSTRAINTS =
+            "Names should only contain alphabetic characters and spaces, and it should not be blank.";
 
     /*
      * The first character of the name must not be a whitespace,
@@ -27,8 +29,8 @@ public class Name {
      */
     public Name(String name) {
         requireNonNull(name);
-        checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
-        fullName = name;
+        checkArgument(isValidName(name.trim()), MESSAGE_CONSTRAINTS);
+        fullName = name.trim();
     }
 
     /**
@@ -36,6 +38,14 @@ public class Name {
      */
     public static boolean isValidName(String test) {
         return test.matches(VALIDATION_REGEX);
+    }
+
+    /**
+     * Returns whether the trimmed name satisfies the student-profile specification.
+     * Legacy AB3 names remain readable through the original validation.
+     */
+    public static boolean isValidStudentName(String test) {
+        return test.matches("[A-Za-z][A-Za-z ]*");
     }
 
 

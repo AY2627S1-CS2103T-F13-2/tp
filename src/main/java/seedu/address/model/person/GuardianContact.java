@@ -29,7 +29,7 @@ public final class GuardianContact {
      */
     public static boolean isValidGuardianContact(String test) {
         requireNonNull(test);
-        return test.matches(VALIDATION_REGEX);
+        return test.isEmpty() || Phone.isValidStudentPhone(test);
     }
 
     @Override

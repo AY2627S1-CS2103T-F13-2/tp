@@ -13,6 +13,8 @@ public class Phone {
     public static final String MESSAGE_CONSTRAINTS =
             "Phone numbers should only contain digits, and should be at least 3 digits long";
     public static final String VALIDATION_REGEX = "\\d{3,}";
+    public static final String STUDENT_MESSAGE_CONSTRAINTS =
+            "Phone numbers should only contain numbers, and it should be 8 digits long.";
     public final String value;
 
     /**
@@ -22,8 +24,8 @@ public class Phone {
      */
     public Phone(String phone) {
         requireNonNull(phone);
-        checkArgument(isValidPhone(phone), MESSAGE_CONSTRAINTS);
-        value = phone;
+        checkArgument(isValidPhone(phone.trim()), MESSAGE_CONSTRAINTS);
+        value = phone.trim();
     }
 
     /**
@@ -31,6 +33,13 @@ public class Phone {
      */
     public static boolean isValidPhone(String test) {
         return test.matches(VALIDATION_REGEX);
+    }
+
+    /**
+     * Returns whether the trimmed phone satisfies the eight-digit student rule.
+     */
+    public static boolean isValidStudentPhone(String test) {
+        return test.matches("[0-9]{8}");
     }
 
     @Override

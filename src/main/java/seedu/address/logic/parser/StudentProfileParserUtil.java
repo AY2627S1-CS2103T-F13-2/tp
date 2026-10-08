@@ -8,11 +8,14 @@ import java.util.Set;
 import java.util.function.Function;
 
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Address;
 import seedu.address.model.person.Age;
 import seedu.address.model.person.Education;
 import seedu.address.model.person.GuardianContact;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Note;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
 import seedu.address.model.person.Subject;
 
@@ -22,6 +25,35 @@ import seedu.address.model.person.Subject;
  */
 public final class StudentProfileParserUtil {
     private StudentProfileParserUtil() {}
+
+    /**
+     * Parses a name under the student rules, excluding digits and punctuation.
+     */
+    public static Name parseName(String value) throws ParseException {
+        requireNonNull(value);
+        if (!Name.isValidStudentName(value.trim())) {
+            throw new ParseException(Name.STUDENT_MESSAGE_CONSTRAINTS);
+        }
+        return new Name(value);
+    }
+
+    /**
+     * Parses an exactly eight-digit student phone number.
+     */
+    public static Phone parsePhone(String value) throws ParseException {
+        requireNonNull(value);
+        if (!Phone.isValidStudentPhone(value.trim())) {
+            throw new ParseException(Phone.STUDENT_MESSAGE_CONSTRAINTS);
+        }
+        return new Phone(value);
+    }
+
+    /**
+     * Parses a non-empty single-line address using the existing shared parser.
+     */
+    public static Address parseAddress(String value) throws ParseException {
+        return ParserUtil.parseAddress(value);
+    }
 
     /**
      * Parses a subject using its shared validation and normalization.

@@ -19,6 +19,21 @@ import seedu.address.model.person.Subject;
 
 public class StudentProfileParserUtilTest {
     @Test
+    public void parseCoreFields_appliesStudentRules() throws Exception {
+        assertEquals("Peter  Parker", StudentProfileParserUtil.parseName(" Peter  Parker ").fullName);
+        assertEquals("01234567", StudentProfileParserUtil.parsePhone(" 01234567 ").value);
+        assertEquals("Clementi #02/03", StudentProfileParserUtil.parseAddress(" Clementi #02/03 ").value);
+        for (String invalid : List.of("", "123", "Peter2", "Peter-Parker")) {
+            assertThrows(ParseException.class, () -> StudentProfileParserUtil.parseName(invalid));
+        }
+        for (String invalid : List.of("", "123", "123456789", "+6591234567", "9123 4567")) {
+            assertThrows(ParseException.class, () -> StudentProfileParserUtil.parsePhone(invalid));
+        }
+        assertThrows(ParseException.class, () -> StudentProfileParserUtil.parseAddress(" "));
+        assertThrows(ParseException.class, () -> StudentProfileParserUtil.parseAddress("two\nlines"));
+    }
+
+    @Test
     public void parseSubjects_normalizedSet_preservesCaseAndInternalSpaces() throws Exception {
         assertEquals(Set.of(new Subject("Maths"), new Subject("H2  Physics")),
                 StudentProfileParserUtil.parseSubjects(List.of(" Maths ", "H2  Physics", "Maths")));

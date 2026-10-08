@@ -9,7 +9,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Address {
 
-    public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Address must not be blank.";
 
     /*
      * The first character of the address must not be a whitespace,
@@ -26,8 +26,8 @@ public class Address {
      */
     public Address(String address) {
         requireNonNull(address);
-        checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
-        value = address;
+        checkArgument(isValidAddress(address.trim()), MESSAGE_CONSTRAINTS);
+        value = address.trim();
     }
 
     /**
