@@ -25,6 +25,20 @@ public class JsonAdaptedPersonTest {
     private static final String VALID_START_DATE = BENSON.getStartDate().toString();
 
     @Test
+    public void toModelType_missingRemark_defaultsToEmpty() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(
+                VALID_NAME, VALID_PHONE, VALID_ADDRESS, VALID_START_DATE, null);
+        assertEquals("", person.toModelType().getRemark().value);
+    }
+
+    @Test
+    public void toModelType_remark_preserved() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(
+                VALID_NAME, VALID_PHONE, VALID_ADDRESS, VALID_START_DATE, "Likes baseball");
+        assertEquals("Likes baseball", person.toModelType().getRemark().value);
+    }
+
+    @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(BENSON);
         assertEquals(BENSON, person.toModelType());

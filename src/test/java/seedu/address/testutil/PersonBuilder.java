@@ -4,6 +4,7 @@ import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Remark;
 import seedu.address.model.person.StartDate;
 
 /**
@@ -20,6 +21,7 @@ public class PersonBuilder {
     private Phone phone;
     private Address address;
     private StartDate startDate;
+    private Remark remark;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -29,6 +31,7 @@ public class PersonBuilder {
         phone = new Phone(DEFAULT_PHONE);
         address = new Address(DEFAULT_ADDRESS);
         startDate = new StartDate(DEFAULT_START_DATE);
+        remark = new Remark("");
     }
 
     /**
@@ -39,6 +42,7 @@ public class PersonBuilder {
         phone = personToCopy.getPhone();
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
+        remark = personToCopy.getRemark();
     }
 
     /**
@@ -73,8 +77,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the optional remark of the person being built.
+     */
+    public PersonBuilder withRemark(String remark) {
+        this.remark = new Remark(remark);
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, address, startDate);
+        return new Person(name, phone, address, startDate, remark);
     }
 
 }

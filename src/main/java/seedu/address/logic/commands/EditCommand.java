@@ -103,7 +103,7 @@ public class EditCommand extends Command {
         Address updatedAddress = editPersonDescriptor.getAddress().orElse(personToEdit.getAddress());
         StartDate updatedStartDate = editPersonDescriptor.getStartDate().orElse(personToEdit.getStartDate());
 
-        return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate);
+        return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, personToEdit.getRemark());
     }
 
     @Override

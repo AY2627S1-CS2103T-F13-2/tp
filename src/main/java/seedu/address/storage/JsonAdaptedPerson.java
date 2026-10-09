@@ -8,6 +8,7 @@ import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Remark;
 import seedu.address.model.person.StartDate;
 
 /**
@@ -21,17 +22,27 @@ class JsonAdaptedPerson {
     private final String phone;
     private final String address;
     private final String startDate;
+    private final String remark;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
      */
+    public JsonAdaptedPerson(String name, String phone, String address, String startDate) {
+        this(name, phone, address, startDate, "");
+    }
+
+    /**
+     * Constructs an adapted person; missing remarks in older files default to empty.
+     */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
-            @JsonProperty("address") String address, @JsonProperty("startDate") String startDate) {
+            @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
+            @JsonProperty("remark") String remark) {
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
+        this.remark = remark == null ? "" : remark;
     }
 
     /**
@@ -42,6 +53,7 @@ class JsonAdaptedPerson {
         phone = source.getPhone().value;
         address = source.getAddress().value;
         startDate = source.getStartDate().value;
+        remark = source.getRemark().value;
     }
 
     /**
@@ -83,7 +95,7 @@ class JsonAdaptedPerson {
         }
         final StartDate modelStartDate = new StartDate(startDate);
 
-        return new Person(modelName, modelPhone, modelAddress, modelStartDate);
+        return new Person(modelName, modelPhone, modelAddress, modelStartDate, new Remark(remark));
     }
 
 }
