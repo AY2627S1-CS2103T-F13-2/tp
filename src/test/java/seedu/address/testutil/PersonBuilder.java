@@ -2,6 +2,7 @@ package seedu.address.testutil;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
@@ -15,11 +16,13 @@ public class PersonBuilder {
     public static final String DEFAULT_PHONE = "85355255";
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
     public static final String DEFAULT_START_DATE = "10-Aug";
+    public static final String DEFAULT_OUTSTANDING_AMOUNT = "0";
 
     private Name name;
     private Phone phone;
     private Address address;
     private StartDate startDate;
+    private OutstandingAmount outstandingAmount;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -29,6 +32,7 @@ public class PersonBuilder {
         phone = new Phone(DEFAULT_PHONE);
         address = new Address(DEFAULT_ADDRESS);
         startDate = new StartDate(DEFAULT_START_DATE);
+        outstandingAmount = new OutstandingAmount(DEFAULT_OUTSTANDING_AMOUNT);
     }
 
     /**
@@ -39,6 +43,7 @@ public class PersonBuilder {
         phone = personToCopy.getPhone();
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
+        outstandingAmount = personToCopy.getOutstandingAmount();
     }
 
     /**
@@ -73,8 +78,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the {@code OutstandingAmount} of the {@code Person} that we are building.
+     */
+    public PersonBuilder withOutstandingAmount(String outstandingAmount) {
+        this.outstandingAmount = new OutstandingAmount(outstandingAmount);
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, address, startDate);
+        return new Person(name, phone, address, startDate, outstandingAmount);
     }
 
 }

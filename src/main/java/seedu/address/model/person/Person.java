@@ -16,16 +16,19 @@ public class Person {
     private final Phone phone;
     private final Address address;
     private final StartDate startDate;
+    private final OutstandingAmount outstandingAmount;
 
     /**
      * Every field must be present and not null.
      */
-    public Person(Name name, Phone phone, Address address, StartDate startDate) {
-        requireAllNonNull(name, phone, address, startDate);
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount) {
+        requireAllNonNull(name, phone, address, startDate, outstandingAmount);
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
+        this.outstandingAmount = outstandingAmount;
     }
 
     public Name getName() {
@@ -42,6 +45,10 @@ public class Person {
 
     public StartDate getStartDate() {
         return startDate;
+    }
+
+    public OutstandingAmount getOutstandingAmount() {
+        return outstandingAmount;
     }
 
     /**
@@ -73,13 +80,14 @@ public class Person {
         return name.equals(otherPerson.name)
                 && phone.equals(otherPerson.phone)
                 && address.equals(otherPerson.address)
-                && startDate.equals(otherPerson.startDate);
+                && startDate.equals(otherPerson.startDate)
+                && outstandingAmount.equals(otherPerson.outstandingAmount);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, address, startDate);
+        return Objects.hash(name, phone, address, startDate, outstandingAmount);
     }
 
     @Override
@@ -89,6 +97,7 @@ public class Person {
                 .add("phone", phone)
                 .add("address", address)
                 .add("startDate", startDate)
+                .add("outstandingAmount", outstandingAmount)
                 .toString();
     }
 
