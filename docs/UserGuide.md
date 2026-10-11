@@ -31,7 +31,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list` : Lists all contacts.
 
-   * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug` : Adds a student profile named `John Doe` to TuteeDex.
+   * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug o/20` : Adds a student profile named `John Doe` to TuteeDex.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -80,16 +80,18 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
-Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE`
+Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]`
 
 <box type="tip" seamless>
 
 **Note:** `START_DATE` must use the `DD-MMM` format, for example `10-Aug`. Calendar validity is not checked.
+
+**Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
 </box>
 
 Examples:
 * `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug`
-* `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep`
+* `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600`
 
 ### Listing all persons: `list`
 
@@ -197,7 +199,7 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug`
+**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE]`<br> e.g., `edit 2 n/James Lee d/19-Sep`

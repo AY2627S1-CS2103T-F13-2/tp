@@ -77,6 +77,13 @@ public class AddressBookTest {
     }
 
     @Test
+    public void hasPerson_personWithDifferentOutstandingAmountInAddressBook_returnsFalse() {
+        addressBook.addPerson(ALICE);
+        Person editedAlice = new PersonBuilder(ALICE).withOutstandingAmount("20").build();
+        assertFalse(addressBook.hasPerson(editedAlice));
+    }
+
+    @Test
     public void getPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> addressBook.getPersonList().remove(0));
     }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -32,6 +33,8 @@ public class CommandTestUtil {
     public static final String VALID_ADDRESS_BOB = "Block 123, Bobby Street 3";
     public static final String VALID_START_DATE_AMY = "10-Aug";
     public static final String VALID_START_DATE_BOB = "19-Sep";
+    public static final String VALID_OUTSTANDING_AMOUNT_AMY = "0";
+    public static final String VALID_OUTSTANDING_AMOUNT_BOB = "20";
 
     public static final String NAME_DESC_AMY = " " + PREFIX_NAME + VALID_NAME_AMY;
     public static final String NAME_DESC_BOB = " " + PREFIX_NAME + VALID_NAME_BOB;
@@ -41,11 +44,16 @@ public class CommandTestUtil {
     public static final String ADDRESS_DESC_BOB = " " + PREFIX_ADDRESS + VALID_ADDRESS_BOB;
     public static final String START_DATE_DESC_AMY = " " + PREFIX_START_DATE + VALID_START_DATE_AMY;
     public static final String START_DATE_DESC_BOB = " " + PREFIX_START_DATE + VALID_START_DATE_BOB;
+    public static final String OUTSTANDING_AMOUNT_DESC_AMY =
+            " " + PREFIX_OUTSTANDING_AMOUNT + VALID_OUTSTANDING_AMOUNT_AMY;
+    public static final String OUTSTANDING_AMOUNT_DESC_BOB =
+            " " + PREFIX_OUTSTANDING_AMOUNT + VALID_OUTSTANDING_AMOUNT_BOB;
 
     public static final String INVALID_NAME_DESC = " " + PREFIX_NAME + "James&"; // '&' not allowed in names
     public static final String INVALID_PHONE_DESC = " " + PREFIX_PHONE + "911a"; // 'a' not allowed in phones
     public static final String INVALID_ADDRESS_DESC = " " + PREFIX_ADDRESS; // empty string not allowed for addresses
     public static final String INVALID_START_DATE_DESC = " " + PREFIX_START_DATE + "10-Aug-2026";
+    public static final String INVALID_OUTSTANDING_AMOUNT_DESC = " " + PREFIX_OUTSTANDING_AMOUNT + "20.123";
 
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";

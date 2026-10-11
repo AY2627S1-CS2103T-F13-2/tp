@@ -40,7 +40,7 @@ public class TypicalPersons {
 
     // Manually added
     public static final Person HOON = new PersonBuilder().withName("Hoon Meier").withPhone("84824240")
-            .withAddress("little india").withStartDate("08-Aug").build();
+            .withAddress("little india").withStartDate("08-Aug").withOutstandingAmount("20.50").build();
     public static final Person IDA = new PersonBuilder().withName("Ida Mueller").withPhone("84821310")
             .withAddress("chicago ave").withStartDate("09-Sep").build();
 
