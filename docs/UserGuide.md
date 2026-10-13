@@ -102,18 +102,46 @@ Format: `list`
 * `list` takes no parameters. Entering any parameter (e.g. `list 3`) shows an error and the list is not changed.
 * The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
-### Editing a person: `edit`
+### Editing a student profile: `edit`
 
-Edits an existing person in the address book.
+Updates one or more fields of an existing student profile in TuteeDex.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE]`
+Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`
 
 * Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
+* After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
+* Fields that are not supplied remain unchanged, including the outstanding amount.
+* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates use `DD-MMM`, and outstanding amounts are nonnegative numbers with at most two decimal places. Calendar validity is not checked.
+* Use `o/0` to reset the outstanding amount to zero. A prefix with a blank value, including `o/`, is invalid.
+* Leading and trailing spaces around values are ignored. Text case and internal spaces are preserved.
+* The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index.
+* Each field may appear only once in an edit command.
+* Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
+* An edit is rejected as a duplicate only if all five stored fields match another profile. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
+* If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
+* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full contact list. The changes are saved automatically.
+* If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
+
+Errors:
+
+| Input problem | Feedback |
+| --- | --- |
+| Missing or invalid index | `INDEX must be a positive integer! (e.g., 1, 2, 3, …)` |
+| Index beyond the displayed list | `No matching contact found at the specified index.` |
+| No field supplied, e.g. `edit 1` | `At least one field must be provided to edit.` |
+| Repeated field | `Each contact field may be specified only once in an edit command.` |
+| Unknown or uppercase prefix | `Invalid command format.` followed by Edit usage instructions |
+| Invalid field value | The same field validation error as `add` |
+| Duplicate profile | `This contact already exists in TuteeDex.` |
+
 Examples:
 * `edit 1 p/91234567 d/20-Oct` edits the phone number and start date of the first profile.
 * `edit 2 n/Betsy Crower` edits the name of the second profile.
+* `edit 1 o/600` changes the first profile's outstanding amount to SGD 600.00.
+* `edit 1 o/0` resets the first profile's outstanding amount to zero.
+* `find Betsy` followed by `edit 1 a/32, Clementi Road` updates only the address of the first search result.
 
 ### Locating persons by name: `find`
 
@@ -202,7 +230,7 @@ Action     | Format, Examples
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE]`<br> e.g., `edit 2 n/James Lee d/19-Sep`
+**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list`
 **Help**   | `help`

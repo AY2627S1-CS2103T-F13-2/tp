@@ -8,15 +8,20 @@ import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
+import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.collections.ListChangeListener;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
@@ -27,6 +32,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -69,6 +75,64 @@ public class LogicManagerTest {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand,
                 ListCommand.getMessageForContactCount(model.getFilteredPersonList().size()), model);
+    }
+
+    @Test
+    public void execute_editAllFields_savesAndReloadsUpdatedDetails() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        Person updated = new PersonBuilder(AMY).withName("Amy Tan").withPhone("91234567")
+                .withAddress("Block 9, Clementi Road").withStartDate("20-Oct").withOutstandingAmount("20.50").build();
+
+        CommandResult result = logic.execute(
+                "edit 1 n/Amy Tan p/91234567 a/Block 9, Clementi Road d/20-Oct o/20.50");
+
+        assertEquals("Edited contact: Amy Tan", result.getFeedbackToUser());
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        ReadOnlyAddressBook savedData = savedStorage.readAddressBook().orElseThrow();
+        assertEquals(List.of(updated, BOB), savedData.getPersonList());
+        Model reloadedModel = new ModelManager(savedData, new UserPrefs());
+        Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
+        assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
+                + "\nOutstanding amount: SGD 20.50", reloadedLogic.execute("view 1").getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_partialEdit_savesPreservedFieldsAndNotifiesDisplayedList() throws Exception {
+        Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
+        model.addPerson(original);
+        Person updated = new PersonBuilder(original).withPhone("91234567").build();
+        List<Person> displayedUpdates = new ArrayList<>();
+        logic.getFilteredPersonList().addListener((ListChangeListener<Person>) change -> {
+            while (change.next()) {
+                displayedUpdates.addAll(change.getAddedSubList());
+            }
+        });
+
+        logic.execute("edit 1 p/91234567");
+
+        assertEquals(List.of(updated), displayedUpdates);
+        assertEquals(List.of(updated), logic.getFilteredPersonList());
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        assertEquals(List.of(updated), savedStorage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void execute_invalidEdit_preservesSavedData() throws Exception {
+        Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
+        model.addPerson(original);
+        logic.execute("list");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String originalJson = Files.readString(savedPath);
+        String invalidCommand = "edit 1 p/91234567 o/-1";
+
+        assertThrows(ParseException.class, OutstandingAmount.MESSAGE_CONSTRAINTS, () -> logic.execute(invalidCommand));
+
+        assertEquals(List.of(original), logic.getFilteredPersonList());
+        assertEquals(originalJson, Files.readString(savedPath));
     }
 
     @Test

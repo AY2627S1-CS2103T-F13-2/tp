@@ -13,6 +13,7 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditPersonDescriptorTest {
@@ -53,13 +54,26 @@ public class EditPersonDescriptorTest {
     }
 
     @Test
+    public void outstandingAmountOnly_countsAsEditAndSurvivesCopy() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withOutstandingAmount("600").build();
+        EditPersonDescriptor copy = new EditPersonDescriptor(descriptor);
+
+        assertTrue(copy.isAnyFieldEdited());
+        assertEquals(new OutstandingAmount("600"), copy.getOutstandingAmount().orElseThrow());
+        assertEquals(descriptor, copy);
+        assertFalse(descriptor.equals(new EditPersonDescriptor()));
+        assertFalse(descriptor.equals(new EditPersonDescriptorBuilder().withOutstandingAmount("20").build()));
+    }
+
+    @Test
     public void toStringMethod() {
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
         String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
                 + editPersonDescriptor.getName().orElse(null) + ", phone="
                 + editPersonDescriptor.getPhone().orElse(null) + ", address="
                 + editPersonDescriptor.getAddress().orElse(null) + ", startDate="
-                + editPersonDescriptor.getStartDate().orElse(null) + "}";
+                + editPersonDescriptor.getStartDate().orElse(null) + ", outstandingAmount="
+                + editPersonDescriptor.getOutstandingAmount().orElse(null) + "}";
         assertEquals(expected, editPersonDescriptor.toString());
     }
 }
