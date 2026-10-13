@@ -40,8 +40,10 @@ public class ViewCommand extends Command {
         }
 
         Person personToDisplay = lastShownList.get(targetIndex.getZeroBased());
-        return new CommandResult(String.format("Name: %s\nPhone: %s\nAddress: %s",
-                personToDisplay.getName(), personToDisplay.getPhone(), personToDisplay.getAddress()));
+        return new CommandResult(String.format(
+                "Name: %s\nPhone: %s\nAddress: %s\nStart date: %s\nOutstanding amount: %s",
+                personToDisplay.getName(), personToDisplay.getPhone(), personToDisplay.getAddress(),
+                personToDisplay.getStartDate(), personToDisplay.getOutstandingAmount().toCurrencyString()));
     }
 
     @Override

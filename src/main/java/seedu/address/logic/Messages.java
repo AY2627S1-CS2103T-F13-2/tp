@@ -42,7 +42,9 @@ public class Messages {
                 .append("; Address: ")
                 .append(person.getAddress())
                 .append("; Start date: ")
-                .append(person.getStartDate());
+                .append(person.getStartDate())
+                .append("; Outstanding amount: ")
+                .append(person.getOutstandingAmount().toCurrencyString());
         return builder.toString();
     }
 

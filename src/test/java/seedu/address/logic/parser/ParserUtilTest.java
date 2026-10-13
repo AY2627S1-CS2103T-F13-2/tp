@@ -15,6 +15,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 
@@ -31,6 +32,7 @@ public class ParserUtilTest {
     private static final String VALID_EMAIL = "rachel@example.com";
     private static final String VALID_TAG_1 = "friend";
     private static final String VALID_TAG_2 = "neighbour";
+    private static final String VALID_OUTSTANDING_AMOUNT = "20.50";
 
     private static final String WHITESPACE = " \t\r\n";
 
@@ -121,6 +123,22 @@ public class ParserUtilTest {
         String addressWithWhitespace = WHITESPACE + VALID_ADDRESS + WHITESPACE;
         Address expectedAddress = new Address(VALID_ADDRESS);
         assertEquals(expectedAddress, ParserUtil.parseAddress(addressWithWhitespace));
+    }
+
+    @Test
+    public void parseOutstandingAmount_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseOutstandingAmount(null));
+    }
+
+    @Test
+    public void parseOutstandingAmount_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseOutstandingAmount("-1"));
+    }
+
+    @Test
+    public void parseOutstandingAmount_validValue_returnsNormalizedAmount() throws Exception {
+        OutstandingAmount expectedAmount = new OutstandingAmount(VALID_OUTSTANDING_AMOUNT);
+        assertEquals(expectedAmount, ParserUtil.parseOutstandingAmount("  " + VALID_OUTSTANDING_AMOUNT + "  "));
     }
 
     @Test

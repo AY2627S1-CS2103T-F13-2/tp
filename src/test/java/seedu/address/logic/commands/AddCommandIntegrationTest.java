@@ -44,4 +44,23 @@ public class AddCommandIntegrationTest {
                 AddCommand.MESSAGE_DUPLICATE_PERSON);
     }
 
+    @Test
+    public void execute_sameProfileWithDifferentOutstandingAmount_success() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person personWithDifferentAmount = new PersonBuilder(personInList).withOutstandingAmount("20").build();
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.addPerson(personWithDifferentAmount);
+
+        assertCommandSuccess(new AddCommand(personWithDifferentAmount), model,
+                String.format(AddCommand.MESSAGE_SUCCESS, personWithDifferentAmount.getName()), expectedModel);
+    }
+
+    @Test
+    public void execute_equivalentOutstandingAmount_throwsCommandException() {
+        Person personWithZero = model.getAddressBook().getPersonList().get(0);
+        Person personWithEquivalentZero = new PersonBuilder(personWithZero).withOutstandingAmount("0.00").build();
+
+        assertCommandFailure(new AddCommand(personWithEquivalentZero), model, AddCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
 }

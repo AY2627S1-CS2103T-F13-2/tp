@@ -39,6 +39,10 @@ public class PersonTest {
         // different start date -> returns false
         editedBob = new PersonBuilder(BOB).withStartDate("20-Oct").build();
         assertFalse(BOB.isSamePerson(editedBob));
+
+        // different outstanding amount -> returns false
+        editedBob = new PersonBuilder(BOB).withOutstandingAmount("20").build();
+        assertFalse(BOB.isSamePerson(editedBob));
     }
 
     @Test
@@ -74,12 +78,17 @@ public class PersonTest {
         // different start date -> returns false
         editedAlice = new PersonBuilder(ALICE).withStartDate(VALID_START_DATE_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different outstanding amount -> returns false
+        editedAlice = new PersonBuilder(ALICE).withOutstandingAmount("20").build();
+        assertFalse(ALICE.equals(editedAlice));
     }
 
     @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
-                + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate() + "}";
+                + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
+                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

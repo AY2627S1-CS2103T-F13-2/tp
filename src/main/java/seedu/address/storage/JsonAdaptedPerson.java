@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
@@ -21,17 +22,20 @@ class JsonAdaptedPerson {
     private final String phone;
     private final String address;
     private final String startDate;
+    private final String outstandingAmount;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
      */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
-            @JsonProperty("address") String address, @JsonProperty("startDate") String startDate) {
+            @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
+            @JsonProperty("outstandingAmount") String outstandingAmount) {
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
+        this.outstandingAmount = outstandingAmount;
     }
 
     /**
@@ -42,6 +46,7 @@ class JsonAdaptedPerson {
         phone = source.getPhone().value;
         address = source.getAddress().value;
         startDate = source.getStartDate().value;
+        outstandingAmount = source.getOutstandingAmount().toPlainString();
     }
 
     /**
@@ -83,7 +88,17 @@ class JsonAdaptedPerson {
         }
         final StartDate modelStartDate = new StartDate(startDate);
 
-        return new Person(modelName, modelPhone, modelAddress, modelStartDate);
+        final OutstandingAmount modelOutstandingAmount;
+        if (outstandingAmount == null) {
+            modelOutstandingAmount = OutstandingAmount.ZERO;
+        } else {
+            if (!OutstandingAmount.isValidOutstandingAmount(outstandingAmount)) {
+                throw new IllegalValueException(OutstandingAmount.MESSAGE_CONSTRAINTS);
+            }
+            modelOutstandingAmount = new OutstandingAmount(outstandingAmount);
+        }
+
+        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount);
     }
 
 }

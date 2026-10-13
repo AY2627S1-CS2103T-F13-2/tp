@@ -2,10 +2,13 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_OUTSTANDING_AMOUNT_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_START_DATE_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.OUTSTANDING_AMOUNT_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_BOB;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -15,7 +18,9 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.StartDate;
+import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandParserTest {
     private final AddCommandParser parser = new AddCommandParser();
@@ -24,6 +29,19 @@ public class AddCommandParserTest {
     public void parse_allRequiredFieldsPresent_success() {
         assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB,
                 new AddCommand(BOB));
+    }
+
+    @Test
+    public void parse_outstandingAmountPresent_success() {
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + OUTSTANDING_AMOUNT_DESC_BOB,
+                new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("20").build()));
+    }
+
+    @Test
+    public void parse_outstandingAmountOmitted_defaultsToZero() {
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB,
+                new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("0").build()));
     }
 
     @Test
@@ -43,5 +61,19 @@ public class AddCommandParserTest {
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                         + START_DATE_DESC_BOB + START_DATE_DESC_BOB,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_START_DATE));
+    }
+
+    @Test
+    public void parse_invalidOutstandingAmount_failure() {
+        assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + INVALID_OUTSTANDING_AMOUNT_DESC,
+                OutstandingAmount.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_repeatedOutstandingAmount_failure() {
+        assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + OUTSTANDING_AMOUNT_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_OUTSTANDING_AMOUNT));
     }
 }

@@ -12,6 +12,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
 import seedu.address.model.tag.Tag;
@@ -89,6 +90,16 @@ public class ParserUtil {
             throw new ParseException(StartDate.MESSAGE_CONSTRAINTS);
         }
         return new StartDate(trimmedStartDate);
+    }
+
+    /** Parses an outstanding amount, trimming leading and trailing whitespace. */
+    public static OutstandingAmount parseOutstandingAmount(String outstandingAmount) throws ParseException {
+        requireNonNull(outstandingAmount);
+        String trimmedOutstandingAmount = outstandingAmount.trim();
+        if (!OutstandingAmount.isValidOutstandingAmount(trimmedOutstandingAmount)) {
+            throw new ParseException(OutstandingAmount.MESSAGE_CONSTRAINTS);
+        }
+        return new OutstandingAmount(trimmedOutstandingAmount);
     }
 
     /**
