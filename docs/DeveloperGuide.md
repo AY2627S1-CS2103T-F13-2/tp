@@ -470,6 +470,30 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
+### Editing a student profile
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear` in this test copy to remove sample profiles, then add two test profiles:
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/20` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep o/600`.
+2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
+   Expected: `Edited contact: Bob Choo`. The full list returns; Bob's card immediately shows the new phone
+   and `SGD 20.50`, while his name, address, and start date remain unchanged.
+3. Run `view 2`.<br>
+   Expected: Bob's details include phone `91234567` and outstanding amount `SGD 20.50`.
+4. Run `find Bob`, then `edit 1 o/20.5`.<br>
+   Expected: `No changes made to contact: Bob Choo`. Only Bob remains displayed.
+5. Run `edit 1 p/87654321 o/-1`, then `edit 1 o/`.<br>
+   Expected: Both commands show the outstanding-amount validation error. Bob's details and search results
+   remain unchanged. Try `edit 1 o/20 o/30` too; it should show the repeated-field error.
+6. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/20.00`.<br>
+   Expected: `This contact already exists in TuteeDex.` Bob remains unchanged in the search results.
+7. Run `edit 1 o/0`.<br>
+   Expected: `Edited contact: Bob Choo`. The full list returns, and Bob's card shows `SGD 0.00`.
+8. Exit and restart the app from the same folder, then run `view 2`.<br>
+   Expected: Bob's phone is still `91234567` and outstanding amount is still `SGD 0.00`.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
