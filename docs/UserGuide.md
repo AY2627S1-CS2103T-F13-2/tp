@@ -106,14 +106,19 @@ Format: `list`
 
 Edits an existing person in the address book.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE]`
+Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`
 
 * Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
+* Fields that are not supplied remain unchanged, including the outstanding amount.
+* `OUTSTANDING_AMOUNT` must be a nonnegative number with at most two decimal places, using the same rules as `add`.
+* Each field may appear only once in an edit command.
+
 Examples:
 * `edit 1 p/91234567 d/20-Oct` edits the phone number and start date of the first profile.
 * `edit 2 n/Betsy Crower` edits the name of the second profile.
+* `edit 1 o/600` changes the first profile's outstanding amount to SGD 600.00.
 
 ### Locating persons by name: `find`
 
@@ -202,7 +207,7 @@ Action     | Format, Examples
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE]`<br> e.g., `edit 2 n/James Lee d/19-Sep`
+**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list`
 **Help**   | `help`

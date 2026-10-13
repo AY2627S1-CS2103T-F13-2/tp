@@ -44,6 +44,8 @@ public class PersonUtil {
         descriptor.getPhone().ifPresent(phone -> sb.append(PREFIX_PHONE).append(phone.value).append(" "));
         descriptor.getAddress().ifPresent(address -> sb.append(PREFIX_ADDRESS).append(address.value).append(" "));
         descriptor.getStartDate().ifPresent(date -> sb.append(PREFIX_START_DATE).append(date.value).append(" "));
+        descriptor.getOutstandingAmount().ifPresent(amount ->
+                sb.append(PREFIX_OUTSTANDING_AMOUNT).append(amount.toPlainString()).append(" "));
         return sb.toString();
     }
 }

@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
@@ -18,6 +19,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
@@ -36,7 +38,8 @@ public class EditCommand extends Command {
             + "[" + PREFIX_NAME + "NAME] "
             + "[" + PREFIX_PHONE + "PHONE] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
-            + "[" + PREFIX_START_DATE + "START_DATE]\n"
+            + "[" + PREFIX_START_DATE + "START_DATE] "
+            + "[" + PREFIX_OUTSTANDING_AMOUNT + "OUTSTANDING_AMOUNT]\n"
             + "Example: " + COMMAND_WORD + " 1 "
             + PREFIX_PHONE + "91234567 "
             + PREFIX_START_DATE + "10-Aug";
@@ -102,9 +105,10 @@ public class EditCommand extends Command {
         Phone updatedPhone = editPersonDescriptor.getPhone().orElse(personToEdit.getPhone());
         Address updatedAddress = editPersonDescriptor.getAddress().orElse(personToEdit.getAddress());
         StartDate updatedStartDate = editPersonDescriptor.getStartDate().orElse(personToEdit.getStartDate());
+        OutstandingAmount updatedOutstandingAmount = editPersonDescriptor.getOutstandingAmount()
+                .orElse(personToEdit.getOutstandingAmount());
 
-        return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate,
-                personToEdit.getOutstandingAmount());
+        return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount);
     }
 
     @Override
@@ -139,6 +143,7 @@ public class EditCommand extends Command {
         private Phone phone;
         private Address address;
         private StartDate startDate;
+        private OutstandingAmount outstandingAmount;
 
         public EditPersonDescriptor() {}
 
@@ -151,13 +156,14 @@ public class EditCommand extends Command {
             setPhone(toCopy.phone);
             setAddress(toCopy.address);
             setStartDate(toCopy.startDate);
+            setOutstandingAmount(toCopy.outstandingAmount);
         }
 
         /**
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address, startDate);
+            return CollectionUtil.isAnyNonNull(name, phone, address, startDate, outstandingAmount);
         }
 
         public void setName(Name name) {
@@ -192,6 +198,14 @@ public class EditCommand extends Command {
             return Optional.ofNullable(startDate);
         }
 
+        public void setOutstandingAmount(OutstandingAmount outstandingAmount) {
+            this.outstandingAmount = outstandingAmount;
+        }
+
+        public Optional<OutstandingAmount> getOutstandingAmount() {
+            return Optional.ofNullable(outstandingAmount);
+        }
+
         @Override
         public boolean equals(Object other) {
             if (other == this) {
@@ -206,7 +220,8 @@ public class EditCommand extends Command {
             return Objects.equals(name, otherEditPersonDescriptor.name)
                     && Objects.equals(phone, otherEditPersonDescriptor.phone)
                     && Objects.equals(address, otherEditPersonDescriptor.address)
-                    && Objects.equals(startDate, otherEditPersonDescriptor.startDate);
+                    && Objects.equals(startDate, otherEditPersonDescriptor.startDate)
+                    && Objects.equals(outstandingAmount, otherEditPersonDescriptor.outstandingAmount);
         }
 
         @Override
@@ -216,6 +231,7 @@ public class EditCommand extends Command {
                     .add("phone", phone)
                     .add("address", address)
                     .add("startDate", startDate)
+                    .add("outstandingAmount", outstandingAmount)
                     .toString();
         }
     }

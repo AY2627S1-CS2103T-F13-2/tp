@@ -29,6 +29,32 @@ public class EditCommandIntegrationTest {
     private final AddressBookParser parser = new AddressBookParser();
 
     @Test
+    public void execute_outstandingAmountOnly_updatesAmountAndPreservesOtherFields() throws Exception {
+        Person target = model.getFilteredPersonList().get(0);
+        Person updated = new PersonBuilder(target).withOutstandingAmount("600").build();
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(target, updated);
+
+        Command command = parser.parseCommand("edit 1 o/600");
+
+        assertCommandSuccess(command, model, "Edited contact: " + target.getName(), expectedModel);
+    }
+
+    @Test
+    public void execute_outstandingAmountOmitted_preservesNonzeroAmount() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person target = new PersonBuilder(original).withOutstandingAmount("20.50").build();
+        model.setPerson(original, target);
+        Person updated = new PersonBuilder(target).withPhone("91234567").build();
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(target, updated);
+
+        Command command = parser.parseCommand("edit 1 p/91234567");
+
+        assertCommandSuccess(command, model, "Edited contact: " + target.getName(), expectedModel);
+    }
+
+    @Test
     public void execute_partialEditFilteredList_updatesDisplayedContact() throws Exception {
         Person target = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
         Person updated = new PersonBuilder(target).withPhone("91234567").build();

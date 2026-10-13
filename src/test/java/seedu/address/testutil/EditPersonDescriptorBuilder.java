@@ -3,6 +3,7 @@ package seedu.address.testutil;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
@@ -31,6 +32,7 @@ public class EditPersonDescriptorBuilder {
         descriptor.setPhone(person.getPhone());
         descriptor.setAddress(person.getAddress());
         descriptor.setStartDate(person.getStartDate());
+        descriptor.setOutstandingAmount(person.getOutstandingAmount());
     }
 
     /**
@@ -62,6 +64,14 @@ public class EditPersonDescriptorBuilder {
      */
     public EditPersonDescriptorBuilder withStartDate(String startDate) {
         descriptor.setStartDate(new StartDate(startDate));
+        return this;
+    }
+
+    /**
+     * Sets the {@code OutstandingAmount} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withOutstandingAmount(String outstandingAmount) {
+        descriptor.setOutstandingAmount(new OutstandingAmount(outstandingAmount));
         return this;
     }
 

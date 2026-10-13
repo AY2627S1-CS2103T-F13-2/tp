@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 
@@ -26,7 +27,7 @@ public class EditCommandParser implements Parser<EditCommand> {
     public static final String MESSAGE_INVALID_FORMAT = "Invalid command format.\n" + EditCommand.MESSAGE_USAGE;
 
     private static final Set<Prefix> SUPPORTED_PREFIXES = Set.of(
-            PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE);
+            PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE, PREFIX_OUTSTANDING_AMOUNT);
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
 
     /**
@@ -38,7 +39,8 @@ public class EditCommandParser implements Parser<EditCommand> {
         requireNonNull(args);
         verifyKnownPrefixes(args);
         ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE);
+                ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
+                        PREFIX_OUTSTANDING_AMOUNT);
 
         Index index;
 
@@ -49,7 +51,8 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
 
         try {
-            argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE);
+            argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
+                    PREFIX_OUTSTANDING_AMOUNT);
         } catch (ParseException pe) {
             throw new ParseException(MESSAGE_DUPLICATE_FIELDS, pe);
         }
@@ -67,6 +70,10 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
         if (argMultimap.getValue(PREFIX_START_DATE).isPresent()) {
             editPersonDescriptor.setStartDate(ParserUtil.parseStartDate(argMultimap.getValue(PREFIX_START_DATE).get()));
+        }
+        if (argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).isPresent()) {
+            editPersonDescriptor.setOutstandingAmount(
+                    ParserUtil.parseOutstandingAmount(argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).get()));
         }
 
         if (!editPersonDescriptor.isAnyFieldEdited()) {

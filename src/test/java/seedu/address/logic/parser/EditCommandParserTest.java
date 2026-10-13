@@ -6,12 +6,14 @@ import static seedu.address.logic.commands.CommandTestUtil.INVALID_NAME_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_PHONE_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_START_DATE_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.OUTSTANDING_AMOUNT_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_OUTSTANDING_AMOUNT_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_AMY;
@@ -27,6 +29,7 @@ import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
@@ -52,12 +55,13 @@ public class EditCommandParserTest {
     public void parse_allFieldsSpecified_success() {
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + NAME_DESC_AMY + PHONE_DESC_BOB
-                + ADDRESS_DESC_AMY + START_DATE_DESC_BOB;
+                + ADDRESS_DESC_AMY + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB;
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
                 .withName(VALID_NAME_AMY)
                 .withPhone(VALID_PHONE_BOB)
                 .withAddress(VALID_ADDRESS_AMY)
                 .withStartDate(VALID_START_DATE_BOB)
+                .withOutstandingAmount(VALID_OUTSTANDING_AMOUNT_BOB)
                 .build();
 
         assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
@@ -102,6 +106,23 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_outstandingAmountSpecified_success() {
+        String[] amounts = {"0", "600", "20.50"};
+        for (String amount : amounts) {
+            EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withOutstandingAmount(amount).build();
+            assertParseSuccess(parser, "1 o/  " + amount + "  ", new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        }
+    }
+
+    @Test
+    public void parse_invalidOutstandingAmount_failure() {
+        String[] amounts = {"-1", "20.123", "abc", "1 2", ""};
+        for (String amount : amounts) {
+            assertParseFailure(parser, "1 o/" + amount, OutstandingAmount.MESSAGE_CONSTRAINTS);
+        }
+    }
+
+    @Test
     public void parse_invalidIndexes_failure() {
         String[] invalidIndexes = {"", " ", "-1", "0", "1.5", "abc", "1 2", "+1", "2147483648"};
         for (String invalidIndex : invalidIndexes) {
@@ -112,7 +133,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_unknownOrUppercasePrefix_failure() {
         String[] arguments = {"1 x/value", "1 a/Main Street x/value", "1 x/value" + PHONE_DESC_AMY,
-            "1 P/91234567", "1 a/Main Street N/Amy", "1 e/student@example.com", "1 t/friend"};
+            "1 P/91234567", "1 a/Main Street N/Amy", "1 O/600", "1 e/student@example.com", "1 t/friend"};
         for (String argument : arguments) {
             assertParseFailure(parser, argument, EditCommandParser.MESSAGE_INVALID_FORMAT);
         }
@@ -124,7 +145,8 @@ public class EditCommandParserTest {
             "1 n/Amy n/Bob",
             "1 p/11111111 p/22222222",
             "1 a/First Street a/Second Street",
-            "1 d/10-Aug d/19-Sep"
+            "1 d/10-Aug d/19-Sep",
+            "1 o/20 o/600"
         };
         for (String arguments : repeatedFields) {
             assertParseFailure(parser, arguments, EditCommandParser.MESSAGE_DUPLICATE_FIELDS);
