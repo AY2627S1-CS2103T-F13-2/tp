@@ -1,7 +1,7 @@
 {
   "baseUrl": "",
   "titlePrefix": "TuteeDex",
-  "titleSuffix": "AddressBook Level-3",
+  "titleSuffix": "TuteeDex",
   "faviconPath": "images/SeEduLogo.png",
   "style": {
     "codeTheme": "light"

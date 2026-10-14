@@ -3,9 +3,9 @@
   title: "John Doe's Project Portfolio Page"
 ---
 
-### Project: AddressBook Level 3
+### Project: TuteeDex
 
-AddressBook - Level 3 is a desktop address book application used for teaching Software Engineering principles. The user interacts with it using a CLI, and it has a GUI created with JavaFX. It is written in Java, and has about 10 kLoC.
+TuteeDex is a desktop application for private tutors to manage student profiles. The user interacts with it using a CLI, and it has a GUI created with JavaFX. It is written in Java.
 
 Given below are my contributions to the project.
 
