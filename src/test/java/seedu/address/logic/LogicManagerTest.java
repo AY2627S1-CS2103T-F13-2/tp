@@ -78,6 +78,21 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_addWithZeroOutstandingAmount_success() throws Exception {
+        Person expectedPerson = new PersonBuilder().withName("Zero Balance").withPhone("81234567")
+                .withAddress("1 Test Street").withStartDate("14-Oct").withOutstandingAmount("0").build();
+
+        CommandResult result = logic.execute(
+                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0");
+
+        assertEquals("Zero Balance's profile has been added to TuteeDex!", result.getFeedbackToUser());
+        assertEquals(List.of(expectedPerson), logic.getFilteredPersonList());
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        assertEquals(List.of(expectedPerson), savedStorage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
     public void execute_editAllFields_savesAndReloadsUpdatedDetails() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);

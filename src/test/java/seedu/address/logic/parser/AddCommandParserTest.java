@@ -39,6 +39,13 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_zeroOutstandingAmountPresent_success() {
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + " o/0",
+                new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("0").build()));
+    }
+
+    @Test
     public void parse_outstandingAmountOmitted_defaultsToZero() {
         assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB,
                 new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("0").build()));

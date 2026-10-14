@@ -327,7 +327,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2b. An identical profile already exists.
 
-  * 2b1. TuteeDex rejects the duplicate and informs the tutor.
+  * 2b1. TuteeDex rejects the duplicate and displays `This contact already exists in TuteeDex`.
 
     Use case ends.
 

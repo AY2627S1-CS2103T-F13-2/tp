@@ -89,6 +89,8 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
 </box>
 
+An add command is rejected as a duplicate when all five stored fields match an existing profile. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile.
+
 Examples:
 * `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug`
 * `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600`
