@@ -34,7 +34,7 @@ public class AddCommand extends Command {
             + PREFIX_OUTSTANDING_AMOUNT + "20";
 
     public static final String MESSAGE_SUCCESS = "%1$s's profile has been added to TuteeDex!";
-    public static final String MESSAGE_DUPLICATE_PERSON = "Failed to add a new student profile to TuteeDex.";
+    public static final String MESSAGE_DUPLICATE_PERSON = "This contact already exists in TuteeDex";
 
     private final Person toAdd;
 

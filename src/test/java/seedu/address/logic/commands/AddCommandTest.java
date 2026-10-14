@@ -25,6 +25,8 @@ import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandTest {
 
+    private static final String EXPECTED_DUPLICATE_MESSAGE = "This contact already exists in TuteeDex";
+
     @Test
     public void constructor_nullPerson_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new AddCommand(null));
@@ -48,7 +50,7 @@ public class AddCommandTest {
         AddCommand addCommand = new AddCommand(validPerson);
         ModelStub modelStub = new ModelStubWithPerson(validPerson);
 
-        assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () -> addCommand.execute(modelStub));
+        assertThrows(CommandException.class, EXPECTED_DUPLICATE_MESSAGE, () -> addCommand.execute(modelStub));
     }
 
     @Test
