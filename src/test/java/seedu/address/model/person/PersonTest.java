@@ -7,11 +7,16 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
@@ -85,10 +90,38 @@ public class PersonTest {
     }
 
     @Test
+    public void tags_areDataButDoNotDistinguishDuplicateProfiles() {
+        Person first = new PersonBuilder(ALICE).withTags("A-Level").build();
+        Person second = new PersonBuilder(ALICE).withTags("Needs revision").build();
+        assertTrue(first.isSamePerson(second));
+        assertTrue(first.isSamePerson(ALICE));
+        assertFalse(first.equals(second));
+        assertFalse(first.equals(ALICE));
+    }
+
+    @Test
+    public void tags_caseAndOrderDoNotAffectEquality() {
+        Person first = new PersonBuilder(ALICE).withTags("A-Level", "Needs revision").build();
+        Person second = new PersonBuilder(ALICE).withTags("NEEDS REVISION", "a-level", "A-Level").build();
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
+    }
+
+    @Test
+    public void tags_defensiveCopyAndImmutableAccess() {
+        Set<Tag> tags = new HashSet<>(Set.of(new Tag("A-Level")));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(), ALICE.getStartDate(),
+                ALICE.getOutstandingAmount(), tags);
+        tags.clear();
+        assertEquals(Set.of(new Tag("a-level")), person.getTags());
+        assertThrows(UnsupportedOperationException.class, () -> person.getTags().clear());
+    }
+
+    @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
-                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + "}";
+                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", tags=" + ALICE.getTags() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

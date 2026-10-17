@@ -108,7 +108,8 @@ public class EditCommand extends Command {
         OutstandingAmount updatedOutstandingAmount = editPersonDescriptor.getOutstandingAmount()
                 .orElse(personToEdit.getOutstandingAmount());
 
-        return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount);
+        return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount,
+                personToEdit.getTags());
     }
 
     @Override
