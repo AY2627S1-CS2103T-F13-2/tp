@@ -181,8 +181,14 @@ repeated tags, and produces an empty set when no tags are supplied. The shared c
 * Existing Edit commands preserve tags while editing the other fields. Tag editing and filtering are
   separate follow-ups (#81 and #82); they should reuse `Tag` normalization and set equality.
 
-Tag output in View and the UI will be connected in the next increment. Future UI work should display
-the stored lowercase labels. No tag length or count limit is introduced by this contract.
+Add tag input, shared storage, and validation are implemented in issue #80. Another team member owns
+extending View for all new fields. Profile-card changes are deferred to That Li's UI work; neither
+display change is part of the Add Tags contribution. Both should read `Person.getTags()` and display
+the stored lowercase labels, preferably in alphabetical order. No tag length or count limit is
+introduced by this contract.
+
+`LogicManagerTest` verifies Add with real temporary JSON storage: normalized tags survive loading into
+a new model, and invalid tags or duplicate profiles leave saved data and search results unchanged.
 
 ### \[Proposed\] Undo/redo feature
 
