@@ -1,0 +1,27 @@
+name: Commit messages
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  commit-messages:
+    name: Commit message conventions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test commit-message checker
+        run: python3 -m unittest discover -s .github/commit_messages -p 'test_*.py' -v
+      - name: Check commits introduced by this PR
+        env:
+          COMMIT_BASE: ${{ github.event.pull_request.base.sha }}
+          COMMIT_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python3 .github/commit_messages/check.py --base "$COMMIT_BASE" --head "$COMMIT_HEAD"
