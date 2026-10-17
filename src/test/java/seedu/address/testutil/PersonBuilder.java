@@ -2,6 +2,7 @@ package seedu.address.testutil;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -23,6 +24,7 @@ public class PersonBuilder {
     private Address address;
     private StartDate startDate;
     private OutstandingAmount outstandingAmount;
+    private Notes notes;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -33,6 +35,7 @@ public class PersonBuilder {
         address = new Address(DEFAULT_ADDRESS);
         startDate = new StartDate(DEFAULT_START_DATE);
         outstandingAmount = new OutstandingAmount(DEFAULT_OUTSTANDING_AMOUNT);
+        notes = Notes.EMPTY;
     }
 
     /**
@@ -44,6 +47,7 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
         outstandingAmount = personToCopy.getOutstandingAmount();
+        notes = personToCopy.getNotes();
     }
 
     /**
@@ -86,8 +90,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the notes of the student being built.
+     */
+    public PersonBuilder withNotes(String notes) {
+        this.notes = new Notes(notes);
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, address, startDate, outstandingAmount);
+        return new Person(name, phone, address, startDate, outstandingAmount, notes);
     }
 
 }

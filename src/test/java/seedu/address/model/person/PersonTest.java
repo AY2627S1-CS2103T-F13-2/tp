@@ -85,10 +85,22 @@ public class PersonTest {
     }
 
     @Test
+    public void notes_affectEqualityButNotDuplicateIdentity() {
+        Person withNotes = new PersonBuilder(ALICE).withNotes("Revise fractions").build();
+        assertTrue(ALICE.isSamePerson(withNotes));
+        assertTrue(withNotes.isSamePerson(ALICE));
+        assertFalse(ALICE.equals(withNotes));
+        Person copy = new PersonBuilder(withNotes).build();
+        assertEquals(withNotes, copy);
+        assertEquals(withNotes.hashCode(), copy.hashCode());
+        assertEquals(Notes.EMPTY, ALICE.getNotes());
+    }
+
+    @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
-                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + "}";
+                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", notes=" + ALICE.getNotes() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }
