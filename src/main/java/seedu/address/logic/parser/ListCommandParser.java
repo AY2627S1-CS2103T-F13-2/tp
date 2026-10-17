@@ -35,7 +35,7 @@ public class ListCommandParser implements Parser<ListCommand> {
             }
         }
         ArgumentMultimap values = ArgumentTokenizer.tokenize(args, PREFIX_SUBJECT);
-        if (!values.getPreamble().isEmpty() || values.getAllValues(PREFIX_SUBJECT).isEmpty()) {
+        if (!values.getPreamble().isEmpty()) {
             throw new ParseException(MESSAGE_INVALID_PARAMETERS);
         }
         Set<Subject> subjects = ParserUtil.parseSubjects(values.getAllValues(PREFIX_SUBJECT));
