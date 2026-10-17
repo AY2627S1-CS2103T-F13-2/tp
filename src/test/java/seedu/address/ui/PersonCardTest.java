@@ -33,9 +33,13 @@ public class PersonCardTest {
                 completed.countDown();
             }
         });
-        assertTrue(completed.await(10, TimeUnit.SECONDS));
-        if (failure.get() != null) {
-            throw new AssertionError(failure.get());
+        try {
+            assertTrue(completed.await(10, TimeUnit.SECONDS));
+            if (failure.get() != null) {
+                throw new AssertionError(failure.get());
+            }
+        } finally {
+            Platform.exit();
         }
     }
 
