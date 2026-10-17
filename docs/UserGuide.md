@@ -80,20 +80,43 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
-Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]`
+Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT] [notes/NOTE]`
 
 <box type="tip" seamless>
 
 **Note:** `START_DATE` must use the `DD-MMM` format, for example `10-Aug`. Calendar validity is not checked.
 
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
+
+**Note:** `notes/NOTE` is optional and stores one free-text note per student.
+Omitting it or supplying a blank value stores no note. Surrounding spaces are
+trimmed; internal spaces, punctuation, and display case are preserved.
+Specify `notes/` only once. Repeating it is an error and no profile is added.
+As with other Add values, recognised field prefixes preceded by a space mark
+the next field, rather than literal note text. Notes are saved automatically
+and appear in `view INDEX`. Existing data without notes loads with empty notes.
 </box>
 
-An add command is rejected as a duplicate when all five stored fields match an existing profile. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile.
+An add command is rejected as a duplicate when name, phone, address, start date,
+and outstanding amount match an existing profile. Notes do not distinguish
+duplicates. Outstanding amounts are compared numerically, so `0`, `0.0`, and
+`0.00` are equivalent. A duplicate produces `This contact already exists in
+TuteeDex` and does not add another profile.
 
 Examples:
 * `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug`
 * `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600`
+* `add n/Amy Bee a/Block 1 p/91234567 d/10-Aug notes/Revise fractions`
+
+### Viewing a student profile: `view`
+
+Format: `view INDEX`
+
+Displays the name, phone, address, start date, outstanding amount, and notes
+of the student at `INDEX` in the currently displayed list. A student with no
+note has an empty `Notes:` value. The index must be a positive integer and
+refer to a displayed student; otherwise, the command shows an error.
+Viewing a profile does not change student data or the current list.
 
 ### Listing all persons: `list`
 
@@ -115,13 +138,17 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
 * Fields that are not supplied remain unchanged, including the outstanding amount.
+* Existing notes are preserved by edits. Editing or clearing notes through
+  `edit` is not supported in this increment.
 * Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates use `DD-MMM`, and outstanding amounts are nonnegative numbers with at most two decimal places. Calendar validity is not checked.
 * Use `o/0` to reset the outstanding amount to zero. A prefix with a blank value, including `o/`, is invalid.
 * Leading and trailing spaces around values are ignored. Text case and internal spaces are preserved.
 * The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index.
 * Each field may appear only once in an edit command.
 * Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
-* An edit is rejected as a duplicate only if all five stored fields match another profile. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
+* An edit is rejected as a duplicate only if name, phone, address, start date,
+  and outstanding amount match another profile. Notes do not distinguish
+  duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
 * A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full contact list. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
@@ -229,7 +256,8 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20`
+**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT] [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20 notes/Revise algebra`
+**View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`

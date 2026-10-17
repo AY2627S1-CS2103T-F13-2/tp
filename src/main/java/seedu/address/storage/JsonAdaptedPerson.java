@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -23,6 +24,15 @@ class JsonAdaptedPerson {
     private final String address;
     private final String startDate;
     private final String outstandingAmount;
+    private final String notes;
+
+    /**
+     * Constructs a legacy student record without notes.
+     */
+    public JsonAdaptedPerson(String name, String phone, String address, String startDate,
+            String outstandingAmount) {
+        this(name, phone, address, startDate, outstandingAmount, null);
+    }
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -30,12 +40,13 @@ class JsonAdaptedPerson {
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
-            @JsonProperty("outstandingAmount") String outstandingAmount) {
+            @JsonProperty("outstandingAmount") String outstandingAmount, @JsonProperty("notes") String notes) {
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
         this.outstandingAmount = outstandingAmount;
+        this.notes = notes;
     }
 
     /**
@@ -47,6 +58,7 @@ class JsonAdaptedPerson {
         address = source.getAddress().value;
         startDate = source.getStartDate().value;
         outstandingAmount = source.getOutstandingAmount().toPlainString();
+        notes = source.getNotes().value;
     }
 
     /**
@@ -98,7 +110,8 @@ class JsonAdaptedPerson {
             modelOutstandingAmount = new OutstandingAmount(outstandingAmount);
         }
 
-        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount);
+        Notes modelNotes = notes == null ? Notes.EMPTY : new Notes(notes);
+        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount, modelNotes);
     }
 
 }

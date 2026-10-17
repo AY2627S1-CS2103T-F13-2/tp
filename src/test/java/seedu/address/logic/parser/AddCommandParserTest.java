@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.OUTSTANDING_AMOUNT_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_BOB;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -24,6 +25,41 @@ import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandParserTest {
     private final AddCommandParser parser = new AddCommandParser();
+
+    @Test
+    public void parse_notesPresent_preservesFreeText() {
+        String notes = "Needs  revision: fractions, algebra & 中文!";
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + " notes/  " + notes + "  ",
+                new AddCommand(new PersonBuilder(BOB).withNotes(notes).build()));
+    }
+
+    @Test
+    public void parse_notesOmittedOrBlank_defaultsToEmpty() {
+        String requiredFields = NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB;
+        for (String optionalNotes : new String[] {"", " notes/", " notes/   "}) {
+            assertParseSuccess(parser, requiredFields + optionalNotes,
+                    new AddCommand(new PersonBuilder(BOB).withNotes("").build()));
+        }
+    }
+
+    @Test
+    public void parse_notesBeforeOtherFields_success() {
+        assertParseSuccess(parser, " notes/Revise fractions" + NAME_DESC_BOB + PHONE_DESC_BOB
+                        + ADDRESS_DESC_BOB + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB,
+                new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("20")
+                        .withNotes("Revise fractions").build()));
+    }
+
+    @Test
+    public void parse_repeatedNotes_failure() {
+        String requiredFields = NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB;
+        for (String repeatedNotes : new String[] {" notes/One notes/Two", " notes/ notes/",
+            " notes/Same notes/Same"}) {
+            assertParseFailure(parser, requiredFields + repeatedNotes,
+                    Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
+        }
+    }
 
     @Test
     public void parse_allRequiredFieldsPresent_success() {
