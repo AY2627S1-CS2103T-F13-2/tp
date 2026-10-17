@@ -1,11 +1,10 @@
 package seedu.address.ui;
 
-import java.util.stream.Collectors;
-
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import seedu.address.logic.Messages;
 import seedu.address.model.person.Person;
 
 /**
@@ -54,7 +53,6 @@ public class PersonCard extends UiPart<Region> {
         address.setText(person.getAddress().value);
         startDate.setText(person.getStartDate().value);
         outstandingAmount.setText(person.getOutstandingAmount().toCurrencyString());
-        subjects.setText("Subjects: " + (person.getSubjects().isEmpty() ? "Not specified"
-                : person.getSubjects().stream().map(Object::toString).collect(Collectors.joining(", "))));
+        subjects.setText("Subjects: " + Messages.formatSubjects(person));
     }
 }
