@@ -80,16 +80,33 @@ public class LogicManagerTest {
     @Test
     public void execute_addWithZeroOutstandingAmount_success() throws Exception {
         Person expectedPerson = new PersonBuilder().withName("Zero Balance").withPhone("81234567")
-                .withAddress("1 Test Street").withStartDate("14-Oct").withOutstandingAmount("0").build();
+                .withAddress("1 Test Street").withStartDate("14-Oct").withOutstandingAmount("0")
+                .withSubjects("Maths").build();
 
         CommandResult result = logic.execute(
-                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0");
+                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0 s/Maths");
 
         assertEquals("Zero Balance's profile has been added to TuteeDex!", result.getFeedbackToUser());
         assertEquals(List.of(expectedPerson), logic.getFilteredPersonList());
         JsonAddressBookStorage savedStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         assertEquals(List.of(expectedPerson), savedStorage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void execute_addSubjects_subjectsPersist() throws Exception {
+        logic.execute("add n/Subject Student p/81234567 a/1 Test Street d/14-Oct s/Maths s/H2 Chemistry");
+        logic.execute("edit 1 p/87654321");
+
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        Person saved = savedStorage.readAddressBook().orElseThrow().getPersonList().get(0);
+        assertEquals(new PersonBuilder().withName("Subject Student").withPhone("87654321")
+                .withAddress("1 Test Street").withStartDate("14-Oct")
+                .withSubjects("Maths", "H2 Chemistry").build(), saved);
+        assertEquals("Name: Subject Student\nPhone: 87654321\nAddress: 1 Test Street\nStart date: 14-Oct"
+                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry",
+                logic.execute("view 1").getFeedbackToUser());
     }
 
     @Test
@@ -111,7 +128,8 @@ public class LogicManagerTest {
         Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
         assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
-                + "\nOutstanding amount: SGD 20.50", reloadedLogic.execute("view 1").getFeedbackToUser());
+                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified",
+                reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 
     @Test
@@ -245,8 +263,8 @@ public class LogicManagerTest {
 
         // Triggers the saveAddressBook method by executing an add command
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + ADDRESS_DESC_AMY + START_DATE_DESC_AMY;
-        Person expectedPerson = new PersonBuilder(AMY).build();
+                + ADDRESS_DESC_AMY + START_DATE_DESC_AMY + " s/Maths";
+        Person expectedPerson = new PersonBuilder(AMY).withSubjects("Maths").build();
         ModelManager expectedModel = new ModelManager();
         expectedModel.addPerson(expectedPerson);
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);

@@ -1,11 +1,15 @@
 package seedu.address.testutil;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 
 /**
  * A utility class to help with building Person objects.
@@ -23,6 +27,7 @@ public class PersonBuilder {
     private Address address;
     private StartDate startDate;
     private OutstandingAmount outstandingAmount;
+    private Set<Subject> subjects = Set.of();
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -44,6 +49,7 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
         outstandingAmount = personToCopy.getOutstandingAmount();
+        subjects = personToCopy.getSubjects();
     }
 
     /**
@@ -86,8 +92,18 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets subjects in insertion order. */
+    public PersonBuilder withSubjects(String... subjects) {
+        Set<Subject> parsed = new LinkedHashSet<>();
+        for (String subject : subjects) {
+            parsed.add(new Subject(subject));
+        }
+        this.subjects = parsed;
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, address, startDate, outstandingAmount);
+        return new Person(name, phone, address, startDate, outstandingAmount, subjects);
     }
 
 }
