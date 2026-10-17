@@ -1,0 +1,8 @@
+NEGATIVE TEST ONLY - DO NOT MERGE
+
+This PR intentionally contains an invalid commit message to demonstrate
+that the required Commit message conventions check blocks merging.
+
+Close the test PR after verification. This file is not part of TuteeDex
+and is not intended to reach master. The workflow files on this branch
+come from setup PR #83, which should be reviewed and merged separately.
