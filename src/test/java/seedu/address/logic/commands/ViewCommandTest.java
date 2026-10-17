@@ -73,6 +73,7 @@ public class ViewCommandTest {
     private String expectedDetails(Person person) {
         return "Name: " + person.getName() + "\nPhone: " + person.getPhone() + "\nAddress: " + person.getAddress()
                 + "\nStart date: " + person.getStartDate()
-                + "\nOutstanding amount: " + person.getOutstandingAmount().toCurrencyString();
+                + "\nOutstanding amount: " + person.getOutstandingAmount().toCurrencyString()
+                + "\nSubjects: Not specified";
     }
 }

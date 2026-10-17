@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import java.util.stream.Collectors;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -37,6 +39,8 @@ public class PersonCard extends UiPart<Region> {
     private Label startDate;
     @FXML
     private Label outstandingAmount;
+    @FXML
+    private Label subjects;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -50,5 +54,7 @@ public class PersonCard extends UiPart<Region> {
         address.setText(person.getAddress().value);
         startDate.setText(person.getStartDate().value);
         outstandingAmount.setText(person.getOutstandingAmount().toCurrencyString());
+        subjects.setText("Subjects: " + (person.getSubjects().isEmpty() ? "Not specified"
+                : person.getSubjects().stream().map(Object::toString).collect(Collectors.joining(", "))));
     }
 }

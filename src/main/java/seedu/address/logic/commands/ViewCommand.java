@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
@@ -41,9 +42,11 @@ public class ViewCommand extends Command {
 
         Person personToDisplay = lastShownList.get(targetIndex.getZeroBased());
         return new CommandResult(String.format(
-                "Name: %s\nPhone: %s\nAddress: %s\nStart date: %s\nOutstanding amount: %s",
+                "Name: %s\nPhone: %s\nAddress: %s\nStart date: %s\nOutstanding amount: %s\nSubjects: %s",
                 personToDisplay.getName(), personToDisplay.getPhone(), personToDisplay.getAddress(),
-                personToDisplay.getStartDate(), personToDisplay.getOutstandingAmount().toCurrencyString()));
+                personToDisplay.getStartDate(), personToDisplay.getOutstandingAmount().toCurrencyString(),
+                personToDisplay.getSubjects().isEmpty() ? "Not specified" : personToDisplay.getSubjects().stream()
+                        .map(Object::toString).collect(Collectors.joining(", "))));
     }
 
     @Override

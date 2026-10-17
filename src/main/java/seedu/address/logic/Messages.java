@@ -44,7 +44,10 @@ public class Messages {
                 .append("; Start date: ")
                 .append(person.getStartDate())
                 .append("; Outstanding amount: ")
-                .append(person.getOutstandingAmount().toCurrencyString());
+                .append(person.getOutstandingAmount().toCurrencyString())
+                .append("; Subjects: ")
+                .append(person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()
+                        .map(Object::toString).collect(Collectors.joining(", ")));
         return builder.toString();
     }
 
