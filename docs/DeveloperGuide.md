@@ -161,8 +161,9 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Shared tag data
 
-Tags are optional descriptive labels, separate from subjects. The Add integration tracked in issue #80
-will accept repeated `t/TAG` values. This foundation increment provides the following shared contract:
+Tags are optional descriptive labels, separate from subjects. Add accepts repeated `t/TAG` values
+using `ParserUtil.parseTags()`. This validates every occurrence before adding the profile, combines
+repeated tags, and produces an empty set when no tags are supplied. The shared contract is:
 
 * `Tag` accepts ASCII letters, digits, spaces, and hyphens, and rejects blank values. It trims surrounding
   whitespace and stores lowercase text using `Locale.ROOT`. Internal spaces are preserved.
@@ -180,8 +181,8 @@ will accept repeated `t/TAG` values. This foundation increment provides the foll
 * Existing Edit commands preserve tags while editing the other fields. Tag editing and filtering are
   separate follow-ups (#81 and #82); they should reuse `Tag` normalization and set equality.
 
-The Add parser and user-facing output will be connected in the next increment. Future UI work should
-display the stored lowercase labels. No tag length or count limit is introduced by this contract.
+Tag output in View and the UI will be connected in the next increment. Future UI work should display
+the stored lowercase labels. No tag length or count limit is introduced by this contract.
 
 ### \[Proposed\] Undo/redo feature
 
