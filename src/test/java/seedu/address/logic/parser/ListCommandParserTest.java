@@ -3,9 +3,12 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.model.person.Subject;
 
 /**
  * As we are only doing white-box testing, our test cases do not cover path variations
@@ -29,5 +32,18 @@ public class ListCommandParserTest {
     public void parse_argsGiven_throwsParseException() {
         assertParseFailure(parser, " 3", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
         assertParseFailure(parser, " foo", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+    }
+
+    @Test
+    public void parse_subjects_returnsFilteredListCommand() {
+        assertParseSuccess(parser, " s/Maths s/H2 Chemistry",
+                new ListCommand(Set.of(new Subject("maths"), new Subject("H2 Chemistry"))));
+    }
+
+    @Test
+    public void parse_invalidSubject_failure() {
+        assertParseFailure(parser, " s/Maths s/", "Subject must not be blank.");
+        assertParseFailure(parser, " s/Maths, Physics", Subject.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " t/A-Level", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
     }
 }

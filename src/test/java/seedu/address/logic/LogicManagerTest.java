@@ -110,6 +110,40 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_subjectFilter_preservesDisplayedIndices() throws Exception {
+        logic.execute("add n/Anna Tutor p/81234567 a/1 Test Street d/14-Oct s/Maths");
+        logic.execute("add n/Ben Tutor p/81234568 a/2 Test Street d/14-Oct s/Physics");
+        logic.execute("add n/Cara Tutor p/81234569 a/3 Test Street d/14-Oct s/maths s/Chemistry");
+
+        logic.execute("find Ben");
+        assertEquals("Listed 2 contacts.", logic.execute("list s/MATHS").getFeedbackToUser());
+        assertEquals(List.of("Anna Tutor", "Cara Tutor"), logic.getFilteredPersonList().stream()
+                .map(person -> person.getName().toString()).toList());
+        assertThrows(ParseException.class, "Subject must not be blank.", () -> logic.execute("list s/"));
+        assertEquals(2, logic.getFilteredPersonList().size());
+        assertEquals("Name: Cara Tutor", logic.execute("view 2").getFeedbackToUser().split("\\n")[0]);
+
+        logic.execute("delete 2");
+        assertEquals("Listed 2 contacts.", logic.execute("list").getFeedbackToUser());
+        assertEquals(List.of("Anna Tutor", "Ben Tutor"), logic.getFilteredPersonList().stream()
+                .map(person -> person.getName().toString()).toList());
+    }
+
+    @Test
+    public void execute_addSubjectValidation_preservesFirstSpelling() throws Exception {
+        logic.execute("add n/Amy Subject p/81234567 a/1 Test Street d/14-Oct s/Maths s/maths");
+        assertEquals(1, logic.getFilteredPersonList().get(0).getSubjects().size());
+        assertEquals("Maths", logic.getFilteredPersonList().get(0).getSubjects().iterator().next().value);
+
+        String details = " n/Ben Subject p/81234568 a/2 Test Street d/14-Oct";
+        assertThrows(ParseException.class, "At least one subject must be supplied.", () ->
+                logic.execute("add" + details));
+        assertThrows(ParseException.class, "Subject must not be blank.", () ->
+                logic.execute("add" + details + " s/"));
+        assertEquals(1, logic.getFilteredPersonList().size());
+    }
+
+    @Test
     public void execute_editAllFields_savesAndReloadsUpdatedDetails() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);

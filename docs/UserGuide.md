@@ -97,13 +97,17 @@ Examples:
 * `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug s/Maths`
 * `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600 s/H2 Chemistry s/Physics`
 
-### Listing all persons: `list`
+### Listing and filtering students: `list`
 
 Shows every contact in the address book, displaying only each contact's name and phone number.
 
-Format: `list`
+Format: `list [s/SUBJECT]…`
 
-* `list` takes no parameters. Entering any parameter (e.g. `list 3`) shows an error and the list is not changed.
+* Plain `list` shows all contacts and clears a previous search or filter.
+* `list s/Maths s/H2 Chemistry` shows each student taking any specified subject, ignoring case. It matches complete subject names, so `s/Maths` does not match `Additional Maths`.
+* Every subject uses the same validation as `add`. Blank or invalid subjects, or other parameters such as `list 3`, show an error without changing the current list.
+* A subject filter replaces the previous search or filter, starts from all contacts, keeps their order, and renumbers displayed results from 1.
+* If no student matches, the list is empty and the status says `No contacts match the specified subjects.`
 * The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
 ### Editing a student profile: `edit`

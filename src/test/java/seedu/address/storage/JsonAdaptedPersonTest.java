@@ -39,6 +39,17 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_subjectsAndLegacyRecords_loadCorrectly() throws Exception {
+        JsonAdaptedPerson withSubjects = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, List.of("Maths", "maths", "Physics"));
+        assertEquals(2, withSubjects.toModelType().getSubjects().size());
+
+        JsonAdaptedPerson legacy = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT);
+        assertEquals(0, legacy.toModelType().getSubjects().size());
+    }
+
+    @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(INVALID_NAME, VALID_PHONE, VALID_ADDRESS, VALID_START_DATE,
