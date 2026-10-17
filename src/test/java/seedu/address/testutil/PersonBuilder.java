@@ -1,11 +1,16 @@
 package seedu.address.testutil;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 
 /**
  * A utility class to help with building Person objects.
@@ -23,6 +28,7 @@ public class PersonBuilder {
     private Address address;
     private StartDate startDate;
     private OutstandingAmount outstandingAmount;
+    private Set<Tag> tags;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -33,6 +39,7 @@ public class PersonBuilder {
         address = new Address(DEFAULT_ADDRESS);
         startDate = new StartDate(DEFAULT_START_DATE);
         outstandingAmount = new OutstandingAmount(DEFAULT_OUTSTANDING_AMOUNT);
+        tags = Set.of();
     }
 
     /**
@@ -44,6 +51,7 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
         outstandingAmount = personToCopy.getOutstandingAmount();
+        tags = personToCopy.getTags();
     }
 
     /**
@@ -86,8 +94,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the optional tags on the profile being built.
+     */
+    public PersonBuilder withTags(String... tags) {
+        this.tags = Arrays.stream(tags).map(Tag::new).collect(Collectors.toSet());
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, address, startDate, outstandingAmount);
+        return new Person(name, phone, address, startDate, outstandingAmount, tags);
     }
 
 }

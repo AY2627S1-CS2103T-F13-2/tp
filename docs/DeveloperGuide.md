@@ -159,6 +159,30 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Shared tag data
+
+Tags are optional descriptive labels, separate from subjects. The Add integration tracked in issue #80
+will accept repeated `t/TAG` values. This foundation increment provides the following shared contract:
+
+* `Tag` accepts ASCII letters, digits, spaces, and hyphens, and rejects blank values. It trims surrounding
+  whitespace and stores lowercase text using `Locale.ROOT`. Internal spaces are preserved.
+* `Person.getTags()` returns an immutable set. Repeated tags and case variants collapse into one value;
+  order has no meaning. The five-argument constructor creates a profile without tags, while the
+  six-argument constructor accepts a set of tags.
+* `Person.isSamePerson()` compares name, phone, address, start date, and outstanding amount, ignoring tags.
+  Profiles with the same core fields but different tags are duplicates. The outstanding-amount identity
+  discussion in issue #73 remains separate and this change preserves its current behavior.
+* `Person.equals()` and `hashCode()` include tags, so changes to stored data remain detectable even when
+  the student identity stays the same.
+* JSON stores a `tags` array of normalized strings in alphabetical order. A missing or null array loads
+  as an empty set, preserving compatibility with the previous student-profile schema. Invalid or null
+  elements reject the stored profile. For example: `"tags": ["a-level", "needs revision"]`.
+* Existing Edit commands preserve tags while editing the other fields. Tag editing and filtering are
+  separate follow-ups (#81 and #82); they should reuse `Tag` normalization and set equality.
+
+The Add parser and user-facing output will be connected in the next increment. Future UI work should
+display the stored lowercase labels. No tag length or count limit is introduced by this contract.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
