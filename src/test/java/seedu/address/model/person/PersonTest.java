@@ -2,6 +2,7 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
@@ -9,6 +10,9 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -82,13 +86,33 @@ public class PersonTest {
         // different outstanding amount -> returns false
         editedAlice = new PersonBuilder(ALICE).withOutstandingAmount("20").build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different subjects -> returns false
+        editedAlice = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        assertFalse(ALICE.equals(editedAlice));
+        assertFalse(ALICE.isSamePerson(editedAlice));
+        assertEquals(new PersonBuilder(ALICE).withSubjects("maths").build().hashCode(), editedAlice.hashCode());
+    }
+
+    @Test
+    public void constructors_subjectsAreImmutableAndLegacyProfilesHaveNone() {
+        Person legacyPerson = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(),
+                ALICE.getStartDate(), ALICE.getOutstandingAmount());
+        assertEquals(Set.of(), legacyPerson.getSubjects());
+
+        Set<Subject> sourceSubjects = new LinkedHashSet<>(Set.of(new Subject("Maths")));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(),
+                ALICE.getStartDate(), ALICE.getOutstandingAmount(), sourceSubjects);
+        sourceSubjects.add(new Subject("Physics"));
+        assertEquals(Set.of(new Subject("Maths")), person.getSubjects());
+        assertThrows(UnsupportedOperationException.class, () -> person.getSubjects().add(new Subject("English")));
     }
 
     @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
-                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + "}";
+                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", subjects=[]}";
         assertEquals(expected, ALICE.toString());
     }
 }

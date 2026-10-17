@@ -6,7 +6,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
 import seedu.address.logic.commands.AddCommand;
@@ -17,6 +19,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 
 /**
  * Parses input arguments and creates a new AddCommand object
@@ -31,11 +34,14 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT);
+                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_SUBJECT);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE, PREFIX_START_DATE)
                 || !argMultimap.getPreamble().isEmpty()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
+        }
+        if (argMultimap.getAllValues(PREFIX_SUBJECT).isEmpty()) {
+            throw new ParseException("At least one subject must be supplied.");
         }
 
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
@@ -47,8 +53,9 @@ public class AddCommandParser implements Parser<AddCommand> {
         OutstandingAmount outstandingAmount = argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).isPresent()
                 ? ParserUtil.parseOutstandingAmount(argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).get())
                 : OutstandingAmount.ZERO;
+        Set<Subject> subjects = ParserUtil.parseSubjects(argMultimap.getAllValues(PREFIX_SUBJECT));
 
-        Person person = new Person(name, phone, address, startDate, outstandingAmount);
+        Person person = new Person(name, phone, address, startDate, outstandingAmount, subjects);
 
         return new AddCommand(person);
     }

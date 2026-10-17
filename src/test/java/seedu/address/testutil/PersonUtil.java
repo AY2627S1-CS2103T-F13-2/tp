@@ -5,6 +5,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
@@ -32,6 +33,7 @@ public class PersonUtil {
         sb.append(PREFIX_ADDRESS + person.getAddress().value + " ");
         sb.append(PREFIX_START_DATE + person.getStartDate().value + " ");
         sb.append(PREFIX_OUTSTANDING_AMOUNT + person.getOutstandingAmount().toPlainString() + " ");
+        person.getSubjects().forEach(subject -> sb.append(PREFIX_SUBJECT).append(subject).append(" "));
         return sb.toString();
     }
 

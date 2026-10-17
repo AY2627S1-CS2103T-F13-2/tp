@@ -80,28 +80,34 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
-Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]`
+Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]… [o/OUTSTANDING_AMOUNT]`
 
 <box type="tip" seamless>
 
 **Note:** `START_DATE` must use the `DD-MMM` format, for example `10-Aug`. Calendar validity is not checked.
 
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
+
+**Note:** At least one `s/SUBJECT` is required for new profiles. Repeat `s/` for multiple subjects, for example `s/Maths s/H2 Chemistry`. Each subject must be 1–50 characters after trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including at least one letter or digit. Subjects are compared without regard to case; duplicates are stored once. Comma-separated subjects are not supported.
 </box>
 
-An add command is rejected as a duplicate when all five stored fields match an existing profile. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile.
+An add command is rejected as a duplicate when all stored fields, including the subject set, match an existing profile. Subject order and case do not affect comparison. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile. Profiles saved before subjects were introduced remain available with no subjects recorded.
 
 Examples:
-* `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug`
-* `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600`
+* `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug s/Maths`
+* `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600 s/H2 Chemistry s/Physics`
 
-### Listing all persons: `list`
+### Listing and filtering students: `list`
 
 Shows every contact in the address book, displaying only each contact's name and phone number.
 
-Format: `list`
+Format: `list [s/SUBJECT]…`
 
-* `list` takes no parameters. Entering any parameter (e.g. `list 3`) shows an error and the list is not changed.
+* Plain `list` shows all contacts and clears a previous search or filter.
+* `list s/Maths s/H2 Chemistry` shows each student taking any specified subject, ignoring case. It matches complete subject names, so `s/Maths` does not match `Additional Maths`.
+* Every subject uses the same validation as `add`. Blank or invalid subjects, or other parameters such as `list 3`, show an error without changing the current list.
+* A subject filter replaces the previous search or filter, starts from all contacts, keeps their order, and renumbers displayed results from 1.
+* If no student matches, the list is empty and the status says `No contacts match the specified subjects.`
 * The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
 ### Editing a student profile: `edit`
@@ -114,7 +120,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
-* Fields that are not supplied remain unchanged, including the outstanding amount.
+* Fields that are not supplied remain unchanged, including the outstanding amount and subjects.
 * Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates use `DD-MMM`, and outstanding amounts are nonnegative numbers with at most two decimal places. Calendar validity is not checked.
 * Use `o/0` to reset the outstanding amount to zero. A prefix with a blank value, including `o/`, is invalid.
 * Leading and trailing spaces around values are ignored. Text case and internal spaces are preserved.

@@ -44,8 +44,16 @@ public class Messages {
                 .append("; Start date: ")
                 .append(person.getStartDate())
                 .append("; Outstanding amount: ")
-                .append(person.getOutstandingAmount().toCurrencyString());
+                .append(person.getOutstandingAmount().toCurrencyString())
+                .append("; Subjects: ")
+                .append(formatSubjects(person));
         return builder.toString();
+    }
+
+    /** Formats a person's subjects for display in messages and contact cards. */
+    public static String formatSubjects(Person person) {
+        return person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()
+                .map(Object::toString).collect(Collectors.joining(", "));
     }
 
 }
