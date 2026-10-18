@@ -14,13 +14,17 @@ public class ListCommandParser implements Parser<ListCommand> {
     /**
      * Parses the given {@code String} of arguments in the context of the ListCommand
      * and returns a ListCommand object for execution.
-     * @throws ParseException if any arguments are given, since the list command takes none
+     * @throws ParseException if the arguments are not blank or the summary flag
      */
+    @Override
     public ListCommand parse(String args) throws ParseException {
-        if (!args.isBlank()) {
-            throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+        if (args.isBlank()) {
+            return new ListCommand();
         }
-        return new ListCommand();
+        if (args.trim().equals(ListCommand.SUMMARY_FLAG)) {
+            return new ListCommand(true);
+        }
+        throw new ParseException(MESSAGE_INVALID_PARAMETERS);
     }
 
 }

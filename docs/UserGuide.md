@@ -99,9 +99,10 @@ Examples:
 
 Shows every contact in the address book, displaying only each contact's name and phone number.
 
-Format: `list`
+Format: `list [-summary]`
 
-* `list` takes no parameters. Entering any parameter (e.g. `list 3`) shows an error and the list is not changed.
+* `list` lists all contacts. `list -summary` additionally shows the number of students with an outstanding payment and the number with no outstanding payment in the result display.
+* The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
 * The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
 ### Editing a student profile: `edit`
@@ -234,5 +235,5 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list`
+**List**   | `list [-summary]`
 **Help**   | `help`

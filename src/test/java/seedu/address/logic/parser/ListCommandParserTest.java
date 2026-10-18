@@ -26,8 +26,15 @@ public class ListCommandParserTest {
     }
 
     @Test
+    public void parse_summaryFlag_returnsSummaryListCommand() {
+        assertParseSuccess(parser, " -summary ", new ListCommand(true));
+    }
+
+    @Test
     public void parse_argsGiven_throwsParseException() {
         assertParseFailure(parser, " 3", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
         assertParseFailure(parser, " foo", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseFailure(parser, " -summary -summary", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseFailure(parser, " -Summary", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
     }
 }

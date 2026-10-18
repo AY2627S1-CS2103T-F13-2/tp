@@ -15,6 +15,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.testutil.PersonBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for ListCommand.
@@ -58,6 +59,42 @@ public class ListCommandTest {
     }
 
     @Test
+    public void execute_summaryWithMixedPaymentStatuses_showsCounts() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());
+        addressBook.addPerson(new PersonBuilder().withName("Owing Student").withOutstandingAmount("0.01").build());
+        addressBook.addPerson(new PersonBuilder().withName("Another Owing Student")
+                .withOutstandingAmount("20.50").build());
+        model = new ModelManager(addressBook, new UserPrefs());
+        expectedModel = new ModelManager(addressBook, new UserPrefs());
+
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                ListCommand.getMessageForContactCount(3), 2, 1);
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
+    public void execute_summaryWithEmptyAddressBook_showsZeroCounts() {
+        model = new ModelManager(new AddressBook(), new UserPrefs());
+        expectedModel = new ModelManager(new AddressBook(), new UserPrefs());
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                ListCommand.MESSAGE_EMPTY, 0, 0);
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
+    public void execute_summaryWithAllPaid_showsZeroOwing() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student One").build());
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student Two").build());
+        model = new ModelManager(addressBook, new UserPrefs());
+        expectedModel = new ModelManager(addressBook, new UserPrefs());
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                ListCommand.getMessageForContactCount(2), 0, 2);
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
     public void equals() {
         ListCommand listCommand = new ListCommand();
 
@@ -66,6 +103,7 @@ public class ListCommandTest {
 
         // different ListCommand (no fields to differ on) -> returns true
         assertEquals(listCommand, new ListCommand());
+        assertNotEquals(listCommand, new ListCommand(true));
 
         // different types -> returns false
         assertNotEquals(listCommand, "list");
