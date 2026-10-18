@@ -59,7 +59,7 @@ public class ListCommandTest {
     }
 
     @Test
-    public void execute_summaryWithMixedOutstandingAmounts_showsTotal() {
+    public void execute_summaryWithMixedPaymentStatuses_showsTotalAndPaid() {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());
         addressBook.addPerson(new PersonBuilder().withName("Owing Student").withOutstandingAmount("0.01").build());
@@ -69,41 +69,42 @@ public class ListCommandTest {
         expectedModel = new ModelManager(addressBook, new UserPrefs());
 
         String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
-                ListCommand.getMessageForContactCount(3), "20.51");
+                "Total: 3", "Paid: 1");
         assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
     }
 
     @Test
-    public void execute_summaryWithEmptyAddressBook_showsZeroTotal() {
+    public void execute_summaryWithEmptyAddressBook_showsZeroCounts() {
         model = new ModelManager(new AddressBook(), new UserPrefs());
         expectedModel = new ModelManager(new AddressBook(), new UserPrefs());
         String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
-                ListCommand.MESSAGE_EMPTY, "0.00");
+                "Total: 0", "Paid: 0");
         assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
     }
 
     @Test
-    public void execute_summaryWithAllZeroOutstandingAmounts_showsZeroTotal() {
+    public void execute_summaryWithAllZeroOutstandingAmounts_showsAllPaid() {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(new PersonBuilder().withName("Paid Student One").build());
         addressBook.addPerson(new PersonBuilder().withName("Paid Student Two").build());
         model = new ModelManager(addressBook, new UserPrefs());
         expectedModel = new ModelManager(addressBook, new UserPrefs());
         String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
-                ListCommand.getMessageForContactCount(2), "0.00");
+                "Total: 2", "Paid: 2");
         assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
     }
 
     @Test
-    public void execute_summaryWithDecimalAmounts_preservesExactTotal() {
+    public void execute_summaryWithFilteredList_countsAllStudents() {
         AddressBook addressBook = new AddressBook();
-        addressBook.addPerson(new PersonBuilder().withName("Student One").withOutstandingAmount("0.99").build());
-        addressBook.addPerson(new PersonBuilder().withName("Student Two").withOutstandingAmount("0.02").build());
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());
+        addressBook.addPerson(new PersonBuilder().withName("Owing Student").withOutstandingAmount("0.99").build());
         model = new ModelManager(addressBook, new UserPrefs());
         expectedModel = new ModelManager(addressBook, new UserPrefs());
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
 
         String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
-                ListCommand.getMessageForContactCount(2), "1.01");
+                "Total: 2", "Paid: 1");
         assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
     }
 

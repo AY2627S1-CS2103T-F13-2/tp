@@ -101,7 +101,7 @@ Shows every contact in the address book, displaying only each contact's name and
 
 Format: `list [-summary]`
 
-* `list` lists all contacts. `list -summary` additionally shows the total pending payment across all students in the result display.
+* `list` lists all contacts. `list -summary` additionally shows the total number of students and the number of students who have paid in the result display.
 * The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
 * The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 

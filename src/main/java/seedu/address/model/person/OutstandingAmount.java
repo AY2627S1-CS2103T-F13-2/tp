@@ -37,13 +37,6 @@ public class OutstandingAmount {
     }
 
     /**
-     * Returns the outstanding amount as an immutable decimal value.
-     */
-    public BigDecimal toBigDecimal() {
-        return value;
-    }
-
-    /**
      * Returns the amount formatted as SGD with two decimal places.
      */
     public String toCurrencyString() {
