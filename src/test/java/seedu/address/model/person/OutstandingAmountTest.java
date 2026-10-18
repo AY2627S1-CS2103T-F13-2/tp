@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.Test;
 
 public class OutstandingAmountTest {
@@ -56,5 +58,10 @@ public class OutstandingAmountTest {
 
         assertEquals("20.5", amount.toPlainString());
         assertEquals("SGD 20.50", amount.toCurrencyString());
+    }
+
+    @Test
+    public void toBigDecimal_returnsExactAmount() {
+        assertEquals(0, new BigDecimal("20.50").compareTo(new OutstandingAmount("20.50").toBigDecimal()));
     }
 }

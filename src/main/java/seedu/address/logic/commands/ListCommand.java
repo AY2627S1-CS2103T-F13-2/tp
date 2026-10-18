@@ -3,8 +3,9 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.math.BigDecimal;
+
 import seedu.address.model.Model;
-import seedu.address.model.person.OutstandingAmount;
 
 /**
  * Lists all persons in the address book to the user.
@@ -17,8 +18,7 @@ public class ListCommand extends Command {
     public static final String MESSAGE_EMPTY = "No contacts stored. Use the add command to add one.";
     public static final String MESSAGE_SINGULAR = "Listed 1 contact.";
     public static final String MESSAGE_PLURAL_FORMAT = "Listed %1$d contacts.";
-    public static final String MESSAGE_SUMMARY_FORMAT = "%s\nStudents owing payment: %d.\n"
-            + "Students with no outstanding payment: %d.";
+    public static final String MESSAGE_SUMMARY_FORMAT = "%s\nTotal pending payment: SGD %s.";
 
     private final boolean isSummary;
 
@@ -38,11 +38,12 @@ public class ListCommand extends Command {
         if (!isSummary) {
             return new CommandResult(contactCountMessage);
         }
-        int owingCount = (int) model.getFilteredPersonList().stream()
-                .filter(person -> !person.getOutstandingAmount().equals(OutstandingAmount.ZERO))
-                .count();
-        int paidCount = model.getFilteredPersonList().size() - owingCount;
-        return new CommandResult(String.format(MESSAGE_SUMMARY_FORMAT, contactCountMessage, owingCount, paidCount));
+        BigDecimal pendingPayment = model.getFilteredPersonList().stream()
+                .map(person -> person.getOutstandingAmount().toBigDecimal())
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2);
+        return new CommandResult(String.format(MESSAGE_SUMMARY_FORMAT, contactCountMessage,
+                pendingPayment.toPlainString()));
     }
 
     /**
