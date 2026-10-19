@@ -1,5 +1,10 @@
 package seedu.address.storage;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,6 +15,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 
 /**
  * Jackson-friendly version of {@link Person}.
@@ -23,6 +29,14 @@ class JsonAdaptedPerson {
     private final String address;
     private final String startDate;
     private final String outstandingAmount;
+    private final List<JsonAdaptedTag> tags = new ArrayList<>();
+
+    /**
+     * Constructs a profile with no tags, as in the previous student-profile schema.
+     */
+    public JsonAdaptedPerson(String name, String phone, String address, String startDate, String outstandingAmount) {
+        this(name, phone, address, startDate, outstandingAmount, null);
+    }
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -30,12 +44,16 @@ class JsonAdaptedPerson {
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
-            @JsonProperty("outstandingAmount") String outstandingAmount) {
+            @JsonProperty("outstandingAmount") String outstandingAmount,
+            @JsonProperty("tags") List<JsonAdaptedTag> tags) {
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
         this.outstandingAmount = outstandingAmount;
+        if (tags != null) {
+            this.tags.addAll(tags);
+        }
     }
 
     /**
@@ -47,6 +65,8 @@ class JsonAdaptedPerson {
         address = source.getAddress().value;
         startDate = source.getStartDate().value;
         outstandingAmount = source.getOutstandingAmount().toPlainString();
+        source.getTags().stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
+                .map(JsonAdaptedTag::new).forEach(tags::add);
     }
 
     /**
@@ -98,7 +118,14 @@ class JsonAdaptedPerson {
             modelOutstandingAmount = new OutstandingAmount(outstandingAmount);
         }
 
-        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount);
+        Set<Tag> modelTags = new HashSet<>();
+        for (JsonAdaptedTag tag : tags) {
+            if (tag == null) {
+                throw new IllegalValueException(Tag.MESSAGE_CONSTRAINTS);
+            }
+            modelTags.add(tag.toModelType());
+        }
+        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount, modelTags);
     }
 
 }

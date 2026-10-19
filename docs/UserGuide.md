@@ -80,7 +80,7 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
-Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]`
+Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT] [t/TAG]...`
 
 <box type="tip" seamless>
 
@@ -89,11 +89,19 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
 </box>
 
-An add command is rejected as a duplicate when all five stored fields match an existing profile. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile.
+Tags are optional descriptive labels, separate from subjects:
+
+* Supply one `t/` prefix per tag, such as `t/A-Level t/Needs revision`. Omitting `t/` creates a profile with no tags.
+* Tags accept letters (A-Z and a-z), digits, spaces, and hyphens. Surrounding spaces are trimmed, internal spaces are preserved, and tags are stored in lowercase.
+* Repeated tags, including case variants such as `t/A-Level t/a-level`, are combined. Tag order does not matter.
+* Every tag must be valid. Blank tags, including `t/A-Level t/`, reject the entire command with `Tags must contain only letters, digits, spaces, or hyphens and must not be blank.`
+
+An add command is rejected as a duplicate when name, phone, address, start date, and outstanding amount match an existing profile, even if the tags differ. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile.
 
 Examples:
 * `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug`
 * `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600`
+* `add n/Peter Parker a/Block 9 p/91234567 d/10-Aug t/A-Level t/Needs revision`
 
 ### Listing all persons: `list`
 
@@ -229,7 +237,7 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20`
+**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT] [t/TAG]...` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20 t/A-Level`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
