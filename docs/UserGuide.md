@@ -142,13 +142,13 @@ Format: `list [-summary]`
 
 Updates one or more fields of an existing student profile in TuteeDex.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]...`
+Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`
 
 * Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
 * After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
-* Fields that are not supplied remain unchanged, including the outstanding amount, tags, and subjects.
+* Fields that are not supplied remain unchanged, including the outstanding amount, tags, subjects, and notes.
 * Supplied `s/SUBJECT` values replace the entire subject set. Repeat `s/` for multiple subjects.
   Subjects use Add's validation: 1-50 characters after trimming, containing only English letters, digits,
   spaces, or hyphens, with at least one letter or digit. Blank subjects, including a bare `s/`, are invalid.
@@ -157,14 +157,16 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * Supplied `t/TAG` values replace the entire tag set. Repeat `t/` for multiple tags.
   Tags use Add's validation and lowercase normalization; equivalent repeated tags are combined.
   A single blank `t/` clears all tags. Mixing blank and nonblank tags, or repeating blank `t/`, is invalid.
-* Existing notes are preserved by edits. Editing or clearing notes through
-  `edit` is not supported in this increment.
+* `notes/NOTE` replaces the note. A blank `notes/` clears it; omitting the prefix preserves the existing note.
+  Surrounding whitespace is trimmed; internal spacing, punctuation, display case, and Unicode text are preserved.
+  Specify `notes/` only once. The prefix rules below also apply inside notes: a recognized field prefix starts
+  another field, while an unknown prefix-shaped token is rejected. URLs such as `https://example.com` remain note text.
 * Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates use `DD-MMM`, and outstanding amounts are nonnegative numbers with at most two decimal places. Calendar validity is not checked.
 * Use `o/0` to reset the outstanding amount to zero. Blank values for the five scalar fields, including `o/`, are invalid.
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.
 * The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index.
-* Each scalar field may appear only once in an edit command. Tags accept repeated `t/` prefixes,
+* Each single-valued field, including notes, may appear only once in an edit command. Tags accept repeated `t/` prefixes,
   and subjects accept repeated `s/` prefixes.
 * Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
 * An edit is rejected as a duplicate only if name, phone, address, start date,
@@ -181,7 +183,7 @@ Errors:
 | Missing or invalid index | `INDEX must be a positive integer! (e.g., 1, 2, 3, …)` |
 | Index beyond the displayed list | `No matching contact found at the specified index.` |
 | No field supplied, e.g. `edit 1` | `At least one field must be provided to edit.` |
-| Repeated scalar field | `Each contact field may be specified only once in an edit command.` |
+| Repeated single-valued field | `Each contact field may be specified only once in an edit command.` |
 | Unknown or uppercase prefix | `Invalid command format.` followed by Edit usage instructions |
 | Invalid field value | The same field validation error as `add` |
 | Duplicate profile | `This contact already exists in TuteeDex.` |
@@ -194,6 +196,8 @@ Examples:
 * `edit 1 t/A-Level t/Needs revision` replaces the first profile's tags with these two tags.
 * `edit 1 t/` clears the first profile's tags while keeping its other fields.
 * `edit 1 s/Maths s/H2 Chemistry` replaces the first profile's subjects while keeping its other fields.
+* `edit 1 notes/Revise fractions` replaces the first profile's note while keeping its other fields.
+* `edit 1 notes/` clears the first profile's note.
 * `find Betsy` followed by `edit 1 a/32, Clementi Road` updates only the address of the first search result.
 
 ### Locating persons by name: `find`
@@ -284,7 +288,7 @@ Action     | Format, Examples
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]...`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level`
+**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary]`
 **Help**   | `help`

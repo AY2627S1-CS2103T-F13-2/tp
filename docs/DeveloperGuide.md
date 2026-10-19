@@ -567,6 +567,29 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
    Expected: `view 2` shows Bob's updated phone and still lists `Physics, H2 Chemistry`, with his original notes.
 
+### Editing student notes
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level notes/Original note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics`.
+2. Run `find Amy`, then `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
+   Expected: `Edited contact: Amy Bee`, and both students return to the list.
+   `view 1` shows `Notes: Revise fractions, graphs & 中文!`; all other profile fields are unchanged.
+3. Run `find Amy`, then repeat `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
+   Expected: `No changes made to contact: Amy Bee`. Only Amy remains displayed.
+4. Try `edit 1 notes/One notes/Two`, `edit 1 notes/Replacement p/invalid`, and `edit 1 notes/Review x/value`.<br>
+   Expected: Each command fails; Amy's saved note, other fields, and search results remain unchanged.
+5. Run `edit 1 notes/Call parent p/87654321`.<br>
+   Expected: Amy's note becomes `Call parent` and her phone becomes `87654321`.
+   A recognized prefix starts another field rather than becoming literal note text.
+6. Run `find Amy`, then `edit 1 notes/`, `find Amy`, and `edit 1 notes/` again.<br>
+   Expected: The first edit clears the note and returns the full list. The second reports no changes
+   and preserves the search results. View shows an empty `Notes:` value.
+7. Exit and restart from the same folder.<br>
+   Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
