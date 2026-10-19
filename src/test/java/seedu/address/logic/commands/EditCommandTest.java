@@ -15,6 +15,8 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
@@ -33,6 +35,35 @@ import seedu.address.testutil.PersonBuilder;
 public class EditCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_replacementTags_preservesOtherFieldsAndCommandSnapshot() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person target = new PersonBuilder(original).withTags("old").withNotes("Keep these notes")
+                .withSubjects("Maths").build();
+        model.setPerson(original, target);
+        Person updated = new PersonBuilder(target).withTags("A-Level", "Needs revision").build();
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withTags("A-Level", "Needs revision").build();
+        EditCommand command = new EditCommand(INDEX_FIRST_PERSON, descriptor);
+        descriptor.setTags(Set.of());
+        Model expected = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expected.setPerson(target, updated);
+
+        assertCommandSuccess(command, model, "Edited contact: " + target.getName(), expected);
+    }
+
+    @Test
+    public void execute_emptyTags_clearsExistingTags() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person target = new PersonBuilder(original).withTags("A-Level").build();
+        model.setPerson(original, target);
+        Model expected = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expected.setPerson(target, original);
+
+        EditCommand command = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withTags().build());
+        assertCommandSuccess(command, model, "Edited contact: " + target.getName(), expected);
+    }
 
     @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {

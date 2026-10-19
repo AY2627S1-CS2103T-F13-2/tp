@@ -1,5 +1,8 @@
 package seedu.address.testutil;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
@@ -7,6 +10,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 
 /**
  * A utility class to help with building EditPersonDescriptor objects.
@@ -72,6 +76,12 @@ public class EditPersonDescriptorBuilder {
      */
     public EditPersonDescriptorBuilder withOutstandingAmount(String outstandingAmount) {
         descriptor.setOutstandingAmount(new OutstandingAmount(outstandingAmount));
+        return this;
+    }
+
+    /** Sets replacement tags, or clears tags when no values are supplied. */
+    public EditPersonDescriptorBuilder withTags(String... tags) {
+        descriptor.setTags(Arrays.stream(tags).map(Tag::new).collect(Collectors.toSet()));
         return this;
     }
 

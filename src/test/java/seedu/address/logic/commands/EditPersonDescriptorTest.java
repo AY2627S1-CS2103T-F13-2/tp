@@ -9,11 +9,16 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
+import static seedu.address.testutil.Assert.assertThrows;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditPersonDescriptorTest {
@@ -66,6 +71,36 @@ public class EditPersonDescriptorTest {
     }
 
     @Test
+    public void tags_copyInputAndExposeImmutableSet() {
+        Set<Tag> source = new HashSet<>(Set.of(new Tag("A-Level")));
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        descriptor.setTags(source);
+        source.clear();
+        EditPersonDescriptor copy = new EditPersonDescriptor(descriptor);
+
+        assertEquals(Set.of(new Tag("a-level")), copy.getTags().orElseThrow());
+        assertEquals(descriptor, copy);
+        assertTrue(copy.isAnyFieldEdited());
+        assertThrows(UnsupportedOperationException.class, () -> copy.getTags().orElseThrow().clear());
+        descriptor.setTags(Set.of(new Tag("other")));
+        assertEquals(Set.of(new Tag("a-level")), copy.getTags().orElseThrow());
+        assertFalse(descriptor.equals(copy));
+    }
+
+    @Test
+    public void tags_omittedAndEmptyAreDistinct() {
+        EditPersonDescriptor omitted = new EditPersonDescriptor();
+        assertTrue(omitted.getTags().isEmpty());
+        assertFalse(omitted.isAnyFieldEdited());
+
+        EditPersonDescriptor clear = new EditPersonDescriptorBuilder().withTags().build();
+        assertTrue(clear.getTags().orElseThrow().isEmpty());
+        assertTrue(clear.isAnyFieldEdited());
+        assertFalse(clear.equals(omitted));
+        assertEquals(clear, new EditPersonDescriptor(clear));
+    }
+
+    @Test
     public void toStringMethod() {
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
         String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
@@ -73,7 +108,8 @@ public class EditPersonDescriptorTest {
                 + editPersonDescriptor.getPhone().orElse(null) + ", address="
                 + editPersonDescriptor.getAddress().orElse(null) + ", startDate="
                 + editPersonDescriptor.getStartDate().orElse(null) + ", outstandingAmount="
-                + editPersonDescriptor.getOutstandingAmount().orElse(null) + "}";
+                + editPersonDescriptor.getOutstandingAmount().orElse(null) + ", tags="
+                + editPersonDescriptor.getTags().orElse(null) + "}";
         assertEquals(expected, editPersonDescriptor.toString());
     }
 }
