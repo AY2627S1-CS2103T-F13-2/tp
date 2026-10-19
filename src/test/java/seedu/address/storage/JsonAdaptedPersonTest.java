@@ -14,10 +14,13 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
 import seedu.address.model.tag.Tag;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -31,6 +34,26 @@ public class JsonAdaptedPersonTest {
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
     private static final String VALID_START_DATE = BENSON.getStartDate().toString();
     private static final String VALID_OUTSTANDING_AMOUNT = BENSON.getOutstandingAmount().toString();
+
+    @Test
+    public void toModelType_notes_roundTrips() throws Exception {
+        Person withNotes = new PersonBuilder(BENSON).withNotes("Needs  revision: fractions!").build();
+        assertEquals(withNotes, new JsonAdaptedPerson(withNotes).toModelType());
+    }
+
+    @Test
+    public void toModelType_missingNotes_defaultsToEmpty() throws Exception {
+        JsonAdaptedPerson legacy = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT);
+        assertEquals(Notes.EMPTY, legacy.toModelType().getNotes());
+    }
+
+    @Test
+    public void toModelType_blankNotes_defaultsToEmpty() throws Exception {
+        JsonAdaptedPerson blank = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, " \t ");
+        assertEquals(Notes.EMPTY, blank.toModelType().getNotes());
+    }
 
     @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {

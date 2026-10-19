@@ -19,6 +19,7 @@ public class Person {
     private final Address address;
     private final StartDate startDate;
     private final OutstandingAmount outstandingAmount;
+    private final Notes notes;
     private final Set<Tag> tags;
 
     /**
@@ -26,7 +27,15 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount) {
-        this(name, phone, address, startDate, outstandingAmount, Set.of());
+        this(name, phone, address, startDate, outstandingAmount, Set.of(), Notes.EMPTY);
+    }
+
+    /**
+     * Creates a student profile with optional notes. All fields must be non-null.
+     */
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount, Notes notes) {
+        this(name, phone, address, startDate, outstandingAmount, Set.of(), notes);
     }
 
     /**
@@ -35,12 +44,21 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Set<Tag> tags) {
-        requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags);
+        this(name, phone, address, startDate, outstandingAmount, tags, Notes.EMPTY);
+    }
+
+    /**
+     * Creates a profile with optional tags and notes. All fields must be non-null.
+     */
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes) {
+        requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags, notes);
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
         this.outstandingAmount = outstandingAmount;
+        this.notes = notes;
         this.tags = Set.copyOf(tags);
     }
 
@@ -64,12 +82,16 @@ public class Person {
         return outstandingAmount;
     }
 
+    public Notes getNotes() {
+        return notes;
+    }
+
     public Set<Tag> getTags() {
         return tags;
     }
 
     /**
-     * Returns true if both persons have the same five core fields, ignoring descriptive tags.
+     * Returns true if both persons have the same five core fields, ignoring descriptive tags and notes.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -104,13 +126,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && startDate.equals(otherPerson.startDate)
                 && outstandingAmount.equals(otherPerson.outstandingAmount)
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && notes.equals(otherPerson.notes);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags);
+        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags, notes);
     }
 
     @Override
@@ -122,6 +145,7 @@ public class Person {
                 .add("startDate", startDate)
                 .add("outstandingAmount", outstandingAmount)
                 .add("tags", tags)
+                .add("notes", notes)
                 .toString();
     }
 

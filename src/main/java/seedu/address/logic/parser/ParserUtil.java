@@ -12,6 +12,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
@@ -100,6 +101,14 @@ public class ParserUtil {
             throw new ParseException(OutstandingAmount.MESSAGE_CONSTRAINTS);
         }
         return new OutstandingAmount(trimmedOutstandingAmount);
+    }
+
+    /**
+     * Parses optional free-text notes, trimming only surrounding whitespace.
+     * Blank input represents no note.
+     */
+    public static Notes parseNotes(String notes) {
+        return new Notes(notes);
     }
 
     /**

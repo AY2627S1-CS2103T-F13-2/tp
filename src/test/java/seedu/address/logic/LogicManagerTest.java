@@ -164,7 +164,7 @@ public class LogicManagerTest {
         Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
         assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
-                + "\nOutstanding amount: SGD 20.50", reloadedLogic.execute("view 1").getFeedbackToUser());
+                + "\nOutstanding amount: SGD 20.50\nNotes: ", reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 
     @Test

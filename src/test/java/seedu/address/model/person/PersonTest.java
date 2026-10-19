@@ -90,6 +90,18 @@ public class PersonTest {
     }
 
     @Test
+    public void notes_affectEqualityButNotDuplicateIdentity() {
+        Person withNotes = new PersonBuilder(ALICE).withNotes("Revise fractions").build();
+        assertTrue(ALICE.isSamePerson(withNotes));
+        assertTrue(withNotes.isSamePerson(ALICE));
+        assertFalse(ALICE.equals(withNotes));
+        Person copy = new PersonBuilder(withNotes).build();
+        assertEquals(withNotes, copy);
+        assertEquals(withNotes.hashCode(), copy.hashCode());
+        assertEquals(Notes.EMPTY, ALICE.getNotes());
+    }
+
+    @Test
     public void tags_areDataButDoNotDistinguishDuplicateProfiles() {
         Person first = new PersonBuilder(ALICE).withTags("A-Level").build();
         Person second = new PersonBuilder(ALICE).withTags("Needs revision").build();
@@ -121,7 +133,8 @@ public class PersonTest {
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
-                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", tags=" + ALICE.getTags() + "}";
+                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", tags=" + ALICE.getTags()
+                + ", notes=" + ALICE.getNotes() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -28,6 +29,7 @@ public class PersonBuilder {
     private Address address;
     private StartDate startDate;
     private OutstandingAmount outstandingAmount;
+    private Notes notes;
     private Set<Tag> tags;
 
     /**
@@ -39,6 +41,7 @@ public class PersonBuilder {
         address = new Address(DEFAULT_ADDRESS);
         startDate = new StartDate(DEFAULT_START_DATE);
         outstandingAmount = new OutstandingAmount(DEFAULT_OUTSTANDING_AMOUNT);
+        notes = Notes.EMPTY;
         tags = Set.of();
     }
 
@@ -51,6 +54,7 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
         outstandingAmount = personToCopy.getOutstandingAmount();
+        notes = personToCopy.getNotes();
         tags = personToCopy.getTags();
     }
 
@@ -95,6 +99,14 @@ public class PersonBuilder {
     }
 
     /**
+     * Sets the notes of the student being built.
+     */
+    public PersonBuilder withNotes(String notes) {
+        this.notes = new Notes(notes);
+        return this;
+    }
+
+    /**
      * Sets the optional tags on the profile being built.
      */
     public PersonBuilder withTags(String... tags) {
@@ -103,7 +115,7 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, phone, address, startDate, outstandingAmount, tags);
+        return new Person(name, phone, address, startDate, outstandingAmount, tags, notes);
     }
 
 }
