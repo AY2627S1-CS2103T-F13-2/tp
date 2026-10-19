@@ -107,7 +107,7 @@ public class LogicManagerTest {
                 .withAddress("1 Test Street").withStartDate("14-Oct")
                 .withSubjects("Maths", "H2 Chemistry").build(), saved);
         assertEquals("Name: Subject Student\nPhone: 87654321\nAddress: 1 Test Street\nStart date: 14-Oct"
-                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nNotes: ",
+                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nTags: Not specified\nNotes: ",
                 logic.execute("view 1").getFeedbackToUser());
     }
 
@@ -186,7 +186,7 @@ public class LogicManagerTest {
         Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
         assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
-                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified\nNotes: ",
+                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified\nTags: Not specified\nNotes: ",
                 reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 

@@ -11,6 +11,17 @@ import seedu.address.testutil.PersonBuilder;
 public class MessagesTest {
 
     @Test
+    public void formatTags_emptyTags_showsNotSpecified() {
+        assertEquals("Not specified", Messages.formatTags(ALICE));
+    }
+
+    @Test
+    public void formatTags_multipleTags_sortsStoredLabels() {
+        var person = new PersonBuilder(ALICE).withTags("Needs revision", "A-Level").build();
+        assertEquals("a-level, needs revision", Messages.formatTags(person));
+    }
+
+    @Test
     public void formatSubjects_legacyProfile_showsNotSpecified() {
         assertEquals("Not specified", Messages.formatSubjects(ALICE));
         assertTrue(Messages.format(ALICE).endsWith("; Subjects: Not specified"));
