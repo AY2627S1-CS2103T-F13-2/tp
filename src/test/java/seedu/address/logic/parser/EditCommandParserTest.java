@@ -32,11 +32,42 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditCommandParserTest {
     private final EditCommandParser parser = new EditCommandParser();
+
+    @Test
+    public void parse_subjectsSpecified_replacesCaseInsensitiveSet() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withSubjects("Physics", "H2 Chemistry").build();
+        assertParseSuccess(parser, "1 s/ Physics  s/H2 Chemistry s/PHYSICS",
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        assertParseSuccess(parser, "1 s/Physics t/A-Level s/H2 Chemistry p/" + VALID_PHONE_AMY,
+                new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(descriptor)
+                        .withTags("a-level").withPhone(VALID_PHONE_AMY).build()));
+    }
+
+    @Test
+    public void parse_blankSubjects_failure() {
+        for (String args : new String[] {"1 s/", "1 s/   ", "1 s/Maths s/", "1 s/ s/Physics"}) {
+            assertParseFailure(parser, args, "Subject must not be blank.");
+        }
+    }
+
+    @Test
+    public void parse_subjectValidationBoundaries_matchAddRules() {
+        for (String value : new String[] {"A", "A".repeat(50), "H2 Chemistry", "Combined-Science"}) {
+            assertParseSuccess(parser, "1 s/  " + value + "  ", new EditCommand(INDEX_FIRST_PERSON,
+                    new EditPersonDescriptorBuilder().withSubjects(value).build()));
+        }
+        for (String value : new String[] {"A".repeat(51), "---", "Maths,Physics", "中文"}) {
+            assertParseFailure(parser, "1 t/A-Level s/" + value, Subject.MESSAGE_CONSTRAINTS);
+        }
+        assertParseFailure(parser, "1 S/Maths", EditCommandParser.MESSAGE_INVALID_FORMAT);
+    }
 
     @Test
     public void parse_tagsSpecified_replacesNormalizedTags() {

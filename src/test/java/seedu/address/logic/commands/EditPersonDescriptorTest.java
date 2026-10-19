@@ -12,12 +12,15 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
@@ -101,6 +104,35 @@ public class EditPersonDescriptorTest {
     }
 
     @Test
+    public void subjects_preserveOrderAndSnapshotWithImmutableValues() {
+        Set<Subject> source = new LinkedHashSet<>(List.of(new Subject("Physics"), new Subject("Maths")));
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        assertTrue(descriptor.getSubjects().isEmpty());
+        descriptor.setSubjects(source);
+        source.clear();
+        EditPersonDescriptor copy = new EditPersonDescriptor(descriptor);
+
+        assertTrue(copy.isAnyFieldEdited());
+        assertEquals(List.of("Physics", "Maths"), copy.getSubjects().orElseThrow().stream()
+                .map(subject -> subject.value).toList());
+        assertThrows(UnsupportedOperationException.class, () -> copy.getSubjects().orElseThrow().clear());
+        assertEquals(descriptor, copy);
+        descriptor.setSubjects(Set.of(new Subject("English")));
+        assertFalse(descriptor.equals(copy));
+        assertEquals(new EditPersonDescriptorBuilder().withSubjects("maths", "PHYSICS").build(), copy);
+    }
+
+    @Test
+    public void subjects_emptySetAndNullElementsAreRejected() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        assertThrows(IllegalArgumentException.class, () -> descriptor.setSubjects(Set.of()));
+        Set<Subject> subjects = new HashSet<>();
+        subjects.add(null);
+        assertThrows(NullPointerException.class, () -> descriptor.setSubjects(subjects));
+        assertTrue(descriptor.getSubjects().isEmpty());
+    }
+
+    @Test
     public void toStringMethod() {
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
         String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
@@ -109,7 +141,8 @@ public class EditPersonDescriptorTest {
                 + editPersonDescriptor.getAddress().orElse(null) + ", startDate="
                 + editPersonDescriptor.getStartDate().orElse(null) + ", outstandingAmount="
                 + editPersonDescriptor.getOutstandingAmount().orElse(null) + ", tags="
-                + editPersonDescriptor.getTags().orElse(null) + "}";
+                + editPersonDescriptor.getTags().orElse(null) + ", subjects="
+                + editPersonDescriptor.getSubjects().orElse(null) + "}";
         assertEquals(expected, editPersonDescriptor.toString());
     }
 }

@@ -1,6 +1,7 @@
 package seedu.address.testutil;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
@@ -10,6 +11,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -38,6 +40,9 @@ public class EditPersonDescriptorBuilder {
         descriptor.setStartDate(person.getStartDate());
         descriptor.setOutstandingAmount(person.getOutstandingAmount());
         descriptor.setTags(person.getTags());
+        if (!person.getSubjects().isEmpty()) {
+            descriptor.setSubjects(person.getSubjects());
+        }
     }
 
     /**
@@ -83,6 +88,13 @@ public class EditPersonDescriptorBuilder {
     /** Sets replacement tags, or clears tags when no values are supplied. */
     public EditPersonDescriptorBuilder withTags(String... tags) {
         descriptor.setTags(Arrays.stream(tags).map(Tag::new).collect(Collectors.toSet()));
+        return this;
+    }
+
+    /** Sets nonempty replacement subjects in input order. */
+    public EditPersonDescriptorBuilder withSubjects(String... subjects) {
+        descriptor.setSubjects(Arrays.stream(subjects).map(Subject::new)
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
         return this;
     }
 

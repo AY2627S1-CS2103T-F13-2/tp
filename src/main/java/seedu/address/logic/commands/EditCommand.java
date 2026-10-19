@@ -1,14 +1,18 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,6 +29,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -43,6 +48,7 @@ public class EditCommand extends Command {
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_START_DATE + "START_DATE] "
             + "[" + PREFIX_OUTSTANDING_AMOUNT + "OUTSTANDING_AMOUNT] "
+            + "[" + PREFIX_SUBJECT + "SUBJECT]... "
             + "[" + PREFIX_TAG + "TAG]...\n"
             + "Example: " + COMMAND_WORD + " 1 "
             + PREFIX_PHONE + "91234567 "
@@ -114,7 +120,7 @@ public class EditCommand extends Command {
 
         return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount,
                 editPersonDescriptor.getTags().orElse(personToEdit.getTags()),
-                personToEdit.getNotes(), personToEdit.getSubjects());
+                personToEdit.getNotes(), editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()));
     }
 
     @Override
@@ -150,6 +156,7 @@ public class EditCommand extends Command {
         private StartDate startDate;
         private OutstandingAmount outstandingAmount;
         private Set<Tag> tags;
+        private Set<Subject> subjects;
 
         public EditPersonDescriptor() {}
 
@@ -164,13 +171,14 @@ public class EditCommand extends Command {
             setStartDate(toCopy.startDate);
             setOutstandingAmount(toCopy.outstandingAmount);
             setTags(toCopy.tags);
+            setSubjects(toCopy.subjects);
         }
 
         /**
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address, startDate, outstandingAmount, tags);
+            return CollectionUtil.isAnyNonNull(name, phone, address, startDate, outstandingAmount, tags, subjects);
         }
 
         public void setName(Name name) {
@@ -223,6 +231,21 @@ public class EditCommand extends Command {
             return Optional.ofNullable(tags);
         }
 
+        /** Copies nonempty replacement subjects in input order; null means they were omitted. */
+        public void setSubjects(Set<Subject> subjects) {
+            if (subjects == null) {
+                this.subjects = null;
+                return;
+            }
+            checkArgument(!subjects.isEmpty(), "At least one subject must be supplied.");
+            subjects.forEach(Objects::requireNonNull);
+            this.subjects = Collections.unmodifiableSet(new LinkedHashSet<>(subjects));
+        }
+
+        public Optional<Set<Subject>> getSubjects() {
+            return Optional.ofNullable(subjects);
+        }
+
         @Override
         public boolean equals(Object other) {
             if (other == this) {
@@ -239,7 +262,8 @@ public class EditCommand extends Command {
                     && Objects.equals(address, otherEditPersonDescriptor.address)
                     && Objects.equals(startDate, otherEditPersonDescriptor.startDate)
                     && Objects.equals(outstandingAmount, otherEditPersonDescriptor.outstandingAmount)
-                    && Objects.equals(tags, otherEditPersonDescriptor.tags);
+                    && Objects.equals(tags, otherEditPersonDescriptor.tags)
+                    && Objects.equals(subjects, otherEditPersonDescriptor.subjects);
         }
 
         @Override
@@ -251,6 +275,7 @@ public class EditCommand extends Command {
                     .add("startDate", startDate)
                     .add("outstandingAmount", outstandingAmount)
                     .add("tags", tags)
+                    .add("subjects", subjects)
                     .toString();
         }
     }
