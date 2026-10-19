@@ -53,6 +53,14 @@ public class PersonUtil {
         descriptor.getStartDate().ifPresent(date -> sb.append(PREFIX_START_DATE).append(date.value).append(" "));
         descriptor.getOutstandingAmount().ifPresent(amount ->
                 sb.append(PREFIX_OUTSTANDING_AMOUNT).append(amount.toPlainString()).append(" "));
+        descriptor.getTags().ifPresent(tags -> {
+            if (tags.isEmpty()) {
+                sb.append(PREFIX_TAG).append(" ");
+            } else {
+                tags.stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
+                        .forEach(tag -> sb.append(PREFIX_TAG).append(tag.tagName).append(" "));
+            }
+        });
         return sb.toString();
     }
 }

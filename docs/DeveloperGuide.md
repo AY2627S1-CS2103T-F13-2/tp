@@ -525,6 +525,28 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 8. Exit and restart the app from the same folder, then run `view 2`.<br>
    Expected: Bob's phone is still `91234567` and outstanding amount is still `SGD 0.00`.
 
+### Editing student tags
+
+Use a fresh copy of the app in an empty folder. Inspect saved tags in `data/addressbook.json`
+after successful edits; these checks do not require changes to the profile-card display.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/Old notes/Keep note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics`.
+2. Run `find Amy`, then `edit 1 t/A-Level t/Needs revision t/a-level`.<br>
+   Expected: `Edited contact: Amy Bee`, and both students return to the list.
+   Amy's stored tags are `a-level` and `needs revision`; `old` is removed and the repeated tag is combined.
+   `view 1` still shows subject `Maths` and notes `Keep note`, with all five core fields unchanged.
+3. Run `find Amy`, then `edit 1 t/needs revision t/A-LEVEL`.<br>
+   Expected: `No changes made to contact: Amy Bee`. Only Amy remains displayed.
+4. Try `edit 1 p/87654321 t/A-Level t/` and `edit 1 T/A-Level`.<br>
+   Expected: Both commands fail, and Amy's phone, tags, and current search results remain unchanged.
+5. Run `edit 1 t/`, then `find Amy` and `edit 1 t/` again.<br>
+   Expected: The first edit clears Amy's tags and restores both students. The second reports no changes
+   and preserves the search results. Amy's other profile fields remain unchanged.
+6. Exit and restart from the same folder.<br>
+   Expected: Amy's tags remain empty, and both profiles retain their other details.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files

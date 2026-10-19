@@ -32,10 +32,38 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditCommandParserTest {
     private final EditCommandParser parser = new EditCommandParser();
+
+    @Test
+    public void parse_tagsSpecified_replacesNormalizedTags() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withTags("a-level", "needs revision").build();
+        assertParseSuccess(parser, "1 t/ A-Level  t/Needs revision t/a-level",
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        assertParseSuccess(parser, "1 t/needs revision p/" + VALID_PHONE_AMY + " t/A-Level",
+                new EditCommand(INDEX_FIRST_PERSON,
+                        new EditPersonDescriptorBuilder(descriptor).withPhone(VALID_PHONE_AMY).build()));
+    }
+
+    @Test
+    public void parse_singleBlankTag_clearsTags() {
+        EditCommand expected = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withTags().build());
+        assertParseSuccess(parser, "1 t/", expected);
+        assertParseSuccess(parser, "1 t/   ", expected);
+    }
+
+    @Test
+    public void parse_invalidOrMixedBlankTags_failure() {
+        for (String args : new String[] {"1 t/A-Level t/", "1 t/ t/A-Level", "1 t/ t/", "1 t/Maths,Physics",
+            "1 t/中文", "1 p/91234567 t/bad!"}) {
+            assertParseFailure(parser, args, Tag.MESSAGE_CONSTRAINTS);
+        }
+    }
 
     @Test
     public void parse_missingParts_failure() {
@@ -133,7 +161,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_unknownOrUppercasePrefix_failure() {
         String[] arguments = {"1 x/value", "1 a/Main Street x/value", "1 x/value" + PHONE_DESC_AMY,
-            "1 P/91234567", "1 a/Main Street N/Amy", "1 O/600", "1 e/student@example.com", "1 t/friend"};
+            "1 P/91234567", "1 a/Main Street N/Amy", "1 O/600", "1 e/student@example.com", "1 T/friend"};
         for (String argument : arguments) {
             assertParseFailure(parser, argument, EditCommandParser.MESSAGE_INVALID_FORMAT);
         }

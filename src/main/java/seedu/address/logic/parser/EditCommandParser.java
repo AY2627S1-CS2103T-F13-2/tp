@@ -6,7 +6,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +29,7 @@ public class EditCommandParser implements Parser<EditCommand> {
     public static final String MESSAGE_INVALID_FORMAT = "Invalid command format.\n" + EditCommand.MESSAGE_USAGE;
 
     private static final Set<Prefix> SUPPORTED_PREFIXES = Set.of(
-            PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE, PREFIX_OUTSTANDING_AMOUNT);
+            PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE, PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG);
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
 
     /**
@@ -40,7 +42,7 @@ public class EditCommandParser implements Parser<EditCommand> {
         verifyKnownPrefixes(args);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT);
+                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG);
 
         Index index;
 
@@ -74,6 +76,11 @@ public class EditCommandParser implements Parser<EditCommand> {
         if (argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).isPresent()) {
             editPersonDescriptor.setOutstandingAmount(
                     ParserUtil.parseOutstandingAmount(argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).get()));
+        }
+        if (argMultimap.getValue(PREFIX_TAG).isPresent()) {
+            List<String> tags = argMultimap.getAllValues(PREFIX_TAG);
+            editPersonDescriptor.setTags(tags.size() == 1 && tags.getFirst().isEmpty()
+                    ? Set.of() : ParserUtil.parseTags(tags));
         }
 
         if (!editPersonDescriptor.isAnyFieldEdited()) {
