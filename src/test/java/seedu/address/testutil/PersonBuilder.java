@@ -1,15 +1,19 @@
 package seedu.address.testutil;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
 import seedu.address.model.person.Subject;
+import seedu.address.model.tag.Tag;
 
 /**
  * A utility class to help with building Person objects.
@@ -28,6 +32,8 @@ public class PersonBuilder {
     private StartDate startDate;
     private OutstandingAmount outstandingAmount;
     private Set<Subject> subjects = Set.of();
+    private Notes notes;
+    private Set<Tag> tags;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -38,6 +44,8 @@ public class PersonBuilder {
         address = new Address(DEFAULT_ADDRESS);
         startDate = new StartDate(DEFAULT_START_DATE);
         outstandingAmount = new OutstandingAmount(DEFAULT_OUTSTANDING_AMOUNT);
+        notes = Notes.EMPTY;
+        tags = Set.of();
     }
 
     /**
@@ -50,6 +58,8 @@ public class PersonBuilder {
         startDate = personToCopy.getStartDate();
         outstandingAmount = personToCopy.getOutstandingAmount();
         subjects = personToCopy.getSubjects();
+        notes = personToCopy.getNotes();
+        tags = personToCopy.getTags();
     }
 
     /**
@@ -102,8 +112,24 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the notes of the student being built.
+     */
+    public PersonBuilder withNotes(String notes) {
+        this.notes = new Notes(notes);
+        return this;
+    }
+
+    /**
+     * Sets the optional tags on the profile being built.
+     */
+    public PersonBuilder withTags(String... tags) {
+        this.tags = Arrays.stream(tags).map(Tag::new).collect(Collectors.toSet());
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, address, startDate, outstandingAmount, subjects);
+        return new Person(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
     }
 
 }

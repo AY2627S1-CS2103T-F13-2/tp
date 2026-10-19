@@ -8,16 +8,21 @@ import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
 import seedu.address.model.person.Subject;
+import seedu.address.model.tag.Tag;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -31,6 +36,26 @@ public class JsonAdaptedPersonTest {
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
     private static final String VALID_START_DATE = BENSON.getStartDate().toString();
     private static final String VALID_OUTSTANDING_AMOUNT = BENSON.getOutstandingAmount().toString();
+
+    @Test
+    public void toModelType_notes_roundTrips() throws Exception {
+        Person withNotes = new PersonBuilder(BENSON).withNotes("Needs  revision: fractions!").build();
+        assertEquals(withNotes, new JsonAdaptedPerson(withNotes).toModelType());
+    }
+
+    @Test
+    public void toModelType_missingNotes_defaultsToEmpty() throws Exception {
+        JsonAdaptedPerson legacy = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT);
+        assertEquals(Notes.EMPTY, legacy.toModelType().getNotes());
+    }
+
+    @Test
+    public void toModelType_blankNotes_defaultsToEmpty() throws Exception {
+        JsonAdaptedPerson blank = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, " \t ");
+        assertEquals(Notes.EMPTY, blank.toModelType().getNotes());
+    }
 
     @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
@@ -130,15 +155,42 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_invalidSubject_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, List.of("Maths", "Invalid!"));
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null, List.of("Maths", "Invalid!"));
         assertThrows(IllegalValueException.class, Subject.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
     @Test
     public void toModelType_nullSubject_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, Arrays.asList("Maths", null));
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null, Arrays.asList("Maths", null));
         assertThrows(IllegalValueException.class, Subject.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_missingTags_defaultsToEmptySet() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT);
+        assertEquals(Set.of(), person.toModelType().getTags());
+    }
+
+    @Test
+    public void toModelType_tagCaseVariants_normalizesAndCombines() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT,
+                List.of(new JsonAdaptedTag(" A-Level "), new JsonAdaptedTag("a-level")));
+        assertEquals(Set.of(new Tag("a-level")), person.toModelType().getTags());
+    }
+
+    @Test
+    public void toModelType_invalidStoredTags_throwsIllegalValueException() {
+        for (String name : Arrays.asList("", " ", "invalid!", null)) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                    VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, List.of(new JsonAdaptedTag(name)));
+            assertThrows(IllegalValueException.class, Tag.MESSAGE_CONSTRAINTS, person::toModelType);
+        }
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, Arrays.asList((JsonAdaptedTag) null));
+        assertThrows(IllegalValueException.class, Tag.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
 }

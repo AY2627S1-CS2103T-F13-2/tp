@@ -42,11 +42,12 @@ public class ViewCommand extends Command {
 
         Person personToDisplay = lastShownList.get(targetIndex.getZeroBased());
         return new CommandResult(String.format(
-                "Name: %s\nPhone: %s\nAddress: %s\nStart date: %s\nOutstanding amount: %s\nSubjects: %s",
+                "Name: %s\nPhone: %s\nAddress: %s\nStart date: %s\nOutstanding amount: %s\nSubjects: %s\nNotes: %s",
                 personToDisplay.getName(), personToDisplay.getPhone(), personToDisplay.getAddress(),
                 personToDisplay.getStartDate(), personToDisplay.getOutstandingAmount().toCurrencyString(),
                 personToDisplay.getSubjects().isEmpty() ? "Not specified" : personToDisplay.getSubjects().stream()
-                        .map(Object::toString).collect(Collectors.joining(", "))));
+                        .map(Object::toString).collect(Collectors.joining(", ")),
+                personToDisplay.getNotes()));
     }
 
     @Override
