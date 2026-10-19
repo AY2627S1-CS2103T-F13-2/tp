@@ -1,6 +1,7 @@
 package seedu.address.testutil;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -29,6 +31,7 @@ public class PersonBuilder {
     private Address address;
     private StartDate startDate;
     private OutstandingAmount outstandingAmount;
+    private Set<Subject> subjects = Set.of();
     private Notes notes;
     private Set<Tag> tags;
 
@@ -54,6 +57,7 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         startDate = personToCopy.getStartDate();
         outstandingAmount = personToCopy.getOutstandingAmount();
+        subjects = personToCopy.getSubjects();
         notes = personToCopy.getNotes();
         tags = personToCopy.getTags();
     }
@@ -98,6 +102,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets subjects in insertion order. */
+    public PersonBuilder withSubjects(String... subjects) {
+        Set<Subject> parsed = new LinkedHashSet<>();
+        for (String subject : subjects) {
+            parsed.add(new Subject(subject));
+        }
+        this.subjects = parsed;
+        return this;
+    }
+
     /**
      * Sets the notes of the student being built.
      */
@@ -115,7 +129,7 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, phone, address, startDate, outstandingAmount, tags, notes);
+        return new Person(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
     }
 
 }

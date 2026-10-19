@@ -2,6 +2,8 @@ package seedu.address.model.person;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,15 +21,14 @@ public class Person {
     private final Address address;
     private final StartDate startDate;
     private final OutstandingAmount outstandingAmount;
+    private final Set<Subject> subjects;
     private final Notes notes;
     private final Set<Tag> tags;
 
-    /**
-     * Every field must be present and not null.
-     */
+    /** Creates a profile without optional details. */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount) {
-        this(name, phone, address, startDate, outstandingAmount, Set.of(), Notes.EMPTY);
+        this(name, phone, address, startDate, outstandingAmount, Set.of(), Notes.EMPTY, Set.of());
     }
 
     /**
@@ -35,7 +36,7 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Notes notes) {
-        this(name, phone, address, startDate, outstandingAmount, Set.of(), notes);
+        this(name, phone, address, startDate, outstandingAmount, Set.of(), notes, Set.of());
     }
 
     /**
@@ -44,7 +45,7 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Set<Tag> tags) {
-        this(name, phone, address, startDate, outstandingAmount, tags, Notes.EMPTY);
+        this(name, phone, address, startDate, outstandingAmount, tags, Notes.EMPTY, Set.of());
     }
 
     /**
@@ -52,12 +53,21 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes) {
-        requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags, notes);
+        this(name, phone, address, startDate, outstandingAmount, tags, notes, Set.of());
+    }
+
+    /**
+     * Creates a profile with tags, notes, and subjects. All fields must be non-null.
+     */
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes, Set<Subject> subjects) {
+        requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
         this.outstandingAmount = outstandingAmount;
+        this.subjects = Collections.unmodifiableSet(new LinkedHashSet<>(subjects));
         this.notes = notes;
         this.tags = Set.copyOf(tags);
     }
@@ -82,6 +92,10 @@ public class Person {
         return outstandingAmount;
     }
 
+    public Set<Subject> getSubjects() {
+        return subjects;
+    }
+
     public Notes getNotes() {
         return notes;
     }
@@ -91,7 +105,7 @@ public class Person {
     }
 
     /**
-     * Returns true if both persons have the same five core fields, ignoring descriptive tags and notes.
+     * Returns true if both persons have the same five core fields, ignoring tags, notes, and subjects.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -127,13 +141,14 @@ public class Person {
                 && startDate.equals(otherPerson.startDate)
                 && outstandingAmount.equals(otherPerson.outstandingAmount)
                 && tags.equals(otherPerson.tags)
-                && notes.equals(otherPerson.notes);
+                && notes.equals(otherPerson.notes)
+                && subjects.equals(otherPerson.subjects);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags, notes);
+        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
     }
 
     @Override
@@ -146,6 +161,7 @@ public class Person {
                 .add("outstandingAmount", outstandingAmount)
                 .add("tags", tags)
                 .add("notes", notes)
+                .add("subjects", subjects)
                 .toString();
     }
 

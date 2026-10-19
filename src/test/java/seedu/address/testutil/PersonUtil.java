@@ -6,6 +6,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
 import seedu.address.logic.commands.AddCommand;
@@ -34,6 +35,7 @@ public class PersonUtil {
         sb.append(PREFIX_ADDRESS + person.getAddress().value + " ");
         sb.append(PREFIX_START_DATE + person.getStartDate().value + " ");
         sb.append(PREFIX_OUTSTANDING_AMOUNT + person.getOutstandingAmount().toPlainString() + " ");
+        person.getSubjects().forEach(subject -> sb.append(PREFIX_SUBJECT).append(subject).append(" "));
         sb.append(PREFIX_NOTES + person.getNotes().value + " ");
         person.getTags().stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
                 .forEach(tag -> sb.append(PREFIX_TAG).append(tag.tagName).append(" "));

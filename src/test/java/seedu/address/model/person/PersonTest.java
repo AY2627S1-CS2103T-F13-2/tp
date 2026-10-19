@@ -12,6 +12,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -87,6 +88,26 @@ public class PersonTest {
         // different outstanding amount -> returns false
         editedAlice = new PersonBuilder(ALICE).withOutstandingAmount("20").build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different subjects affect equality, but not duplicate identity
+        editedAlice = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        assertFalse(ALICE.equals(editedAlice));
+        assertTrue(ALICE.isSamePerson(editedAlice));
+        assertEquals(new PersonBuilder(ALICE).withSubjects("maths").build().hashCode(), editedAlice.hashCode());
+    }
+
+    @Test
+    public void constructors_subjectsAreImmutableAndLegacyProfilesHaveNone() {
+        Person legacyPerson = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(),
+                ALICE.getStartDate(), ALICE.getOutstandingAmount());
+        assertEquals(Set.of(), legacyPerson.getSubjects());
+
+        Set<Subject> sourceSubjects = new LinkedHashSet<>(Set.of(new Subject("Maths")));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(),
+                ALICE.getStartDate(), ALICE.getOutstandingAmount(), Set.of(), Notes.EMPTY, sourceSubjects);
+        sourceSubjects.add(new Subject("Physics"));
+        assertEquals(Set.of(new Subject("Maths")), person.getSubjects());
+        assertThrows(UnsupportedOperationException.class, () -> person.getSubjects().add(new Subject("English")));
     }
 
     @Test
@@ -134,7 +155,7 @@ public class PersonTest {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
                 + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", tags=" + ALICE.getTags()
-                + ", notes=" + ALICE.getNotes() + "}";
+                + ", notes=" + ALICE.getNotes() + ", subjects=" + ALICE.getSubjects() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

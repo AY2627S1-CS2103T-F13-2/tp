@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
@@ -16,6 +17,7 @@ import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -151,5 +153,28 @@ public class ParserUtil {
             tagSet.add(parseTag(tagName));
         }
         return tagSet;
+    }
+
+    /** Parses one subject after trimming surrounding spaces. */
+    public static Subject parseSubject(String subject) throws ParseException {
+        requireNonNull(subject);
+        String trimmed = subject.trim();
+        if (trimmed.isEmpty()) {
+            throw new ParseException("Subject must not be blank.");
+        }
+        if (!Subject.isValidSubject(trimmed)) {
+            throw new ParseException(Subject.MESSAGE_CONSTRAINTS);
+        }
+        return new Subject(trimmed);
+    }
+
+    /** Parses repeated subject values, retaining the first spelling and input order. */
+    public static Set<Subject> parseSubjects(Collection<String> subjects) throws ParseException {
+        requireNonNull(subjects);
+        Set<Subject> parsed = new LinkedHashSet<>();
+        for (String subject : subjects) {
+            parsed.add(parseSubject(subject));
+        }
+        return parsed;
     }
 }

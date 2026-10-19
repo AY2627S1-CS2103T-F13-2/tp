@@ -82,10 +82,11 @@ public class LogicManagerTest {
     @Test
     public void execute_addWithZeroOutstandingAmount_success() throws Exception {
         Person expectedPerson = new PersonBuilder().withName("Zero Balance").withPhone("81234567")
-                .withAddress("1 Test Street").withStartDate("14-Oct").withOutstandingAmount("0").build();
+                .withAddress("1 Test Street").withStartDate("14-Oct").withOutstandingAmount("0")
+                .withSubjects("Maths").build();
 
         CommandResult result = logic.execute(
-                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0");
+                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0 s/Maths");
 
         assertEquals("Zero Balance's profile has been added to TuteeDex!", result.getFeedbackToUser());
         assertEquals(List.of(expectedPerson), logic.getFilteredPersonList());
@@ -95,10 +96,27 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_addWithTags_savesAndReloadsNormalizedTags() throws Exception {
-        Person expectedPerson = new PersonBuilder(AMY).withTags("a-level", "needs revision").build();
+    public void execute_addSubjects_subjectsPersist() throws Exception {
+        logic.execute("add n/Subject Student p/81234567 a/1 Test Street d/14-Oct s/Maths s/H2 Chemistry");
+        logic.execute("edit 1 p/87654321");
 
-        CommandResult result = logic.execute(PersonUtil.getAddCommand(AMY)
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        Person saved = savedStorage.readAddressBook().orElseThrow().getPersonList().get(0);
+        assertEquals(new PersonBuilder().withName("Subject Student").withPhone("87654321")
+                .withAddress("1 Test Street").withStartDate("14-Oct")
+                .withSubjects("Maths", "H2 Chemistry").build(), saved);
+        assertEquals("Name: Subject Student\nPhone: 87654321\nAddress: 1 Test Street\nStart date: 14-Oct"
+                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nNotes: ",
+                logic.execute("view 1").getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_addWithTags_savesAndReloadsNormalizedTags() throws Exception {
+        Person student = new PersonBuilder(AMY).withSubjects("Maths").build();
+        Person expectedPerson = new PersonBuilder(student).withTags("a-level", "needs revision").build();
+
+        CommandResult result = logic.execute(PersonUtil.getAddCommand(student)
                 + "t/A-Level t/Needs revision t/a-level");
 
         assertEquals("Amy Bee's profile has been added to TuteeDex!", result.getFeedbackToUser());
@@ -111,17 +129,19 @@ public class LogicManagerTest {
 
     @Test
     public void execute_addWithInvalidTags_preservesSavedDataAndFilter() throws Exception {
-        Person existing = new PersonBuilder(AMY).withTags("a-level").build();
+        Person existing = new PersonBuilder(AMY).withSubjects("Maths").withTags("a-level").build();
+        Person bobWithSubject = new PersonBuilder(BOB).withSubjects("Physics").build();
         logic.execute(PersonUtil.getAddCommand(existing));
-        logic.execute(PersonUtil.getAddCommand(BOB));
+        logic.execute(PersonUtil.getAddCommand(bobWithSubject));
         logic.execute("find Amy");
         Path savedPath = temporaryFolder.resolve("addressBook.json");
         String originalJson = Files.readString(savedPath);
 
         for (String tagInput : List.of("t/", "t/A-Level t/", "t/invalid!")) {
-            String invalidCommand = PersonUtil.getAddCommand(new PersonBuilder().build()) + tagInput;
+            String invalidCommand = PersonUtil.getAddCommand(new PersonBuilder().withSubjects("Maths").build())
+                    + tagInput;
             assertThrows(ParseException.class, Tag.MESSAGE_CONSTRAINTS, () -> logic.execute(invalidCommand));
-            assertEquals(List.of(existing, BOB), model.getAddressBook().getPersonList());
+            assertEquals(List.of(existing, bobWithSubject), model.getAddressBook().getPersonList());
             assertEquals(List.of(existing), logic.getFilteredPersonList());
             assertEquals(originalJson, Files.readString(savedPath));
         }
@@ -129,18 +149,20 @@ public class LogicManagerTest {
 
     @Test
     public void execute_addWithDifferentTags_preservesSavedDataOnDuplicate() throws Exception {
-        Person existing = new PersonBuilder(AMY).withTags("a-level").build();
+        Person existing = new PersonBuilder(AMY).withSubjects("Maths").withTags("a-level").build();
+        Person bobWithSubject = new PersonBuilder(BOB).withSubjects("Physics").build();
         logic.execute(PersonUtil.getAddCommand(existing));
-        logic.execute(PersonUtil.getAddCommand(BOB));
+        logic.execute(PersonUtil.getAddCommand(bobWithSubject));
         logic.execute("find Amy");
         Path savedPath = temporaryFolder.resolve("addressBook.json");
         String originalJson = Files.readString(savedPath);
-        String duplicateCommand = PersonUtil.getAddCommand(new PersonBuilder(AMY).withTags("needs revision").build());
+        String duplicateCommand = PersonUtil.getAddCommand(new PersonBuilder(AMY).withSubjects("Maths")
+                .withTags("needs revision").build());
 
         assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () ->
                 logic.execute(duplicateCommand));
 
-        assertEquals(List.of(existing, BOB), model.getAddressBook().getPersonList());
+        assertEquals(List.of(existing, bobWithSubject), model.getAddressBook().getPersonList());
         assertEquals(List.of(existing), logic.getFilteredPersonList());
         assertEquals(originalJson, Files.readString(savedPath));
     }
@@ -164,7 +186,8 @@ public class LogicManagerTest {
         Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
         assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
-                + "\nOutstanding amount: SGD 20.50\nNotes: ", reloadedLogic.execute("view 1").getFeedbackToUser());
+                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified\nNotes: ",
+                reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 
     @Test
@@ -298,8 +321,8 @@ public class LogicManagerTest {
 
         // Triggers the saveAddressBook method by executing an add command
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + ADDRESS_DESC_AMY + START_DATE_DESC_AMY;
-        Person expectedPerson = new PersonBuilder(AMY).build();
+                + ADDRESS_DESC_AMY + START_DATE_DESC_AMY + " s/Maths";
+        Person expectedPerson = new PersonBuilder(AMY).withSubjects("Maths").build();
         ModelManager expectedModel = new ModelManager();
         expectedModel.addPerson(expectedPerson);
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);

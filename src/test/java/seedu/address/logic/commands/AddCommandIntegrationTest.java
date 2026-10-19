@@ -59,7 +59,7 @@ public class AddCommandIntegrationTest {
 
     @Test
     public void execute_addWithRepeatedTags_storesNormalizedTags() throws Exception {
-        Person validPerson = new PersonBuilder().build();
+        Person validPerson = new PersonBuilder().withSubjects("Maths").build();
         Person taggedPerson = new PersonBuilder(validPerson).withTags("a-level", "needs revision").build();
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.addPerson(taggedPerson);
@@ -75,10 +75,19 @@ public class AddCommandIntegrationTest {
         Person original = model.getFilteredPersonList().get(0);
         Person existing = new PersonBuilder(original).withTags("A-Level").build();
         model.setPerson(original, existing);
-        Person duplicate = new PersonBuilder(original).withTags("Needs revision").build();
+        Person duplicate = new PersonBuilder(original).withSubjects("Maths")
+                .withTags("Needs revision").build();
         Command command = parser.parseCommand(PersonUtil.getAddCommand(duplicate));
 
         assertCommandFailure(command, model, AddCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
+    @Test
+    public void execute_addWithDifferentSubjects_rejectsDuplicateProfile() {
+        Person existing = model.getFilteredPersonList().get(0);
+        Person duplicate = new PersonBuilder(existing).withSubjects("Maths").build();
+
+        assertCommandFailure(new AddCommand(duplicate), model, AddCommand.MESSAGE_DUPLICATE_PERSON);
     }
 
     @Test
@@ -86,7 +95,7 @@ public class AddCommandIntegrationTest {
         showPersonAtIndex(model, INDEX_SECOND_PERSON);
         AddressBook originalData = new AddressBook(model.getAddressBook());
         List<Person> originalDisplayedList = new ArrayList<>(model.getFilteredPersonList());
-        String addCommand = PersonUtil.getAddCommand(new PersonBuilder().build());
+        String addCommand = PersonUtil.getAddCommand(new PersonBuilder().withSubjects("Maths").build());
 
         for (String tagInput : List.of("t/", "t/A-Level t/", "t/ t/A-Level", "t/invalid!")) {
             String commandText = addCommand + tagInput;

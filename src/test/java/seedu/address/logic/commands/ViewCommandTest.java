@@ -10,6 +10,8 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
@@ -84,6 +86,8 @@ public class ViewCommandTest {
         return "Name: " + person.getName() + "\nPhone: " + person.getPhone() + "\nAddress: " + person.getAddress()
                 + "\nStart date: " + person.getStartDate()
                 + "\nOutstanding amount: " + person.getOutstandingAmount().toCurrencyString()
+                + "\nSubjects: " + (person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()
+                        .map(Object::toString).collect(Collectors.joining(", ")))
                 + "\nNotes: " + person.getNotes();
     }
 }
