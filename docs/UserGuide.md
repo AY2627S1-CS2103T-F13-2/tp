@@ -142,13 +142,18 @@ Format: `list [-summary]`
 
 Updates one or more fields of an existing student profile in TuteeDex.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [t/TAG]...`
+Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]...`
 
 * Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
 * After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
 * Fields that are not supplied remain unchanged, including the outstanding amount, tags, and subjects.
+* Supplied `s/SUBJECT` values replace the entire subject set. Repeat `s/` for multiple subjects.
+  Subjects use Add's validation: 1-50 characters after trimming, containing only English letters, digits,
+  spaces, or hyphens, with at least one letter or digit. Blank subjects, including a bare `s/`, are invalid.
+  Equivalent subjects are combined without regard to case, retaining the first spelling and input order.
+  Changing only subject case or order is a no-op and retains the existing spelling and order.
 * Supplied `t/TAG` values replace the entire tag set. Repeat `t/` for multiple tags.
   Tags use Add's validation and lowercase normalization; equivalent repeated tags are combined.
   A single blank `t/` clears all tags. Mixing blank and nonblank tags, or repeating blank `t/`, is invalid.
@@ -159,7 +164,8 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.
 * The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index.
-* Each scalar field may appear only once in an edit command. Tags accept repeated `t/` prefixes.
+* Each scalar field may appear only once in an edit command. Tags accept repeated `t/` prefixes,
+  and subjects accept repeated `s/` prefixes.
 * Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
 * An edit is rejected as a duplicate only if name, phone, address, start date,
   and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
@@ -187,6 +193,7 @@ Examples:
 * `edit 1 o/0` resets the first profile's outstanding amount to zero.
 * `edit 1 t/A-Level t/Needs revision` replaces the first profile's tags with these two tags.
 * `edit 1 t/` clears the first profile's tags while keeping its other fields.
+* `edit 1 s/Maths s/H2 Chemistry` replaces the first profile's subjects while keeping its other fields.
 * `find Betsy` followed by `edit 1 a/32, Clementi Road` updates only the address of the first search result.
 
 ### Locating persons by name: `find`
@@ -277,7 +284,7 @@ Action     | Format, Examples
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [t/TAG]...`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 t/A-Level`
+**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]...`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary]`
 **Help**   | `help`

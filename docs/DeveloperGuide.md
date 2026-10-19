@@ -547,6 +547,26 @@ after successful edits; these checks do not require changes to the profile-card 
 6. Exit and restart from the same folder.<br>
    Expected: Amy's tags remain empty, and both profiles retain their other details.
 
+### Editing student subjects
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level notes/Amy note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English o/600 t/Needs revision notes/Bob note`.
+2. Run `find Bob`, then `edit 1 s/Physics s/H2 Chemistry s/PHYSICS`.<br>
+   Expected: `Edited contact: Bob Choo`, and both students return to the list.
+   `view 2` shows `Subjects: Physics, H2 Chemistry` and notes `Bob note`; the five core fields and tags are preserved.
+3. Run `find Bob`, then `edit 1 s/h2 chemistry s/physics`.<br>
+   Expected: `No changes made to contact: Bob Choo`. Only Bob remains displayed.
+   `view 1` retains the original subject spelling and order from step 2.
+4. Try `edit 1 s/`, `edit 1 s/Maths s/`, and `edit 1 p/87654321 t/A-Level s/---`.<br>
+   Expected: Each command fails; Bob's subjects, phone, tags, and current search results remain unchanged.
+5. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/0 s/Physics`.<br>
+   Expected: `This contact already exists in TuteeDex.` Different subjects, tags, and notes do not bypass duplicate checks.
+6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
+   Expected: `view 2` shows Bob's updated phone and still lists `Physics, H2 Chemistry`, with his original notes.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
