@@ -58,6 +58,13 @@ public class UniquePersonListTest {
     }
 
     @Test
+    public void add_sameCoreFieldsWithDifferentTags_throwsDuplicatePersonException() {
+        uniquePersonList.add(new PersonBuilder(ALICE).withTags("A-Level").build());
+        Person duplicate = new PersonBuilder(ALICE).withTags("Needs revision").build();
+        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.add(duplicate));
+    }
+
+    @Test
     public void setPerson_nullTargetPerson_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> uniquePersonList.setPerson(null, ALICE));
     }

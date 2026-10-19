@@ -1,5 +1,10 @@
 package seedu.address.storage;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -11,6 +16,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 
 /**
  * Jackson-friendly version of {@link Person}.
@@ -25,13 +31,23 @@ class JsonAdaptedPerson {
     private final String startDate;
     private final String outstandingAmount;
     private final String notes;
+    private final List<JsonAdaptedTag> tags = new ArrayList<>();
 
     /**
-     * Constructs a legacy student record without notes.
+     * Constructs a legacy student record without tags or notes.
      */
+    public JsonAdaptedPerson(String name, String phone, String address, String startDate, String outstandingAmount) {
+        this(name, phone, address, startDate, outstandingAmount, null, null);
+    }
+
     public JsonAdaptedPerson(String name, String phone, String address, String startDate,
-            String outstandingAmount) {
-        this(name, phone, address, startDate, outstandingAmount, null);
+            String outstandingAmount, String notes) {
+        this(name, phone, address, startDate, outstandingAmount, null, notes);
+    }
+
+    public JsonAdaptedPerson(String name, String phone, String address, String startDate,
+            String outstandingAmount, List<JsonAdaptedTag> tags) {
+        this(name, phone, address, startDate, outstandingAmount, tags, null);
     }
 
     /**
@@ -40,13 +56,17 @@ class JsonAdaptedPerson {
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
-            @JsonProperty("outstandingAmount") String outstandingAmount, @JsonProperty("notes") String notes) {
+            @JsonProperty("outstandingAmount") String outstandingAmount,
+            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("notes") String notes) {
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
         this.outstandingAmount = outstandingAmount;
         this.notes = notes;
+        if (tags != null) {
+            this.tags.addAll(tags);
+        }
     }
 
     /**
@@ -59,6 +79,8 @@ class JsonAdaptedPerson {
         startDate = source.getStartDate().value;
         outstandingAmount = source.getOutstandingAmount().toPlainString();
         notes = source.getNotes().value;
+        source.getTags().stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
+                .map(JsonAdaptedTag::new).forEach(tags::add);
     }
 
     /**
@@ -111,7 +133,15 @@ class JsonAdaptedPerson {
         }
 
         Notes modelNotes = notes == null ? Notes.EMPTY : new Notes(notes);
-        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount, modelNotes);
+        Set<Tag> modelTags = new HashSet<>();
+        for (JsonAdaptedTag tag : tags) {
+            if (tag == null) {
+                throw new IllegalValueException(Tag.MESSAGE_CONSTRAINTS);
+            }
+            modelTags.add(tag.toModelType());
+        }
+        return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount,
+                modelTags, modelNotes);
     }
 
 }

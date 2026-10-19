@@ -3,8 +3,10 @@ package seedu.address.model.person;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Objects;
+import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.model.tag.Tag;
 
 /**
  * Represents a Person in the address book.
@@ -18,13 +20,14 @@ public class Person {
     private final StartDate startDate;
     private final OutstandingAmount outstandingAmount;
     private final Notes notes;
+    private final Set<Tag> tags;
 
     /**
      * Every field must be present and not null.
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount) {
-        this(name, phone, address, startDate, outstandingAmount, Notes.EMPTY);
+        this(name, phone, address, startDate, outstandingAmount, Set.of(), Notes.EMPTY);
     }
 
     /**
@@ -32,13 +35,31 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Notes notes) {
-        requireAllNonNull(name, phone, address, startDate, outstandingAmount, notes);
+        this(name, phone, address, startDate, outstandingAmount, Set.of(), notes);
+    }
+
+    /**
+     * Creates a profile with a defensive, immutable copy of its optional tags.
+     * Every field and tag must be non-null.
+     */
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount, Set<Tag> tags) {
+        this(name, phone, address, startDate, outstandingAmount, tags, Notes.EMPTY);
+    }
+
+    /**
+     * Creates a profile with optional tags and notes. All fields must be non-null.
+     */
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes) {
+        requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags, notes);
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.startDate = startDate;
         this.outstandingAmount = outstandingAmount;
         this.notes = notes;
+        this.tags = Set.copyOf(tags);
     }
 
     public Name getName() {
@@ -65,9 +86,12 @@ public class Person {
         return notes;
     }
 
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
     /**
-     * Returns true if both persons have the same profile details, excluding notes.
-     * Teaching notes do not distinguish otherwise duplicate student profiles.
+     * Returns true if both persons have the same five core fields, ignoring descriptive tags and notes.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -102,13 +126,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && startDate.equals(otherPerson.startDate)
                 && outstandingAmount.equals(otherPerson.outstandingAmount)
+                && tags.equals(otherPerson.tags)
                 && notes.equals(otherPerson.notes);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, address, startDate, outstandingAmount, notes);
+        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags, notes);
     }
 
     @Override
@@ -119,6 +144,7 @@ public class Person {
                 .add("address", address)
                 .add("startDate", startDate)
                 .add("outstandingAmount", outstandingAmount)
+                .add("tags", tags)
                 .add("notes", notes)
                 .toString();
     }

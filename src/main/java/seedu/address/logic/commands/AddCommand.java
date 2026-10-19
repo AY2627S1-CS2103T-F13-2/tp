@@ -7,6 +7,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -27,6 +28,7 @@ public class AddCommand extends Command {
             + PREFIX_ADDRESS + "ADDRESS "
             + PREFIX_START_DATE + "START_DATE "
             + "[" + PREFIX_OUTSTANDING_AMOUNT + "OUTSTANDING_AMOUNT] "
+            + "[" + PREFIX_TAG + "TAG]... "
             + "[" + PREFIX_NOTES + "NOTE]\n"
             + "Example: " + COMMAND_WORD + " "
             + PREFIX_NAME + "John Doe "
@@ -34,6 +36,7 @@ public class AddCommand extends Command {
             + PREFIX_ADDRESS + "311, Clementi Ave 2, #02-25 "
             + PREFIX_START_DATE + "10-Aug "
             + PREFIX_OUTSTANDING_AMOUNT + "20 "
+            + PREFIX_TAG + "A-Level "
             + PREFIX_NOTES + "Revise fractions";
 
     public static final String MESSAGE_SUCCESS = "%1$s's profile has been added to TuteeDex!";

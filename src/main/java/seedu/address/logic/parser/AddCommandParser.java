@@ -7,7 +7,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
 import seedu.address.logic.commands.AddCommand;
@@ -19,6 +21,7 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 
 /**
  * Parses input arguments and creates a new AddCommand object
@@ -33,7 +36,7 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_NOTES);
+                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG, PREFIX_NOTES);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE, PREFIX_START_DATE)
                 || !argMultimap.getPreamble().isEmpty()) {
@@ -51,8 +54,8 @@ public class AddCommandParser implements Parser<AddCommand> {
                 : OutstandingAmount.ZERO;
 
         Notes notes = argMultimap.getValue(PREFIX_NOTES).map(ParserUtil::parseNotes).orElse(Notes.EMPTY);
-
-        Person person = new Person(name, phone, address, startDate, outstandingAmount, notes);
+        Set<Tag> tags = ParserUtil.parseTags(argMultimap.getAllValues(PREFIX_TAG));
+        Person person = new Person(name, phone, address, startDate, outstandingAmount, tags, notes);
 
         return new AddCommand(person);
     }

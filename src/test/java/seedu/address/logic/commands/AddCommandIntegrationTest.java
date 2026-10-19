@@ -1,17 +1,29 @@
 package seedu.address.logic.commands;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
+import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.parser.AddressBookParser;
+import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.PersonUtil;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code AddCommand}.
@@ -19,6 +31,7 @@ import seedu.address.testutil.PersonBuilder;
 public class AddCommandIntegrationTest {
 
     private Model model;
+    private final AddressBookParser parser = new AddressBookParser();
 
     @BeforeEach
     public void setUp() {
@@ -42,6 +55,46 @@ public class AddCommandIntegrationTest {
         Person personInList = model.getAddressBook().getPersonList().get(0);
         assertCommandFailure(new AddCommand(personInList), model,
                 AddCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
+    @Test
+    public void execute_addWithRepeatedTags_storesNormalizedTags() throws Exception {
+        Person validPerson = new PersonBuilder().build();
+        Person taggedPerson = new PersonBuilder(validPerson).withTags("a-level", "needs revision").build();
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.addPerson(taggedPerson);
+        Command command = parser.parseCommand(PersonUtil.getAddCommand(validPerson)
+                + "t/A-Level t/Needs revision t/a-level");
+
+        assertCommandSuccess(command, model, String.format(AddCommand.MESSAGE_SUCCESS, taggedPerson.getName()),
+                expectedModel);
+    }
+
+    @Test
+    public void execute_addWithDifferentTags_rejectsDuplicateProfile() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person existing = new PersonBuilder(original).withTags("A-Level").build();
+        model.setPerson(original, existing);
+        Person duplicate = new PersonBuilder(original).withTags("Needs revision").build();
+        Command command = parser.parseCommand(PersonUtil.getAddCommand(duplicate));
+
+        assertCommandFailure(command, model, AddCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
+    @Test
+    public void execute_addWithInvalidTag_preservesDataAndFilter() {
+        showPersonAtIndex(model, INDEX_SECOND_PERSON);
+        AddressBook originalData = new AddressBook(model.getAddressBook());
+        List<Person> originalDisplayedList = new ArrayList<>(model.getFilteredPersonList());
+        String addCommand = PersonUtil.getAddCommand(new PersonBuilder().build());
+
+        for (String tagInput : List.of("t/", "t/A-Level t/", "t/ t/A-Level", "t/invalid!")) {
+            String commandText = addCommand + tagInput;
+            assertThrows(ParseException.class, Tag.MESSAGE_CONSTRAINTS, () ->
+                    parser.parseCommand(commandText).execute(model));
+            assertEquals(originalData, model.getAddressBook());
+            assertEquals(originalDisplayedList, model.getFilteredPersonList());
+        }
     }
 
     @Test

@@ -34,10 +34,12 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.PersonUtil;
 
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
@@ -90,6 +92,57 @@ public class LogicManagerTest {
         JsonAddressBookStorage savedStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         assertEquals(List.of(expectedPerson), savedStorage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void execute_addWithTags_savesAndReloadsNormalizedTags() throws Exception {
+        Person expectedPerson = new PersonBuilder(AMY).withTags("a-level", "needs revision").build();
+
+        CommandResult result = logic.execute(PersonUtil.getAddCommand(AMY)
+                + "t/A-Level t/Needs revision t/a-level");
+
+        assertEquals("Amy Bee's profile has been added to TuteeDex!", result.getFeedbackToUser());
+        assertEquals(List.of(expectedPerson), logic.getFilteredPersonList());
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        Model reloadedModel = new ModelManager(savedStorage.readAddressBook().orElseThrow(), new UserPrefs());
+        assertEquals(List.of(expectedPerson), reloadedModel.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_addWithInvalidTags_preservesSavedDataAndFilter() throws Exception {
+        Person existing = new PersonBuilder(AMY).withTags("a-level").build();
+        logic.execute(PersonUtil.getAddCommand(existing));
+        logic.execute(PersonUtil.getAddCommand(BOB));
+        logic.execute("find Amy");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String originalJson = Files.readString(savedPath);
+
+        for (String tagInput : List.of("t/", "t/A-Level t/", "t/invalid!")) {
+            String invalidCommand = PersonUtil.getAddCommand(new PersonBuilder().build()) + tagInput;
+            assertThrows(ParseException.class, Tag.MESSAGE_CONSTRAINTS, () -> logic.execute(invalidCommand));
+            assertEquals(List.of(existing, BOB), model.getAddressBook().getPersonList());
+            assertEquals(List.of(existing), logic.getFilteredPersonList());
+            assertEquals(originalJson, Files.readString(savedPath));
+        }
+    }
+
+    @Test
+    public void execute_addWithDifferentTags_preservesSavedDataOnDuplicate() throws Exception {
+        Person existing = new PersonBuilder(AMY).withTags("a-level").build();
+        logic.execute(PersonUtil.getAddCommand(existing));
+        logic.execute(PersonUtil.getAddCommand(BOB));
+        logic.execute("find Amy");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String originalJson = Files.readString(savedPath);
+        String duplicateCommand = PersonUtil.getAddCommand(new PersonBuilder(AMY).withTags("needs revision").build());
+
+        assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () ->
+                logic.execute(duplicateCommand));
+
+        assertEquals(List.of(existing, BOB), model.getAddressBook().getPersonList());
+        assertEquals(List.of(existing), logic.getFilteredPersonList());
+        assertEquals(originalJson, Files.readString(savedPath));
     }
 
     @Test

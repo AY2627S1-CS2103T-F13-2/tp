@@ -7,6 +7,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Notes;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -67,6 +69,18 @@ public class NotesIntegrationTest {
         assertEquals("Name: Amy Bee\nPhone: 87654321\nAddress: Block 1\nStart date: 10-Aug"
                 + "\nOutstanding amount: SGD 20.00\nNotes: " + notes,
                 reloadedLogic.execute("view 1").getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_addEditReload_preservesTagsAndNotes() throws Exception {
+        logic.execute(ADD_STUDENT + " t/A-Level t/Needs revision notes/Revise fractions");
+        Person added = model.getFilteredPersonList().get(0);
+        assertEquals(new Notes("Revise fractions"), added.getNotes());
+        assertEquals(Set.of(new Tag("a-level"), new Tag("needs revision")), added.getTags());
+
+        logic.execute("edit 1 p/87654321");
+        Person expected = new PersonBuilder(added).withPhone("87654321").build();
+        assertEquals(List.of(expected), addressStorage.readAddressBook().orElseThrow().getPersonList());
     }
 
     @Test

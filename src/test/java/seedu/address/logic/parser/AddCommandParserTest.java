@@ -21,6 +21,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandParserTest {
@@ -85,6 +86,30 @@ public class AddCommandParserTest {
     public void parse_outstandingAmountOmitted_defaultsToZero() {
         assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB,
                 new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("0").build()));
+    }
+
+    @Test
+    public void parse_repeatedTags_normalizesAndCombines() {
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + " t/ A-Level  t/Needs revision t/a-level",
+                new AddCommand(new PersonBuilder(BOB).withTags("a-level", "needs revision").build()));
+    }
+
+    @Test
+    public void parse_tagsInterleavedWithOtherFields_success() {
+        assertParseSuccess(parser, " t/A-Level" + NAME_DESC_BOB + " t/Needs revision" + START_DATE_DESC_BOB
+                        + ADDRESS_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB + PHONE_DESC_BOB,
+                new AddCommand(new PersonBuilder(BOB).withOutstandingAmount("20")
+                        .withTags("a-level", "needs revision").build()));
+    }
+
+    @Test
+    public void parse_invalidOrBlankTag_failure() {
+        String[] tags = {" t/", " t/   ", " t/ t/A-Level", " t/A-Level t/", " t/invalid!", " t/A_Level"};
+        for (String tagInput : tags) {
+            assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                    + tagInput, Tag.MESSAGE_CONSTRAINTS);
+        }
     }
 
     @Test

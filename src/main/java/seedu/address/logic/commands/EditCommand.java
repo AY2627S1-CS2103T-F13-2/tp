@@ -109,7 +109,7 @@ public class EditCommand extends Command {
                 .orElse(personToEdit.getOutstandingAmount());
 
         return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount,
-                personToEdit.getNotes());
+                personToEdit.getTags(), personToEdit.getNotes());
     }
 
     @Override
