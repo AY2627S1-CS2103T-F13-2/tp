@@ -122,15 +122,21 @@ Examples:
 
 Format: `view INDEX`
 
-Displays the name, phone, address, start date, outstanding amount, subjects, and notes
+Displays the name, phone, address, start date, outstanding amount, subjects, tags, and notes
 of the student at `INDEX` in the currently displayed list. A student with no
 note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
+Subjects, tags, and notes also appear on each contact card without running `view`.
+Subjects keep their stored order; tags appear alphabetically using their stored
+lowercase labels. Missing subjects or tags show `Not specified`; missing notes
+show an empty `Notes:` value. Long subjects, tags, and notes wrap within the card.
+
 ### Listing all persons: `list`
 
-Shows every contact in the address book, displaying only each contact's name and phone number.
+Shows every contact in the address book. Each card displays the contact's name,
+phone, address, start date, outstanding amount, subjects, tags, and notes.
 
 Format: `list [-summary]`
 
