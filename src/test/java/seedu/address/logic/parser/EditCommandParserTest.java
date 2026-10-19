@@ -40,6 +40,39 @@ public class EditCommandParserTest {
     private final EditCommandParser parser = new EditCommandParser();
 
     @Test
+    public void parse_notesSpecified_preservesFreeTextAndUrls() {
+        String notes = "Revise  fractions, graphs & 中文! See https://example.com";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes(notes).build();
+        assertParseSuccess(parser, "1 notes/  " + notes + "  ", new EditCommand(INDEX_FIRST_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_blankNotes_clearsNote() {
+        EditCommand expected = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNotes("").build());
+        assertParseSuccess(parser, "1 notes/", expected);
+        assertParseSuccess(parser, "1 notes/   ", expected);
+    }
+
+    @Test
+    public void parse_repeatedNotes_failure() {
+        for (String args : new String[] {"1 notes/One notes/Two", "1 notes/ notes/", "1 notes/Same notes/Same",
+            "1 t/A-Level notes/One notes/"}) {
+            assertParseFailure(parser, args, EditCommandParser.MESSAGE_DUPLICATE_FIELDS);
+        }
+    }
+
+    @Test
+    public void parse_notesBeforeOtherFields_recognizesFieldBoundaries() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes("Revise fractions")
+                .withSubjects("Physics").withTags("a-level").withPhone(VALID_PHONE_AMY).build();
+        assertParseSuccess(parser, "1 notes/Revise fractions s/Physics t/A-Level p/" + VALID_PHONE_AMY,
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        assertParseFailure(parser, "1 notes/Revise fractions x/value", EditCommandParser.MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 NOTES/Revise fractions", EditCommandParser.MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_subjectsSpecified_replacesCaseInsensitiveSet() {
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
                 .withSubjects("Physics", "H2 Chemistry").build();
@@ -114,13 +147,15 @@ public class EditCommandParserTest {
     public void parse_allFieldsSpecified_success() {
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + NAME_DESC_AMY + PHONE_DESC_BOB
-                + ADDRESS_DESC_AMY + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB;
+                + ADDRESS_DESC_AMY + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB
+                + " s/Physics t/A-Level notes/Revise fractions";
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
                 .withName(VALID_NAME_AMY)
                 .withPhone(VALID_PHONE_BOB)
                 .withAddress(VALID_ADDRESS_AMY)
                 .withStartDate(VALID_START_DATE_BOB)
                 .withOutstandingAmount(VALID_OUTSTANDING_AMOUNT_BOB)
+                .withSubjects("Physics").withTags("a-level").withNotes("Revise fractions")
                 .build();
 
         assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));

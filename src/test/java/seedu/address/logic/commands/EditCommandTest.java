@@ -25,6 +25,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
@@ -35,6 +36,22 @@ import seedu.address.testutil.PersonBuilder;
 public class EditCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_replacementNotes_preservesOtherFieldsAndCommandSnapshot() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person target = new PersonBuilder(original).withTags("a-level").withSubjects("Maths")
+                .withNotes("Old note").build();
+        model.setPerson(original, target);
+        Person updated = new PersonBuilder(target).withNotes("Revise fractions").build();
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes("Revise fractions").build();
+        EditCommand command = new EditCommand(INDEX_FIRST_PERSON, descriptor);
+        descriptor.setNotes(Notes.EMPTY);
+        Model expected = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expected.setPerson(target, updated);
+
+        assertCommandSuccess(command, model, "Edited contact: " + target.getName(), expected);
+    }
 
     @Test
     public void execute_replacementTags_preservesOtherFieldsAndCommandSnapshot() {

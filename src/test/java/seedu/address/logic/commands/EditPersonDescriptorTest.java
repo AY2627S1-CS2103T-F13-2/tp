@@ -19,6 +19,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
@@ -133,6 +134,29 @@ public class EditPersonDescriptorTest {
     }
 
     @Test
+    public void notes_omittedAndClearedAreDistinct() {
+        EditPersonDescriptor omitted = new EditPersonDescriptor();
+        assertTrue(omitted.getNotes().isEmpty());
+        assertFalse(omitted.isAnyFieldEdited());
+        EditPersonDescriptor clear = new EditPersonDescriptorBuilder().withNotes("   ").build();
+        assertEquals(Notes.EMPTY, clear.getNotes().orElseThrow());
+        assertTrue(clear.isAnyFieldEdited());
+        assertFalse(clear.equals(omitted));
+        assertEquals(clear, new EditPersonDescriptor(clear));
+    }
+
+    @Test
+    public void notes_copyRetainsOriginalValueAfterDescriptorChanges() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes("Revise fractions").build();
+        EditPersonDescriptor copy = new EditPersonDescriptor(descriptor);
+        assertEquals(descriptor, copy);
+        assertTrue(copy.isAnyFieldEdited());
+        descriptor.setNotes(Notes.EMPTY);
+        assertEquals(new Notes("Revise fractions"), copy.getNotes().orElseThrow());
+        assertFalse(descriptor.equals(copy));
+    }
+
+    @Test
     public void toStringMethod() {
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
         String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
@@ -142,7 +166,8 @@ public class EditPersonDescriptorTest {
                 + editPersonDescriptor.getStartDate().orElse(null) + ", outstandingAmount="
                 + editPersonDescriptor.getOutstandingAmount().orElse(null) + ", tags="
                 + editPersonDescriptor.getTags().orElse(null) + ", subjects="
-                + editPersonDescriptor.getSubjects().orElse(null) + "}";
+                + editPersonDescriptor.getSubjects().orElse(null) + ", notes="
+                + editPersonDescriptor.getNotes().orElse(null) + "}";
         assertEquals(expected, editPersonDescriptor.toString());
     }
 }

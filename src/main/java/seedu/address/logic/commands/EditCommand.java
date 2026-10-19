@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
@@ -25,6 +26,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -49,7 +51,8 @@ public class EditCommand extends Command {
             + "[" + PREFIX_START_DATE + "START_DATE] "
             + "[" + PREFIX_OUTSTANDING_AMOUNT + "OUTSTANDING_AMOUNT] "
             + "[" + PREFIX_SUBJECT + "SUBJECT]... "
-            + "[" + PREFIX_TAG + "TAG]...\n"
+            + "[" + PREFIX_TAG + "TAG]... "
+            + "[" + PREFIX_NOTES + "NOTE]\n"
             + "Example: " + COMMAND_WORD + " 1 "
             + PREFIX_PHONE + "91234567 "
             + PREFIX_START_DATE + "10-Aug";
@@ -120,7 +123,8 @@ public class EditCommand extends Command {
 
         return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount,
                 editPersonDescriptor.getTags().orElse(personToEdit.getTags()),
-                personToEdit.getNotes(), editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()));
+                editPersonDescriptor.getNotes().orElse(personToEdit.getNotes()),
+                editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()));
     }
 
     @Override
@@ -147,7 +151,7 @@ public class EditCommand extends Command {
     }
 
     /**
-     * Stores the supplied edits. Absent fields are preserved; a supplied empty tag set clears tags.
+     * Stores supplied edits. Absent fields are preserved; empty tags or notes clear those fields.
      */
     public static class EditPersonDescriptor {
         private Name name;
@@ -157,6 +161,7 @@ public class EditCommand extends Command {
         private OutstandingAmount outstandingAmount;
         private Set<Tag> tags;
         private Set<Subject> subjects;
+        private Notes notes;
 
         public EditPersonDescriptor() {}
 
@@ -172,13 +177,15 @@ public class EditCommand extends Command {
             setOutstandingAmount(toCopy.outstandingAmount);
             setTags(toCopy.tags);
             setSubjects(toCopy.subjects);
+            setNotes(toCopy.notes);
         }
 
         /**
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address, startDate, outstandingAmount, tags, subjects);
+            return CollectionUtil.isAnyNonNull(name, phone, address, startDate, outstandingAmount,
+                    tags, subjects, notes);
         }
 
         public void setName(Name name) {
@@ -246,6 +253,15 @@ public class EditCommand extends Command {
             return Optional.ofNullable(subjects);
         }
 
+        /** Sets replacement notes; null means omitted and Notes.EMPTY means clearing. */
+        public void setNotes(Notes notes) {
+            this.notes = notes;
+        }
+
+        public Optional<Notes> getNotes() {
+            return Optional.ofNullable(notes);
+        }
+
         @Override
         public boolean equals(Object other) {
             if (other == this) {
@@ -263,7 +279,8 @@ public class EditCommand extends Command {
                     && Objects.equals(startDate, otherEditPersonDescriptor.startDate)
                     && Objects.equals(outstandingAmount, otherEditPersonDescriptor.outstandingAmount)
                     && Objects.equals(tags, otherEditPersonDescriptor.tags)
-                    && Objects.equals(subjects, otherEditPersonDescriptor.subjects);
+                    && Objects.equals(subjects, otherEditPersonDescriptor.subjects)
+                    && Objects.equals(notes, otherEditPersonDescriptor.notes);
         }
 
         @Override
@@ -276,6 +293,7 @@ public class EditCommand extends Command {
                     .add("outstandingAmount", outstandingAmount)
                     .add("tags", tags)
                     .add("subjects", subjects)
+                    .add("notes", notes)
                     .toString();
         }
     }

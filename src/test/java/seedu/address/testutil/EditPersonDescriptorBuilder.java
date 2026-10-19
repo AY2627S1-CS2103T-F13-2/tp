@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -40,6 +41,7 @@ public class EditPersonDescriptorBuilder {
         descriptor.setStartDate(person.getStartDate());
         descriptor.setOutstandingAmount(person.getOutstandingAmount());
         descriptor.setTags(person.getTags());
+        descriptor.setNotes(person.getNotes());
         if (!person.getSubjects().isEmpty()) {
             descriptor.setSubjects(person.getSubjects());
         }
@@ -95,6 +97,12 @@ public class EditPersonDescriptorBuilder {
     public EditPersonDescriptorBuilder withSubjects(String... subjects) {
         descriptor.setSubjects(Arrays.stream(subjects).map(Subject::new)
                 .collect(Collectors.toCollection(LinkedHashSet::new)));
+        return this;
+    }
+
+    /** Sets replacement notes, including blank text to clear the note. */
+    public EditPersonDescriptorBuilder withNotes(String notes) {
+        descriptor.setNotes(new Notes(notes));
         return this;
     }
 
