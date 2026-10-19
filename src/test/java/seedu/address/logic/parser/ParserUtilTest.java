@@ -17,6 +17,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 public class ParserUtilTest {
@@ -35,6 +36,17 @@ public class ParserUtilTest {
     private static final String VALID_OUTSTANDING_AMOUNT = "20.50";
 
     private static final String WHITESPACE = " \t\r\n";
+
+    @Test
+    public void parseSubject_trimsSurroundingWhitespaceAndPreservesInternalSpaces() throws Exception {
+        assertEquals(new Subject("H2  Maths"), ParserUtil.parseSubject("  H2  Maths  "));
+        assertEquals("H2  Maths", ParserUtil.parseSubject("  H2  Maths  ").value);
+    }
+
+    @Test
+    public void parseSubject_blankValue_throwsParseException() {
+        assertThrows(ParseException.class, "Subject must not be blank.", () -> ParserUtil.parseSubject("   "));
+    }
 
     @Test
     public void parseIndex_invalidInput_throwsParseException() {

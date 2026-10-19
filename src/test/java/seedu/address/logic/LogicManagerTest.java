@@ -34,10 +34,12 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.PersonUtil;
 
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
@@ -105,7 +107,7 @@ public class LogicManagerTest {
                 .withAddress("1 Test Street").withStartDate("14-Oct")
                 .withSubjects("Maths", "H2 Chemistry").build(), saved);
         assertEquals("Name: Subject Student\nPhone: 87654321\nAddress: 1 Test Street\nStart date: 14-Oct"
-                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry",
+                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nNotes: ",
                 logic.execute("view 1").getFeedbackToUser());
     }
 
@@ -116,7 +118,8 @@ public class LogicManagerTest {
         logic.execute("add n/Cara Tutor p/81234569 a/3 Test Street d/14-Oct s/maths s/Chemistry");
 
         logic.execute("find Ben");
-        assertEquals("Listed 2 contacts.", logic.execute("list s/MATHS").getFeedbackToUser());
+        assertEquals("Listed 2 contacts.",
+                logic.execute("list s/MATHS s/maths s/Chemistry").getFeedbackToUser());
         assertEquals(List.of("Anna Tutor", "Cara Tutor"), logic.getFilteredPersonList().stream()
                 .map(person -> person.getName().toString()).toList());
         assertThrows(ParseException.class, "Subject must not be blank.", () -> logic.execute("list s/"));
@@ -130,17 +133,59 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_addSubjectValidation_preservesFirstSpelling() throws Exception {
-        logic.execute("add n/Amy Subject p/81234567 a/1 Test Street d/14-Oct s/Maths s/maths");
-        assertEquals(1, logic.getFilteredPersonList().get(0).getSubjects().size());
-        assertEquals("Maths", logic.getFilteredPersonList().get(0).getSubjects().iterator().next().value);
+    public void execute_addWithTags_savesAndReloadsNormalizedTags() throws Exception {
+        Person student = new PersonBuilder(AMY).withSubjects("Maths").build();
+        Person expectedPerson = new PersonBuilder(student).withTags("a-level", "needs revision").build();
 
-        String details = " n/Ben Subject p/81234568 a/2 Test Street d/14-Oct";
-        assertThrows(ParseException.class, "At least one subject must be supplied.", () ->
-                logic.execute("add" + details));
-        assertThrows(ParseException.class, "Subject must not be blank.", () ->
-                logic.execute("add" + details + " s/"));
-        assertEquals(1, logic.getFilteredPersonList().size());
+        CommandResult result = logic.execute(PersonUtil.getAddCommand(student)
+                + "t/A-Level t/Needs revision t/a-level");
+
+        assertEquals("Amy Bee's profile has been added to TuteeDex!", result.getFeedbackToUser());
+        assertEquals(List.of(expectedPerson), logic.getFilteredPersonList());
+        JsonAddressBookStorage savedStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        Model reloadedModel = new ModelManager(savedStorage.readAddressBook().orElseThrow(), new UserPrefs());
+        assertEquals(List.of(expectedPerson), reloadedModel.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_addWithInvalidTags_preservesSavedDataAndFilter() throws Exception {
+        Person existing = new PersonBuilder(AMY).withSubjects("Maths").withTags("a-level").build();
+        Person bobWithSubject = new PersonBuilder(BOB).withSubjects("Physics").build();
+        logic.execute(PersonUtil.getAddCommand(existing));
+        logic.execute(PersonUtil.getAddCommand(bobWithSubject));
+        logic.execute("find Amy");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String originalJson = Files.readString(savedPath);
+
+        for (String tagInput : List.of("t/", "t/A-Level t/", "t/invalid!")) {
+            String invalidCommand = PersonUtil.getAddCommand(new PersonBuilder().withSubjects("Maths").build())
+                    + tagInput;
+            assertThrows(ParseException.class, Tag.MESSAGE_CONSTRAINTS, () -> logic.execute(invalidCommand));
+            assertEquals(List.of(existing, bobWithSubject), model.getAddressBook().getPersonList());
+            assertEquals(List.of(existing), logic.getFilteredPersonList());
+            assertEquals(originalJson, Files.readString(savedPath));
+        }
+    }
+
+    @Test
+    public void execute_addWithDifferentTags_preservesSavedDataOnDuplicate() throws Exception {
+        Person existing = new PersonBuilder(AMY).withSubjects("Maths").withTags("a-level").build();
+        Person bobWithSubject = new PersonBuilder(BOB).withSubjects("Physics").build();
+        logic.execute(PersonUtil.getAddCommand(existing));
+        logic.execute(PersonUtil.getAddCommand(bobWithSubject));
+        logic.execute("find Amy");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String originalJson = Files.readString(savedPath);
+        String duplicateCommand = PersonUtil.getAddCommand(new PersonBuilder(AMY).withSubjects("Maths")
+                .withTags("needs revision").build());
+
+        assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () ->
+                logic.execute(duplicateCommand));
+
+        assertEquals(List.of(existing, bobWithSubject), model.getAddressBook().getPersonList());
+        assertEquals(List.of(existing), logic.getFilteredPersonList());
+        assertEquals(originalJson, Files.readString(savedPath));
     }
 
     @Test
@@ -162,7 +207,7 @@ public class LogicManagerTest {
         Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
         assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
-                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified",
+                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified\nNotes: ",
                 reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 

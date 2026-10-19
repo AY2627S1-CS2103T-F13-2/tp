@@ -16,17 +16,21 @@ import seedu.address.model.person.Subject;
 public class ListCommandParser implements Parser<ListCommand> {
 
     public static final String MESSAGE_INVALID_PARAMETERS =
-            "Invalid command format! Use list or list s/SUBJECT [s/SUBJECT]...";
+            "Invalid command format! Use list, list -summary, or list s/SUBJECT [s/SUBJECT]...";
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
 
     /**
      * Parses the given {@code String} of arguments in the context of the ListCommand
      * and returns a ListCommand object for execution.
-     * @throws ParseException if arguments are not repeated subject values
+     * @throws ParseException if arguments are not blank, the summary flag, or repeated subject values
      */
+    @Override
     public ListCommand parse(String args) throws ParseException {
         if (args.isBlank()) {
             return new ListCommand();
+        }
+        if (args.trim().equals(ListCommand.SUMMARY_FLAG)) {
+            return new ListCommand(true);
         }
         Matcher matcher = PREFIX_PATTERN.matcher(args.trim());
         while (matcher.find()) {
@@ -39,6 +43,9 @@ public class ListCommandParser implements Parser<ListCommand> {
             throw new ParseException(MESSAGE_INVALID_PARAMETERS);
         }
         Set<Subject> subjects = ParserUtil.parseSubjects(values.getAllValues(PREFIX_SUBJECT));
+        if (subjects.isEmpty()) {
+            throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+        }
         return new ListCommand(subjects);
     }
 

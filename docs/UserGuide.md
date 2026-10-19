@@ -31,7 +31,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
    * `list` : Lists all contacts.
 
-   * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug o/20` : Adds a student profile named `John Doe` to TuteeDex.
+   * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug s/Maths o/20` : Adds a student profile named `John Doe` to TuteeDex.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -80,7 +80,7 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
-Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]… [o/OUTSTANDING_AMOUNT]`
+Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]`
 
 <box type="tip" seamless>
 
@@ -88,26 +88,59 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]�
 
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
 
-**Note:** At least one `s/SUBJECT` is required for new profiles. Repeat `s/` for multiple subjects, for example `s/Maths s/H2 Chemistry`. Each subject must be 1–50 characters after trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including at least one letter or digit. Subjects are compared without regard to case; duplicates are stored once. Comma-separated subjects are not supported.
+**Note:** At least one `s/SUBJECT` is required for new profiles. Repeat `s/` for multiple subjects, for example `s/Maths s/H2 Chemistry`. Each subject must be 1–50 characters after trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including at least one letter or digit. Subjects are compared without regard to case; duplicates are stored once, retaining the first spelling. Comma-separated subjects are not supported.
+
+**Note:** `notes/NOTE` is optional and stores one free-text note per student.
+Omitting it or supplying a blank value stores no note. Surrounding spaces are
+trimmed; internal spaces, punctuation, and display case are preserved.
+Specify `notes/` only once. Repeating it is an error and no profile is added.
+As with other Add values, recognised field prefixes preceded by a space mark
+the next field, rather than literal note text. Notes are saved automatically
+and appear in `view INDEX`. Existing data without notes loads with empty notes.
 </box>
 
-An add command is rejected as a duplicate when all stored fields, including the subject set, match an existing profile. Subject order and case do not affect comparison. Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are equivalent. A duplicate produces `This contact already exists in TuteeDex` and does not add another profile. Profiles saved before subjects were introduced remain available with no subjects recorded.
+Tags are optional descriptive labels, separate from subjects:
+
+* Supply one `t/` prefix per tag, such as `t/A-Level t/Needs revision`. Omitting `t/` creates a profile with no tags.
+* Tags accept letters (A-Z and a-z), digits, spaces, and hyphens. Surrounding spaces are trimmed, internal spaces are preserved, and tags are stored in lowercase.
+* Repeated tags, including case variants such as `t/A-Level t/a-level`, are combined. Tag order does not matter.
+* Every tag must be valid. Blank tags, including `t/A-Level t/`, reject the entire command with `Tags must contain only letters, digits, spaces, or hyphens and must not be blank.`
+
+An add command is rejected as a duplicate when name, phone, address, start date,
+and outstanding amount match an existing profile, even if subjects, tags, or notes differ.
+Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are
+equivalent. A duplicate produces `This contact already exists in TuteeDex` and
+does not add another profile.
 
 Examples:
 * `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug s/Maths`
 * `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600 s/H2 Chemistry s/Physics`
+* `add n/Amy Bee a/Block 1 p/91234567 d/10-Aug s/Maths notes/Revise fractions`
+* `add n/Peter Parker a/Block 9 p/91234567 d/10-Aug s/Physics t/A-Level t/Needs revision`
+
+### Viewing a student profile: `view`
+
+Format: `view INDEX`
+
+Displays the name, phone, address, start date, outstanding amount, subjects, and notes
+of the student at `INDEX` in the currently displayed list. A student with no
+note has an empty `Notes:` value. The index must be a positive integer and
+refer to a displayed student; otherwise, the command shows an error.
+Viewing a profile does not change student data or the current list.
 
 ### Listing and filtering students: `list`
 
 Shows every contact in the address book, displaying only each contact's name and phone number.
 
-Format: `list [s/SUBJECT]…`
+Format: `list` | `list -summary` | `list s/SUBJECT [s/SUBJECT]...`
 
 * Plain `list` shows all contacts and clears a previous search or filter.
 * `list s/Maths s/H2 Chemistry` shows each student taking any specified subject, ignoring case. It matches complete subject names, so `s/Maths` does not match `Additional Maths`.
 * Every subject uses the same validation as `add`. Blank or invalid subjects, or other parameters such as `list 3`, show an error without changing the current list.
 * A subject filter replaces the previous search or filter, starts from all contacts, keeps their order, and renumbers displayed results from 1.
 * If no student matches, the list is empty and the status says `No contacts match the specified subjects.`
+* `list -summary` shows the total number of students and the number who have paid in the result display. It restores the full list.
+* The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
 * The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
 ### Editing a student profile: `edit`
@@ -121,13 +154,17 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
 * Fields that are not supplied remain unchanged, including the outstanding amount and subjects.
+* Existing notes are preserved by edits. Editing or clearing notes through
+  `edit` is not supported in this increment.
 * Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates use `DD-MMM`, and outstanding amounts are nonnegative numbers with at most two decimal places. Calendar validity is not checked.
 * Use `o/0` to reset the outstanding amount to zero. A prefix with a blank value, including `o/`, is invalid.
 * Leading and trailing spaces around values are ignored. Text case and internal spaces are preserved.
 * The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index.
 * Each field may appear only once in an edit command.
 * Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
-* An edit is rejected as a duplicate only if all five stored fields match another profile. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
+* An edit is rejected as a duplicate only if name, phone, address, start date,
+  and outstanding amount match another profile. Subjects and notes do not distinguish
+  duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
 * A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full contact list. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
@@ -235,10 +272,11 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE [o/OUTSTANDING_AMOUNT]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug o/20`
+**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths o/20 t/A-Level notes/Revise algebra`
+**View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list`
+**List**   | `list [-summary]`
 **Help**   | `help`

@@ -9,6 +9,15 @@ import org.junit.jupiter.api.Test;
 public class SubjectTest {
 
     @Test
+    public void isValidSubject_lengthAndCharacterBoundaries() {
+        assertTrue(Subject.isValidSubject("A"));
+        assertTrue(Subject.isValidSubject("A".repeat(50)));
+        assertFalse(Subject.isValidSubject("A".repeat(51)));
+        assertFalse(Subject.isValidSubject("---"));
+        assertFalse(Subject.isValidSubject("Maths!"));
+    }
+
+    @Test
     public void equals_caseInsensitiveAndTypeSafe() {
         Subject maths = new Subject("Maths");
         assertEquals(maths, new Subject("maths"));

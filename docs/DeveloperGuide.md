@@ -159,6 +159,37 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Shared tag data
+
+Tags are optional descriptive labels, separate from subjects. Add accepts repeated `t/TAG` values
+using `ParserUtil.parseTags()`. This validates every occurrence before adding the profile, combines
+repeated tags, and produces an empty set when no tags are supplied. The shared contract is:
+
+* `Tag` accepts ASCII letters, digits, spaces, and hyphens, and rejects blank values. It trims surrounding
+  whitespace and stores lowercase text using `Locale.ROOT`. Internal spaces are preserved.
+* `Person.getTags()` returns an immutable set. Repeated tags and case variants collapse into one value;
+  order has no meaning. The five-argument constructor creates a profile without tags, while the
+  six-argument constructor accepts a set of tags.
+* `Person.isSamePerson()` compares name, phone, address, start date, and outstanding amount, ignoring tags.
+  Profiles with the same core fields but different tags are duplicates. The outstanding-amount identity
+  discussion in issue #73 remains separate and this change preserves its current behavior.
+* `Person.equals()` and `hashCode()` include tags, so changes to stored data remain detectable even when
+  the student identity stays the same.
+* JSON stores a `tags` array of normalized strings in alphabetical order. A missing or null array loads
+  as an empty set, preserving compatibility with the previous student-profile schema. Invalid or null
+  elements reject the stored profile. For example: `"tags": ["a-level", "needs revision"]`.
+* Existing Edit commands preserve tags while editing the other fields. Tag editing and filtering are
+  separate follow-ups (#81 and #82); they should reuse `Tag` normalization and set equality.
+
+Add tag input, shared storage, and validation are implemented in issue #80. Another team member owns
+extending View for all new fields. Profile-card changes are deferred to That Li's UI work; neither
+display change is part of the Add Tags contribution. Both should read `Person.getTags()` and display
+the stored lowercase labels, preferably in alphabetical order. No tag length or count limit is
+introduced by this contract.
+
+`LogicManagerTest` verifies Add with real temporary JSON storage: normalized tags survive loading into
+a new model, and invalid tags or duplicate profiles leave saved data and search results unchanged.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -475,8 +506,8 @@ testers are expected to do more *exploratory* testing.
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
 1. Run `clear` in this test copy to remove sample profiles, then add two test profiles:
-   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/20` and
-   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep o/600`.
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths o/20` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics o/600`.
 2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
    Expected: `Edited contact: Bob Choo`. The full list returns; Bob's card immediately shows the new phone
    and `SGD 20.50`, while his name, address, and start date remain unchanged.

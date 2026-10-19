@@ -2,20 +2,22 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
@@ -87,10 +89,10 @@ public class PersonTest {
         editedAlice = new PersonBuilder(ALICE).withOutstandingAmount("20").build();
         assertFalse(ALICE.equals(editedAlice));
 
-        // different subjects -> returns false
+        // different subjects affect equality, but not duplicate identity
         editedAlice = new PersonBuilder(ALICE).withSubjects("Maths").build();
         assertFalse(ALICE.equals(editedAlice));
-        assertFalse(ALICE.isSamePerson(editedAlice));
+        assertTrue(ALICE.isSamePerson(editedAlice));
         assertEquals(new PersonBuilder(ALICE).withSubjects("maths").build().hashCode(), editedAlice.hashCode());
     }
 
@@ -102,17 +104,58 @@ public class PersonTest {
 
         Set<Subject> sourceSubjects = new LinkedHashSet<>(Set.of(new Subject("Maths")));
         Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(),
-                ALICE.getStartDate(), ALICE.getOutstandingAmount(), sourceSubjects);
+                ALICE.getStartDate(), ALICE.getOutstandingAmount(), Set.of(), Notes.EMPTY, sourceSubjects);
         sourceSubjects.add(new Subject("Physics"));
         assertEquals(Set.of(new Subject("Maths")), person.getSubjects());
         assertThrows(UnsupportedOperationException.class, () -> person.getSubjects().add(new Subject("English")));
     }
 
     @Test
+    public void notes_affectEqualityButNotDuplicateIdentity() {
+        Person withNotes = new PersonBuilder(ALICE).withNotes("Revise fractions").build();
+        assertTrue(ALICE.isSamePerson(withNotes));
+        assertTrue(withNotes.isSamePerson(ALICE));
+        assertFalse(ALICE.equals(withNotes));
+        Person copy = new PersonBuilder(withNotes).build();
+        assertEquals(withNotes, copy);
+        assertEquals(withNotes.hashCode(), copy.hashCode());
+        assertEquals(Notes.EMPTY, ALICE.getNotes());
+    }
+
+    @Test
+    public void tags_areDataButDoNotDistinguishDuplicateProfiles() {
+        Person first = new PersonBuilder(ALICE).withTags("A-Level").build();
+        Person second = new PersonBuilder(ALICE).withTags("Needs revision").build();
+        assertTrue(first.isSamePerson(second));
+        assertTrue(first.isSamePerson(ALICE));
+        assertFalse(first.equals(second));
+        assertFalse(first.equals(ALICE));
+    }
+
+    @Test
+    public void tags_caseAndOrderDoNotAffectEquality() {
+        Person first = new PersonBuilder(ALICE).withTags("A-Level", "Needs revision").build();
+        Person second = new PersonBuilder(ALICE).withTags("NEEDS REVISION", "a-level", "A-Level").build();
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
+    }
+
+    @Test
+    public void tags_defensiveCopyAndImmutableAccess() {
+        Set<Tag> tags = new HashSet<>(Set.of(new Tag("A-Level")));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(), ALICE.getStartDate(),
+                ALICE.getOutstandingAmount(), tags);
+        tags.clear();
+        assertEquals(Set.of(new Tag("a-level")), person.getTags());
+        assertThrows(UnsupportedOperationException.class, () -> person.getTags().clear());
+    }
+
+    @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", address=" + ALICE.getAddress() + ", startDate=" + ALICE.getStartDate()
-                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", subjects=[]}";
+                + ", outstandingAmount=" + ALICE.getOutstandingAmount() + ", tags=" + ALICE.getTags()
+                + ", notes=" + ALICE.getNotes() + ", subjects=" + ALICE.getSubjects() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

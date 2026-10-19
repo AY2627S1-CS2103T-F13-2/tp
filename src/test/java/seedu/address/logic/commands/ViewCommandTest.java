@@ -10,6 +10,8 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
@@ -18,10 +20,20 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 public class ViewCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_studentWithNotes_displaysNotes() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person withNotes = new PersonBuilder(original).withNotes("Revise  fractions & algebra!").build();
+        model.setPerson(original, withNotes);
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        assertCommandSuccess(new ViewCommand(INDEX_FIRST_PERSON), model, expectedDetails(withNotes), expectedModel);
+    }
 
     @Test
     public void execute_validIndexUnfilteredList_success() {
@@ -74,6 +86,8 @@ public class ViewCommandTest {
         return "Name: " + person.getName() + "\nPhone: " + person.getPhone() + "\nAddress: " + person.getAddress()
                 + "\nStart date: " + person.getStartDate()
                 + "\nOutstanding amount: " + person.getOutstandingAmount().toCurrencyString()
-                + "\nSubjects: Not specified";
+                + "\nSubjects: " + (person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()
+                        .map(Object::toString).collect(Collectors.joining(", ")))
+                + "\nNotes: " + person.getNotes();
     }
 }
