@@ -22,15 +22,21 @@ public class ListCommandParser implements Parser<ListCommand> {
     public ListCommand parse(String args) throws ParseException {
         requireNonNull(args);
         String trimmed = args.trim();
-        if (trimmed.isEmpty()) return new ListCommand();
+        if (trimmed.isEmpty()) {
+            return new ListCommand();
+        }
         boolean isSummary = trimmed.equals(ListCommand.SUMMARY_FLAG);
         String tagArgs = isSummary ? "" : trimmed;
         if (tagArgs.startsWith(ListCommand.SUMMARY_FLAG + " ")) {
             isSummary = true;
             tagArgs = tagArgs.substring(ListCommand.SUMMARY_FLAG.length()).trim();
         }
-        if (tagArgs.contains(ListCommand.SUMMARY_FLAG)) throw new ParseException(MESSAGE_INVALID_PARAMETERS);
-        if (tagArgs.isEmpty()) return new ListCommand(isSummary);
+        if (tagArgs.contains(ListCommand.SUMMARY_FLAG)) {
+            throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+        }
+        if (tagArgs.isEmpty()) {
+            return new ListCommand(isSummary);
+        }
         Matcher matcher = PREFIX_PATTERN.matcher(tagArgs);
         while (matcher.find()) {
             if (!PREFIX_TAG.toString().equals(matcher.group(1))) {

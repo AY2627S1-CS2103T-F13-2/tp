@@ -22,9 +22,17 @@ public class ListCommand extends Command {
     private final Predicate<Person> predicate;
     private final boolean isSummary;
 
-    public ListCommand() { this(PREDICATE_SHOW_ALL_PERSONS, false); }
-    public ListCommand(boolean isSummary) { this(PREDICATE_SHOW_ALL_PERSONS, isSummary); }
-    public ListCommand(Predicate<Person> predicate) { this(predicate, false); }
+    public ListCommand() {
+        this(PREDICATE_SHOW_ALL_PERSONS, false);
+    }
+
+    public ListCommand(boolean isSummary) {
+        this(PREDICATE_SHOW_ALL_PERSONS, isSummary);
+    }
+
+    public ListCommand(Predicate<Person> predicate) {
+        this(predicate, false);
+    }
 
     /** Creates a filtered list command with optional summary output. */
     public ListCommand(Predicate<Person> predicate, boolean isSummary) {
@@ -48,8 +56,12 @@ public class ListCommand extends Command {
     }
 
     public static String getMessageForContactCount(int count) {
-        if (count == 0) return MESSAGE_EMPTY;
-        if (count == 1) return MESSAGE_SINGULAR;
+        if (count == 0) {
+            return MESSAGE_EMPTY;
+        }
+        if (count == 1) {
+            return MESSAGE_SINGULAR;
+        }
         return String.format(MESSAGE_PLURAL_FORMAT, count);
     }
 
