@@ -141,6 +141,15 @@ public class PersonTest {
     }
 
     @Test
+    public void archiveState_canBeReadAndChangedImmutably() {
+        assertFalse(ALICE.isArchived());
+        Person archivedAlice = ALICE.withArchived(true);
+        assertTrue(archivedAlice.isArchived());
+        assertFalse(ALICE.isArchived());
+        assertFalse(archivedAlice.withArchived(false).isArchived());
+    }
+
+    @Test
     public void tags_defensiveCopyAndImmutableAccess() {
         Set<Tag> tags = new HashSet<>(Set.of(new Tag("A-Level")));
         Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(), ALICE.getStartDate(),

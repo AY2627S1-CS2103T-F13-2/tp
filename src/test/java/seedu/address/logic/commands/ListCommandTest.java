@@ -95,6 +95,21 @@ public class ListCommandTest {
     }
 
     @Test
+    public void execute_archivedStudents_areExcludedFromListAndSummary() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withName("Active Student").build());
+        addressBook.addPerson(new PersonBuilder().withName("Archived Student").build().withArchived(true));
+        model = new ModelManager(addressBook, new UserPrefs());
+        expectedModel = new ModelManager(addressBook, new UserPrefs());
+        expectedModel.updateFilteredPersonList(Model.PREDICATE_SHOW_ACTIVE_PERSONS);
+
+        assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SINGULAR, expectedModel);
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                "Total: 1", "Paid: 1");
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
     public void execute_summaryWithFilteredList_countsAllStudents() {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());
