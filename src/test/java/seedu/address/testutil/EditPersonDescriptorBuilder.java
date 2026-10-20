@@ -1,12 +1,19 @@
 package seedu.address.testutil;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
+
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
+import seedu.address.model.tag.Tag;
 
 /**
  * A utility class to help with building EditPersonDescriptor objects.
@@ -33,6 +40,11 @@ public class EditPersonDescriptorBuilder {
         descriptor.setAddress(person.getAddress());
         descriptor.setStartDate(person.getStartDate());
         descriptor.setOutstandingAmount(person.getOutstandingAmount());
+        descriptor.setTags(person.getTags());
+        descriptor.setNotes(person.getNotes());
+        if (!person.getSubjects().isEmpty()) {
+            descriptor.setSubjects(person.getSubjects());
+        }
     }
 
     /**
@@ -72,6 +84,25 @@ public class EditPersonDescriptorBuilder {
      */
     public EditPersonDescriptorBuilder withOutstandingAmount(String outstandingAmount) {
         descriptor.setOutstandingAmount(new OutstandingAmount(outstandingAmount));
+        return this;
+    }
+
+    /** Sets replacement tags, or clears tags when no values are supplied. */
+    public EditPersonDescriptorBuilder withTags(String... tags) {
+        descriptor.setTags(Arrays.stream(tags).map(Tag::new).collect(Collectors.toSet()));
+        return this;
+    }
+
+    /** Sets nonempty replacement subjects in input order. */
+    public EditPersonDescriptorBuilder withSubjects(String... subjects) {
+        descriptor.setSubjects(Arrays.stream(subjects).map(Subject::new)
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
+        return this;
+    }
+
+    /** Sets replacement notes, including blank text to clear the note. */
+    public EditPersonDescriptorBuilder withNotes(String notes) {
+        descriptor.setNotes(new Notes(notes));
         return this;
     }
 
