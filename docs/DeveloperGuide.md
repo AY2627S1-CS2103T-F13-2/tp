@@ -501,6 +501,29 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
+### Listing students by tags
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear` in this test copy, then add three profiles:
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level`,
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics t/Needs revision`, and
+   `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths`.
+2. Run `find Nobody`, then `list t/A-Level t/Needs revision`.<br>
+   Expected: Amy and Bob are displayed in that order, with `Listed 2 contacts.`.
+   This checks OR matching across the full address book, including students hidden by Find.
+3. Run `list t/NEEDS REVISION t/needs revision`, then `view 1`.<br>
+   Expected: Only Bob is displayed, with `Listed 1 contact.`. View shows Bob's details.
+   The repeated case variants do not duplicate Bob in the results, and the displayed index is used.
+4. Run `list t/revision`.<br>
+   Expected: An empty list with `No contacts match the specified tags.`. A substring is not a complete tag match.
+5. Run `list`.<br>
+   Expected: Amy, Bob, and untagged Cara return, with `Listed 3 contacts.`.
+6. Run `find Bob`, then try `list t/`, `list t/A-Level t/`, `list t/A-Level x/value`, and `list T/A-Level`.<br>
+   Expected: Each command reports an error. Only Bob remains displayed, and no profile fields change.
+7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
+   Expected: Amy still matches the tag filter, and all three original profiles remain stored.
+
 ### Editing a student profile
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.

@@ -61,7 +61,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for `help` and `clear` are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -128,15 +128,33 @@ note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
-### Listing all persons: `list`
+### Listing students by tags: `list`
 
-Shows every contact in the address book, displaying only each contact's name and phone number.
+Shows all student profiles, or only profiles having one or more specified tags.
 
-Format: `list [-summary]`
+Format: `list [t/TAG]...`
 
-* `list` lists all contacts. `list -summary` additionally shows the total number of students and the number of students who have paid in the result display.
+* `list` without tags restores all students, including after a Find or tag filter.
+* Supply one `t/` per tag. A student matches if they have **any** requested tag (OR matching).
+* Match complete tags, ignoring case and surrounding spaces. Internal spaces remain significant:
+  `t/Needs revision` matches `needs revision`, but `t/revision` does not match it.
+* Tags use the same validation as Add. Equivalent repeated filters, such as `t/A-Level t/a-level`, are combined.
+  Profiles without tags do not match a tag filter. Results retain their stored order.
+* Each tag filter searches all stored students, rather than just the current search results.
+  Indexes used by commands such as `view`, `edit`, and `delete` refer to the newly displayed list.
+* The status message reports the displayed count, for example `Listed 2 contacts.` or `Listed 1 contact.`.
+  A tag filter with no matches shows `No contacts match the specified tags.` and an empty list.
+  Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
+* Blank or invalid tags, uppercase or unknown prefixes, and unprefixed arguments such as `list 3` are rejected.
+  Invalid input leaves the displayed list and stored profiles unchanged. Listing never changes profile fields.
+
+Examples:
+* `list t/A-Level` shows students tagged `a-level`.
+* `list t/A-Level t/Needs revision` shows students having either tag, including students having both.
+* `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
+* `list` shows every student again.
+* Add `-summary` to display total and paid counts for the displayed students, for example `list -summary` or `list -summary t/A-Level`.
 * The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
-* The status message shows the number of contacts, e.g. `Listed 4 contacts.` or `Listed 1 contact.`. If there are no contacts, it shows `No contacts stored. Use the add command to add one.`
 
 ### Editing a student profile: `edit`
 
@@ -273,5 +291,5 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary]`
+**List**   | `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Help**   | `help`
