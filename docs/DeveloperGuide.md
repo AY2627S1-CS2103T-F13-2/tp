@@ -548,6 +548,71 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 8. Exit and restart the app from the same folder, then run `view 2`.<br>
    Expected: Bob's phone is still `91234567` and outstanding amount is still `SGD 0.00`.
 
+### Editing student tags
+
+Use a fresh copy of the app in an empty folder. Inspect saved tags in `data/addressbook.json`
+after successful edits; these checks do not require changes to the profile-card display.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/Old notes/Keep note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics`.
+2. Run `find Amy`, then `edit 1 t/A-Level t/Needs revision t/a-level`.<br>
+   Expected: `Edited contact: Amy Bee`, and both students return to the list.
+   Amy's stored tags are `a-level` and `needs revision`; `old` is removed and the repeated tag is combined.
+   `view 1` still shows subject `Maths` and notes `Keep note`, with all five core fields unchanged.
+3. Run `find Amy`, then `edit 1 t/needs revision t/A-LEVEL`.<br>
+   Expected: `No changes made to contact: Amy Bee`. Only Amy remains displayed.
+4. Try `edit 1 p/87654321 t/A-Level t/` and `edit 1 T/A-Level`.<br>
+   Expected: Both commands fail, and Amy's phone, tags, and current search results remain unchanged.
+5. Run `edit 1 t/`, then `find Amy` and `edit 1 t/` again.<br>
+   Expected: The first edit clears Amy's tags and restores both students. The second reports no changes
+   and preserves the search results. Amy's other profile fields remain unchanged.
+6. Exit and restart from the same folder.<br>
+   Expected: Amy's tags remain empty, and both profiles retain their other details.
+
+### Editing student subjects
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level notes/Amy note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English o/600 t/Needs revision notes/Bob note`.
+2. Run `find Bob`, then `edit 1 s/Physics s/H2 Chemistry s/PHYSICS`.<br>
+   Expected: `Edited contact: Bob Choo`, and both students return to the list.
+   `view 2` shows `Subjects: Physics, H2 Chemistry` and notes `Bob note`; the five core fields and tags are preserved.
+3. Run `find Bob`, then `edit 1 s/h2 chemistry s/physics`.<br>
+   Expected: `No changes made to contact: Bob Choo`. Only Bob remains displayed.
+   `view 1` retains the original subject spelling and order from step 2.
+4. Try `edit 1 s/`, `edit 1 s/Maths s/`, and `edit 1 p/87654321 t/A-Level s/---`.<br>
+   Expected: Each command fails; Bob's subjects, phone, tags, and current search results remain unchanged.
+5. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/0 s/Physics`.<br>
+   Expected: `This contact already exists in TuteeDex.` Different subjects, tags, and notes do not bypass duplicate checks.
+6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
+   Expected: `view 2` shows Bob's updated phone and still lists `Physics, H2 Chemistry`, with his original notes.
+
+### Editing student notes
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level notes/Original note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics`.
+2. Run `find Amy`, then `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
+   Expected: `Edited contact: Amy Bee`, and both students return to the list.
+   `view 1` shows `Notes: Revise fractions, graphs & 中文!`; all other profile fields are unchanged.
+3. Run `find Amy`, then repeat `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
+   Expected: `No changes made to contact: Amy Bee`. Only Amy remains displayed.
+4. Try `edit 1 notes/One notes/Two`, `edit 1 notes/Replacement p/invalid`, and `edit 1 notes/Review x/value`.<br>
+   Expected: Each command fails; Amy's saved note, other fields, and search results remain unchanged.
+5. Run `edit 1 notes/Call parent p/87654321`.<br>
+   Expected: Amy's note becomes `Call parent` and her phone becomes `87654321`.
+   A recognized prefix starts another field rather than becoming literal note text.
+6. Run `find Amy`, then `edit 1 notes/`, `find Amy`, and `edit 1 notes/` again.<br>
+   Expected: The first edit clears the note and returns the full list. The second reports no changes
+   and preserves the search results. View shows an empty `Notes:` value.
+7. Exit and restart from the same folder.<br>
+   Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
