@@ -2,11 +2,15 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +19,10 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonHasAnyTagPredicate;
+import seedu.address.model.person.Subject;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 /**
@@ -58,6 +66,41 @@ public class ListCommandTest {
         assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SINGULAR, expectedModel);
     }
 
+    @Test
+    public void execute_tagFilter_searchesAllStudentsAndPlainListRestoresAll() {
+        Person alice = new PersonBuilder(ALICE).withTags("a-level").build();
+        Person bob = new PersonBuilder().withName("Bob Choo").withTags("needs revision").build();
+        Person untagged = new PersonBuilder().withName("Untagged Student").build();
+        model = new ModelManager();
+        model.addPerson(alice);
+        model.addPerson(bob);
+        model.addPerson(untagged);
+        model.updateFilteredPersonList(person -> false);
+
+        ListCommand filter = new ListCommand(new PersonHasAnyTagPredicate(
+                Set.of(new Tag("a-level"), new Tag("needs revision"))));
+        assertEquals("Listed 2 contacts.", filter.execute(model).getFeedbackToUser());
+        assertEquals(List.of(alice, bob), model.getFilteredPersonList());
+        assertEquals(List.of(alice, bob, untagged), model.getAddressBook().getPersonList());
+        new ListCommand().execute(model);
+        assertEquals(List.of(alice, bob, untagged), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_tagFilterWithNoMatches_showsSpecificFeedback() {
+        ListCommand filter = new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("missing"))));
+        assertEquals(ListCommand.MESSAGE_NO_MATCHES, filter.execute(model).getFeedbackToUser());
+        assertEquals(List.of(), model.getFilteredPersonList());
+        assertEquals(getTypicalAddressBook().getPersonList(), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void equals_differentFiltersAreNotEqual() {
+        ListCommand filter = new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("a-level"))));
+        assertEquals(filter, new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("A-Level")))));
+        assertNotEquals(filter, new ListCommand());
+        assertNotEquals(filter, new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("other")))));
+    }
     @Test
     public void execute_summaryWithMixedPaymentStatuses_showsTotalAndPaid() {
         AddressBook addressBook = new AddressBook();
@@ -124,6 +167,54 @@ public class ListCommandTest {
 
         // null -> returns false
         assertNotEquals(listCommand, null);
+        assertNotEquals(listCommand, new ListCommand(Set.of(new Subject("Maths"))));
+    }
+
+    @Test
+    public void execute_subjects_matchesAnyCaseInsensitiveAndRestoresAll() {
+        Person maths = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        Person physics = new PersonBuilder(ALICE).withName("Physics Student").withSubjects("Physics").build();
+        Person chemistry = new PersonBuilder(ALICE).withName("Chemistry Student")
+                .withSubjects("Chemistry").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(maths);
+        addressBook.addPerson(physics);
+        addressBook.addPerson(chemistry);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        model.updateFilteredPersonList(person -> false);
+        assertEquals("Listed 2 contacts.", new ListCommand(Set.of(new Subject("maths"), new Subject("PHYSICS")))
+                .execute(model).getFeedbackToUser());
+        assertEquals(List.of(maths, physics), model.getFilteredPersonList());
+        assertEquals("Listed 3 contacts.", new ListCommand().execute(model).getFeedbackToUser());
+        assertEquals(List.of(maths, physics, chemistry), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_subjectsNoMatch_showsEmptyList() {
+        Person additionalMaths = new PersonBuilder(ALICE).withSubjects("Additional Maths").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(additionalMaths);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        assertEquals(ListCommand.MESSAGE_NO_SUBJECT_MATCHES,
+                new ListCommand(Set.of(new Subject("Maths"))).execute(model).getFeedbackToUser());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_subjectsOneExactMatch_showsSingularMessage() {
+        Person maths = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        Person additionalMaths = new PersonBuilder(ALICE).withName("Other Student")
+                .withSubjects("Additional Maths").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(maths);
+        addressBook.addPerson(additionalMaths);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        assertEquals(ListCommand.MESSAGE_SINGULAR,
+                new ListCommand(Set.of(new Subject("maths"))).execute(model).getFeedbackToUser());
+        assertEquals(List.of(maths), model.getFilteredPersonList());
     }
 
     /**
