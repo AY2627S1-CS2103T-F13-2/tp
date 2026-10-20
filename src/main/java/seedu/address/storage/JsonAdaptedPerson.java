@@ -35,22 +35,29 @@ class JsonAdaptedPerson {
     private final List<String> subjects;
     private final String notes;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final boolean archived;
 
     /**
      * Constructs a legacy student record without tags or notes.
      */
     public JsonAdaptedPerson(String name, String phone, String address, String startDate, String outstandingAmount) {
-        this(name, phone, address, startDate, outstandingAmount, null, null, null);
+        this(name, phone, address, startDate, outstandingAmount, null, null, null, false);
     }
 
     public JsonAdaptedPerson(String name, String phone, String address, String startDate,
             String outstandingAmount, String notes) {
-        this(name, phone, address, startDate, outstandingAmount, null, notes, null);
+        this(name, phone, address, startDate, outstandingAmount, null, notes, null, false);
     }
 
     public JsonAdaptedPerson(String name, String phone, String address, String startDate,
             String outstandingAmount, List<JsonAdaptedTag> tags) {
-        this(name, phone, address, startDate, outstandingAmount, tags, null, null);
+        this(name, phone, address, startDate, outstandingAmount, tags, null, null, false);
+    }
+
+    /** Legacy constructor retaining the pre-archive adapter API. */
+    public JsonAdaptedPerson(String name, String phone, String address, String startDate,
+            String outstandingAmount, List<JsonAdaptedTag> tags, String notes, List<String> subjects) {
+        this(name, phone, address, startDate, outstandingAmount, tags, notes, subjects, false);
     }
 
     /**
@@ -61,7 +68,7 @@ class JsonAdaptedPerson {
             @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
             @JsonProperty("outstandingAmount") String outstandingAmount,
             @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("notes") String notes,
-            @JsonProperty("subjects") List<String> subjects) {
+            @JsonProperty("subjects") List<String> subjects, @JsonProperty("archived") Boolean archived) {
         this.name = name;
         this.phone = phone;
         this.address = address;
@@ -69,6 +76,7 @@ class JsonAdaptedPerson {
         this.outstandingAmount = outstandingAmount;
         this.subjects = subjects;
         this.notes = notes;
+        this.archived = archived != null && archived;
         if (tags != null) {
             this.tags.addAll(tags);
         }
@@ -85,6 +93,7 @@ class JsonAdaptedPerson {
         outstandingAmount = source.getOutstandingAmount().toPlainString();
         subjects = source.getSubjects().stream().map(Object::toString).toList();
         notes = source.getNotes().value;
+        archived = source.isArchived();
         source.getTags().stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
                 .map(JsonAdaptedTag::new).forEach(tags::add);
     }
@@ -155,7 +164,7 @@ class JsonAdaptedPerson {
             modelTags.add(tag.toModelType());
         }
         return new Person(modelName, modelPhone, modelAddress, modelStartDate, modelOutstandingAmount,
-                modelTags, modelNotes, modelSubjects);
+                modelTags, modelNotes, modelSubjects, archived);
     }
 
 }
