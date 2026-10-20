@@ -64,6 +64,7 @@
         "appendix-instructions-for-manual-testing": "Appendix: Instructions for manual testing",
         "launch-and-shutdown": "Launch and shutdown",
         "deleting-a-person": "Deleting a person",
+        "listing-students-by-tags": "Listing students by tags",
         "editing-a-student-profile": "Editing a student profile",
         "saving-data": "Saving data"
       },
@@ -115,7 +116,7 @@
         "viewing-help-help": "Viewing help: help",
         "adding-a-person-add": "Adding a person: add",
         "viewing-a-student-profile-view": "Viewing a student profile: view",
-        "listing-all-persons-list": "Listing all persons: list",
+        "listing-students-by-tags-list": "Listing students by tags: list",
         "editing-a-student-profile-edit": "Editing a student profile: edit",
         "locating-persons-by-name-find": "Locating persons by name: find",
         "deleting-a-contact-delete": "Deleting a contact: delete",
