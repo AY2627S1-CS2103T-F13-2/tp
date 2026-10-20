@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
+/** Parses unarchive command arguments. */
 public class UnarchiveCommandParser implements Parser<UnarchiveCommand> {
     @Override
     public UnarchiveCommand parse(String args) throws ParseException {

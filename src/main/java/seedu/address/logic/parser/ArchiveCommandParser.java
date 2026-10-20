@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
+/** Parses archive command arguments. */
 public class ArchiveCommandParser implements Parser<ArchiveCommand> {
     @Override
     public ArchiveCommand parse(String args) throws ParseException {

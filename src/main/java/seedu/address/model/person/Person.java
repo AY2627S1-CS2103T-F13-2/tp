@@ -65,6 +65,9 @@ public class Person {
         this(name, phone, address, startDate, outstandingAmount, tags, notes, subjects, false);
     }
 
+    /**
+     * Creates a profile with tags, notes, subjects, and archive state.
+     */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes, Set<Subject> subjects,
             boolean archived) {
