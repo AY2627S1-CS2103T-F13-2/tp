@@ -32,10 +32,102 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
+import seedu.address.model.person.Subject;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditCommandParserTest {
     private final EditCommandParser parser = new EditCommandParser();
+
+    @Test
+    public void parse_notesSpecified_preservesFreeTextAndUrls() {
+        String notes = "Revise  fractions, graphs & 中文! See https://example.com";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes(notes).build();
+        assertParseSuccess(parser, "1 notes/  " + notes + "  ", new EditCommand(INDEX_FIRST_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_blankNotes_clearsNote() {
+        EditCommand expected = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNotes("").build());
+        assertParseSuccess(parser, "1 notes/", expected);
+        assertParseSuccess(parser, "1 notes/   ", expected);
+    }
+
+    @Test
+    public void parse_repeatedNotes_failure() {
+        for (String args : new String[] {"1 notes/One notes/Two", "1 notes/ notes/", "1 notes/Same notes/Same",
+            "1 t/A-Level notes/One notes/"}) {
+            assertParseFailure(parser, args, EditCommandParser.MESSAGE_DUPLICATE_FIELDS);
+        }
+    }
+
+    @Test
+    public void parse_notesBeforeOtherFields_recognizesFieldBoundaries() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes("Revise fractions")
+                .withSubjects("Physics").withTags("a-level").withPhone(VALID_PHONE_AMY).build();
+        assertParseSuccess(parser, "1 notes/Revise fractions s/Physics t/A-Level p/" + VALID_PHONE_AMY,
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        assertParseFailure(parser, "1 notes/Revise fractions x/value", EditCommandParser.MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 NOTES/Revise fractions", EditCommandParser.MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_subjectsSpecified_replacesCaseInsensitiveSet() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withSubjects("Physics", "H2 Chemistry").build();
+        assertParseSuccess(parser, "1 s/ Physics  s/H2 Chemistry s/PHYSICS",
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        assertParseSuccess(parser, "1 s/Physics t/A-Level s/H2 Chemistry p/" + VALID_PHONE_AMY,
+                new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(descriptor)
+                        .withTags("a-level").withPhone(VALID_PHONE_AMY).build()));
+    }
+
+    @Test
+    public void parse_blankSubjects_failure() {
+        for (String args : new String[] {"1 s/", "1 s/   ", "1 s/Maths s/", "1 s/ s/Physics"}) {
+            assertParseFailure(parser, args, "Subject must not be blank.");
+        }
+    }
+
+    @Test
+    public void parse_subjectValidationBoundaries_matchAddRules() {
+        for (String value : new String[] {"A", "A".repeat(50), "H2 Chemistry", "Combined-Science"}) {
+            assertParseSuccess(parser, "1 s/  " + value + "  ", new EditCommand(INDEX_FIRST_PERSON,
+                    new EditPersonDescriptorBuilder().withSubjects(value).build()));
+        }
+        for (String value : new String[] {"A".repeat(51), "---", "Maths,Physics", "中文"}) {
+            assertParseFailure(parser, "1 t/A-Level s/" + value, Subject.MESSAGE_CONSTRAINTS);
+        }
+        assertParseFailure(parser, "1 S/Maths", EditCommandParser.MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_tagsSpecified_replacesNormalizedTags() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withTags("a-level", "needs revision").build();
+        assertParseSuccess(parser, "1 t/ A-Level  t/Needs revision t/a-level",
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        assertParseSuccess(parser, "1 t/needs revision p/" + VALID_PHONE_AMY + " t/A-Level",
+                new EditCommand(INDEX_FIRST_PERSON,
+                        new EditPersonDescriptorBuilder(descriptor).withPhone(VALID_PHONE_AMY).build()));
+    }
+
+    @Test
+    public void parse_singleBlankTag_clearsTags() {
+        EditCommand expected = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withTags().build());
+        assertParseSuccess(parser, "1 t/", expected);
+        assertParseSuccess(parser, "1 t/   ", expected);
+    }
+
+    @Test
+    public void parse_invalidOrMixedBlankTags_failure() {
+        for (String args : new String[] {"1 t/A-Level t/", "1 t/ t/A-Level", "1 t/ t/", "1 t/Maths,Physics",
+            "1 t/中文", "1 p/91234567 t/bad!"}) {
+            assertParseFailure(parser, args, Tag.MESSAGE_CONSTRAINTS);
+        }
+    }
 
     @Test
     public void parse_missingParts_failure() {
@@ -55,13 +147,15 @@ public class EditCommandParserTest {
     public void parse_allFieldsSpecified_success() {
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + NAME_DESC_AMY + PHONE_DESC_BOB
-                + ADDRESS_DESC_AMY + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB;
+                + ADDRESS_DESC_AMY + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB
+                + " s/Physics t/A-Level notes/Revise fractions";
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
                 .withName(VALID_NAME_AMY)
                 .withPhone(VALID_PHONE_BOB)
                 .withAddress(VALID_ADDRESS_AMY)
                 .withStartDate(VALID_START_DATE_BOB)
                 .withOutstandingAmount(VALID_OUTSTANDING_AMOUNT_BOB)
+                .withSubjects("Physics").withTags("a-level").withNotes("Revise fractions")
                 .build();
 
         assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
@@ -133,7 +227,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_unknownOrUppercasePrefix_failure() {
         String[] arguments = {"1 x/value", "1 a/Main Street x/value", "1 x/value" + PHONE_DESC_AMY,
-            "1 P/91234567", "1 a/Main Street N/Amy", "1 O/600", "1 e/student@example.com", "1 t/friend"};
+            "1 P/91234567", "1 a/Main Street N/Amy", "1 O/600", "1 e/student@example.com", "1 T/friend"};
         for (String argument : arguments) {
             assertParseFailure(parser, argument, EditCommandParser.MESSAGE_INVALID_FORMAT);
         }
