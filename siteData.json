@@ -66,6 +66,9 @@
         "deleting-a-person": "Deleting a person",
         "listing-students-by-tags": "Listing students by tags",
         "editing-a-student-profile": "Editing a student profile",
+        "editing-student-tags": "Editing student tags",
+        "editing-student-subjects": "Editing student subjects",
+        "editing-student-notes": "Editing student notes",
         "saving-data": "Saving data"
       },
       "headingKeywords": {}
