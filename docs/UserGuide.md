@@ -153,6 +153,8 @@ Examples:
 * `list t/A-Level t/Needs revision` shows students having either tag, including students having both.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every student again.
+* Add `-summary` to display total and paid counts for the displayed students, for example `list -summary` or `list -summary t/A-Level`.
+* The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
 
 ### Editing a student profile: `edit`
 
@@ -289,5 +291,5 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [t/TAG]...`<br> e.g., `list t/A-Level t/Needs revision`
+**List**   | `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Help**   | `help`

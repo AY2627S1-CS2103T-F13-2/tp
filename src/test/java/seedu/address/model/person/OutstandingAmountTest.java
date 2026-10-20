@@ -57,4 +57,5 @@ public class OutstandingAmountTest {
         assertEquals("20.5", amount.toPlainString());
         assertEquals("SGD 20.50", amount.toCurrencyString());
     }
+
 }

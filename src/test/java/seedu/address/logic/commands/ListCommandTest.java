@@ -99,6 +99,55 @@ public class ListCommandTest {
         assertNotEquals(filter, new ListCommand());
         assertNotEquals(filter, new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("other")))));
     }
+    @Test
+    public void execute_summaryWithMixedPaymentStatuses_showsTotalAndPaid() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());
+        addressBook.addPerson(new PersonBuilder().withName("Owing Student").withOutstandingAmount("0.01").build());
+        addressBook.addPerson(new PersonBuilder().withName("Another Owing Student")
+                .withOutstandingAmount("20.50").build());
+        model = new ModelManager(addressBook, new UserPrefs());
+        expectedModel = new ModelManager(addressBook, new UserPrefs());
+
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                "Total: 3", "Paid: 1");
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
+    public void execute_summaryWithEmptyAddressBook_showsZeroCounts() {
+        model = new ModelManager(new AddressBook(), new UserPrefs());
+        expectedModel = new ModelManager(new AddressBook(), new UserPrefs());
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                "Total: 0", "Paid: 0");
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
+    public void execute_summaryWithAllZeroOutstandingAmounts_showsAllPaid() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student One").build());
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student Two").build());
+        model = new ModelManager(addressBook, new UserPrefs());
+        expectedModel = new ModelManager(addressBook, new UserPrefs());
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                "Total: 2", "Paid: 2");
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
+    public void execute_summaryWithFilteredList_countsAllStudents() {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());
+        addressBook.addPerson(new PersonBuilder().withName("Owing Student").withOutstandingAmount("0.99").build());
+        model = new ModelManager(addressBook, new UserPrefs());
+        expectedModel = new ModelManager(addressBook, new UserPrefs());
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+
+        String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
+                "Total: 2", "Paid: 1");
+        assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
 
     @Test
     public void equals() {
@@ -109,6 +158,7 @@ public class ListCommandTest {
 
         // different ListCommand (no fields to differ on) -> returns true
         assertEquals(listCommand, new ListCommand());
+        assertNotEquals(listCommand, new ListCommand(true));
 
         // different types -> returns false
         assertNotEquals(listCommand, "list");
