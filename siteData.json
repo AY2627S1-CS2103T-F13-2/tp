@@ -123,11 +123,12 @@
         "editing-a-student-profile-edit": "Editing a student profile: edit",
         "locating-persons-by-name-find": "Locating persons by name: find",
         "deleting-a-contact-delete": "Deleting a contact: delete",
+        "archiving-a-student-archive": "Archiving a student: archive",
+        "unarchiving-a-student-unarchive": "Unarchiving a student: unarchive",
         "clearing-all-entries-clear": "Clearing all entries: clear",
         "exiting-the-program-exit": "Exiting the program: exit",
         "saving-the-data": "Saving the data",
         "editing-the-data-file": "Editing the data file",
-        "archiving-data-files-coming-in-v2-0": "Archiving data files [coming in v2.0]",
         "faq": "FAQ",
         "known-issues": "Known issues",
         "command-summary": "Command summary"
