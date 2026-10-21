@@ -134,7 +134,7 @@ Shows active student profiles, or filters active profiles by one or more subject
 
 Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`
 
-* Plain `list` restores all students, including after a Find or filter.
+* Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
   Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
   Subjects use the same validation as Add; equivalent repeated values are combined.
@@ -162,7 +162,7 @@ Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
 * `list t/A-Level t/Needs revision` shows students having either tag.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
-* `list` shows every student again.
+* `list` shows every active student again.
 
 #### Listing archived students
 

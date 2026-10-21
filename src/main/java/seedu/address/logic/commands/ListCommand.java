@@ -28,7 +28,7 @@ public class ListCommand extends Command {
     private final Predicate<Person> predicate;
     private final Set<Subject> subjects;
     private final boolean isSummary;
-    private final boolean archivedOnly;
+    private final boolean isArchivedOnly;
 
     public ListCommand() {
         this(PREDICATE_SHOW_ALL_PERSONS, Set.of(), false);
@@ -61,11 +61,11 @@ public class ListCommand extends Command {
         this(predicate, subjects, isSummary, false);
     }
 
-    private ListCommand(Predicate<Person> predicate, Set<Subject> subjects, boolean isSummary, boolean archivedOnly) {
+    private ListCommand(Predicate<Person> predicate, Set<Subject> subjects, boolean isSummary, boolean isArchivedOnly) {
         this.predicate = requireNonNull(predicate);
         this.subjects = Set.copyOf(requireNonNull(subjects));
         this.isSummary = isSummary;
-        this.archivedOnly = archivedOnly;
+        this.isArchivedOnly = isArchivedOnly;
     }
 
     /** Lists only archived students, without active filters or summary options. */
@@ -78,10 +78,10 @@ public class ListCommand extends Command {
         requireNonNull(model);
         Predicate<Person> filter = subjects.isEmpty()
                 ? predicate : person -> person.getSubjects().stream().anyMatch(subjects::contains);
-        Predicate<Person> visibility = archivedOnly ? Person::isArchived : PREDICATE_SHOW_ACTIVE_PERSONS;
+        Predicate<Person> visibility = isArchivedOnly ? Person::isArchived : PREDICATE_SHOW_ACTIVE_PERSONS;
         model.updateFilteredPersonList(visibility.and(filter));
         int count = model.getFilteredPersonList().size();
-        if (archivedOnly && count == 0) {
+        if (isArchivedOnly && count == 0) {
             return new CommandResult(MESSAGE_NO_ARCHIVED_CONTACTS);
         }
         if (isSummary) {
@@ -115,6 +115,6 @@ public class ListCommand extends Command {
                 && predicate.equals(otherCommand.predicate)
                 && subjects.equals(otherCommand.subjects)
                 && isSummary == otherCommand.isSummary
-                && archivedOnly == otherCommand.archivedOnly;
+                && isArchivedOnly == otherCommand.isArchivedOnly;
     }
 }
