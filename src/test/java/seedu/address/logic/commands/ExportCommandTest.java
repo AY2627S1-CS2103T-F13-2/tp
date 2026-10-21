@@ -6,6 +6,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +41,30 @@ public class ExportCommandTest {
         Model model = new ModelManager(addressBookWithContacts(), new UserPrefs());
 
         assertThrows(CommandException.class, () -> new ExportCommand(() -> directory).execute(model));
+        Files.deleteIfExists(directory);
+    }
+
+    @Test
+    public void generateOutputPath_noCollision_returnsTimestampedPath() throws IOException {
+        Path directory = Files.createTempDirectory("export-command-test");
+        Path output = ExportCommand.generateOutputPath(LocalDateTime.of(2026, 10, 21, 14, 30, 12, 123_000_000),
+                directory);
+
+        assertEquals(directory.resolve("contacts-20261021-143012-123.csv"), output);
+        Files.deleteIfExists(directory);
+    }
+
+    @Test
+    public void generateOutputPath_collision_returnsSuffixedPath() throws IOException {
+        Path directory = Files.createTempDirectory("export-command-test");
+        Path existing = directory.resolve("contacts-20261021-143012-123.csv");
+        Files.createFile(existing);
+
+        Path output = ExportCommand.generateOutputPath(LocalDateTime.of(2026, 10, 21, 14, 30, 12, 123_000_000),
+                directory);
+
+        assertEquals(directory.resolve("contacts-20261021-143012-123-1.csv"), output);
+        Files.deleteIfExists(existing);
         Files.deleteIfExists(directory);
     }
 

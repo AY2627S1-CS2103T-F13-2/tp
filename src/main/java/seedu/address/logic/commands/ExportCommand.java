@@ -29,7 +29,7 @@ public class ExportCommand extends Command {
 
     /** Creates an export command that generates a timestamped output path. */
     public ExportCommand() {
-        this(ExportCommand::generateOutputPath);
+        this(() -> generateOutputPath(LocalDateTime.now(), Path.of(".")));
     }
 
     ExportCommand(Supplier<Path> outputPathSupplier) {
@@ -55,11 +55,12 @@ public class ExportCommand extends Command {
         return other instanceof ExportCommand;
     }
 
-    private static Path generateOutputPath() {
-        String timestamp = LocalDateTime.now().format(FILE_TIMESTAMP);
-        Path basePath = Path.of(FILE_PREFIX + timestamp + FILE_SUFFIX);
+    static Path generateOutputPath(LocalDateTime dateTime, Path directory) {
+        String timestamp = dateTime.format(FILE_TIMESTAMP);
+        Path basePath = directory.resolve(FILE_PREFIX + timestamp + FILE_SUFFIX);
         return Stream.iterate(0, index -> index + 1)
-                .map(index -> index == 0 ? basePath : Path.of(FILE_PREFIX + timestamp + "-" + index + FILE_SUFFIX))
+                .map(index -> index == 0 ? basePath
+                        : directory.resolve(FILE_PREFIX + timestamp + "-" + index + FILE_SUFFIX))
                 .filter(path -> !Files.exists(path))
                 .findFirst()
                 .orElseThrow();
