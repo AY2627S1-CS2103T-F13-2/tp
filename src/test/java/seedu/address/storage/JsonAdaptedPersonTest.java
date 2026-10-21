@@ -64,6 +64,19 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_archivedPerson_preservesArchiveState() throws Exception {
+        Person archived = BENSON.withArchived(true);
+        assertTrue(new JsonAdaptedPerson(archived).toModelType().isArchived());
+    }
+
+    @Test
+    public void toModelType_missingArchiveState_defaultsToActive() throws Exception {
+        JsonAdaptedPerson legacy = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null, null, null);
+        assertTrue(!legacy.toModelType().isArchived());
+    }
+
+    @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(INVALID_NAME, VALID_PHONE, VALID_ADDRESS, VALID_START_DATE,

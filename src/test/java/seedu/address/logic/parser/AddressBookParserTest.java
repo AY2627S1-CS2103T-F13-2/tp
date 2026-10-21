@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -21,6 +22,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
@@ -94,6 +96,12 @@ public class AddressBookParserTest {
         assertEquals(new ListCommand(true), parser.parseCommand("list -summary"));
         assertThrows(ParseException.class, ListCommandParser.MESSAGE_INVALID_PARAMETERS, () ->
             parser.parseCommand(ListCommand.COMMAND_WORD + " 3"));
+    }
+
+    @Test
+    public void parseCommand_archiveAndUnarchive() throws Exception {
+        assertEquals(new ArchiveCommand("Alice Pauline"), parser.parseCommand("archive s/Alice Pauline"));
+        assertEquals(new UnarchiveCommand("Alice Pauline"), parser.parseCommand("unarchive s/Alice Pauline"));
     }
 
     @Test

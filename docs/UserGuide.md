@@ -29,7 +29,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all active contacts.
 
    * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug s/Maths o/20` : Adds a student profile named `John Doe` to TuteeDex.
 
@@ -128,33 +128,41 @@ note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
-### Listing students by tags: `list`
+### Listing and filtering students: `list`
 
-Shows all student profiles, or only profiles having one or more specified tags.
+Shows active student profiles, or filters active profiles by one or more subjects or tags. Archived students are not shown.
 
-Format: `list [t/TAG]...`
+Format: `list [-summary] [s/SUBJECT]...` or `list [-summary] [t/TAG]...`
 
-* `list` without tags restores all students, including after a Find or tag filter.
+* Plain `list` restores all students, including after a Find or filter.
+* Supply one `s/` per subject. A student matches if they take **any** requested subject.
+  Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
+  Subjects use the same validation as Add; equivalent repeated values are combined.
 * Supply one `t/` per tag. A student matches if they have **any** requested tag (OR matching).
-* Match complete tags, ignoring case and surrounding spaces. Internal spaces remain significant:
-  `t/Needs revision` matches `needs revision`, but `t/revision` does not match it.
-* Tags use the same validation as Add. Equivalent repeated filters, such as `t/A-Level t/a-level`, are combined.
-  Profiles without tags do not match a tag filter. Results retain their stored order.
-* Each tag filter searches all stored students, rather than just the current search results.
-  Indexes used by commands such as `view`, `edit`, and `delete` refer to the newly displayed list.
-* The status message reports the displayed count, for example `Listed 2 contacts.` or `Listed 1 contact.`.
-  A tag filter with no matches shows `No contacts match the specified tags.` and an empty list.
+  Match complete tags, ignoring case and surrounding spaces: `t/Needs revision` matches
+  `needs revision`, but `t/revision` does not. Tags use the same validation as Add;
+  equivalent repeated values are combined. Profiles without tags do not match.
+* Use either subject or tag prefixes in one command; mixing them is invalid.
+* Each filter searches all stored students, rather than just the current search results.
+  Results retain their stored order. Indexes used by `view`, `edit`, and `delete` refer
+  to the newly displayed list.
+* The status message reports the displayed count, for example `Listed 2 contacts.`
+  or `Listed 1 contact.` A subject filter with no matches shows
+  `No contacts match the specified subjects.`; a tag filter with no matches shows
+  `No contacts match the specified tags.` Both leave the displayed list empty.
   Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
-* Blank or invalid tags, uppercase or unknown prefixes, and unprefixed arguments such as `list 3` are rejected.
-  Invalid input leaves the displayed list and stored profiles unchanged. Listing never changes profile fields.
+* Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
+  such as `list 3` are rejected. Invalid input leaves the displayed list and stored
+  profiles unchanged. Listing never changes profile fields.
+* Add `-summary` to display total and paid counts for the displayed students, for example
+  `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
+  The flag must be entered exactly as shown.
 
 Examples:
-* `list t/A-Level` shows students tagged `a-level`.
-* `list t/A-Level t/Needs revision` shows students having either tag, including students having both.
+* `list s/Maths s/H2 Chemistry` shows students taking either subject.
+* `list t/A-Level t/Needs revision` shows students having either tag.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every student again.
-* Add `-summary` to display total and paid counts for the displayed students, for example `list -summary` or `list -summary t/A-Level`.
-* The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
 
 ### Editing a student profile: `edit`
 
@@ -250,6 +258,36 @@ Examples:
 * `list` followed by `delete 2` deletes the 2nd contact in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st contact in the results of the `find` command.
 
+### Archiving a student: `archive`
+
+Archives a student without deleting the student profile. Archived students are hidden from `list` and are excluded from its summary counts, but their data remains saved in TuteeDex.
+
+Format: `archive s/STUDENT_NAME`
+
+* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
+* The name must match the student's full name exactly, ignoring letter case. For example, `archive s/john doe` can archive a student named `John Doe`.
+* A successful command displays `Student archived.` and refreshes the active student list.
+* If no student with the specified name exists, the command displays `Student cannot be found.`
+* If the student is already archived, the command displays `Student already archived.`
+
+Example:
+* `archive s/John Doe` archives John Doe and removes the student from the active list.
+
+### Unarchiving a student: `unarchive`
+
+Restores an archived student to the active student list. Unarchiving does not change the student's profile details.
+
+Format: `unarchive s/STUDENT_NAME`
+
+* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
+* The name must match the student's full name exactly, ignoring letter case.
+* A successful command displays `Student unarchived.` and makes the student appear in `list` again.
+* If no student with the specified name exists, the command displays `Student cannot be found.`
+* If the student is already active, the command displays `Student already active.`
+
+Example:
+* `unarchive s/John Doe` restores John Doe to the active student list.
+
 ### Clearing all entries: `clear`
 
 Clears all entries from the address book.
@@ -276,10 +314,6 @@ TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/ad
 If your changes make the data file invalid, TuteeDex starts with an empty address book at the next run. The invalid file remains on disk until you run a command (TuteeDex saves after every command). Still, we recommend backing up the file before editing it.<br>
 Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
-
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -308,5 +342,7 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]...` or `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
+**Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`
