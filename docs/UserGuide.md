@@ -128,6 +128,16 @@ note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
+### Exporting contacts: `export`
+
+Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
+
+Format: `export`
+
+The generated file is named `contacts-YYYYMMDD-HHMMSS-milliseconds.csv`. Each contact occupies one row. The CSV
+contains the name, phone, address, start date, outstanding amount, subjects, tags, notes, and archive status. Multiple
+subjects or tags are joined with `; `.
+
 ### Listing and filtering students: `list`
 
 Shows active student profiles, or filters active profiles by one or more subjects or tags. Archived students are not shown.
