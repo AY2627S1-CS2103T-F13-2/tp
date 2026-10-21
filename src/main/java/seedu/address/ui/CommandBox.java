@@ -56,6 +56,15 @@ public class CommandBox extends UiPart<Region> {
         commandTextField.getStyleClass().remove(ERROR_STYLE_CLASS);
     }
 
+    /** Prepares an existing find command without executing or overwriting unfinished input. */
+    public void prepareFind() {
+        if (commandTextField.getText().isBlank()) {
+            commandTextField.setText("find ");
+        }
+        commandTextField.requestFocus();
+        commandTextField.positionCaret(commandTextField.getLength());
+    }
+
     /**
      * Sets the command box style to indicate a failed command.
      */
