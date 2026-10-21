@@ -16,6 +16,7 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -42,6 +43,36 @@ public class FindIntegrationTest {
         logic.execute("add n/Bob Lee p/92345678 a/Block 2 d/10-Aug s/English");
         students = List.copyOf(model.getAddressBook().getPersonList());
         originalJson = Files.readString(savedPath);
+    }
+
+    @Test
+    public void execute_archivedNameMatch_isExcludedAfterReload() throws Exception {
+        logic.execute("archive s/Alice Tan");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(savedPath);
+        Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
+        Logic reloadedLogic = new LogicManager(reloaded, new StorageManager(storage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("reloaded-preferences.json"))));
+        String archivedJson = Files.readString(savedPath);
+
+        assertEquals(FindCommand.MESSAGE_NO_MATCHES, reloadedLogic.execute("find Alice").getFeedbackToUser());
+        assertTrue(reloadedLogic.getFilteredPersonList().isEmpty());
+        assertEquals(FindCommand.MESSAGE_SINGULAR, reloadedLogic.execute("find ALICE bob").getFeedbackToUser());
+        assertEquals(List.of(students.get(1)), reloadedLogic.getFilteredPersonList());
+        reloadedLogic.execute("list");
+        assertEquals(List.of(students.get(1)), reloadedLogic.getFilteredPersonList());
+        assertTrue(reloaded.getAddressBook().getPersonList().get(0).isArchived());
+        assertEquals(archivedJson, Files.readString(savedPath));
+    }
+
+    @Test
+    public void execute_afterSubjectOrTagFilter_searchesAllActiveStudents() throws Exception {
+        logic.execute("list s/Maths");
+        logic.execute("find Bob");
+        assertEquals(List.of(students.get(1)), logic.getFilteredPersonList());
+        logic.execute("list t/missing");
+        logic.execute("find Alice");
+        assertEquals(List.of(students.get(0)), logic.getFilteredPersonList());
+        assertDataUnchanged();
     }
 
     @Test
