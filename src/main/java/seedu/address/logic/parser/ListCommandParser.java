@@ -1,30 +1,73 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
+
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.PersonHasAnyTagPredicate;
+import seedu.address.model.person.Subject;
+import seedu.address.model.tag.Tag;
 
-/**
- * Parses input arguments and creates a new ListCommand object.
- */
+/** Parses plain lists, summary lists, and repeated subject or tag filters. */
 public class ListCommandParser implements Parser<ListCommand> {
+    public static final String MESSAGE_INVALID_PARAMETERS = "Invalid command format! Use list, list -summary, "
+            + "list s/SUBJECT [s/SUBJECT]..., or list t/TAG [t/TAG]...";
+    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
 
-    public static final String MESSAGE_INVALID_PARAMETERS =
-            "Invalid command format! List command should not take any parameters!";
-
-    /**
-     * Parses the given {@code String} of arguments in the context of the ListCommand
-     * and returns a ListCommand object for execution.
-     * @throws ParseException if the arguments are not blank or the summary flag
-     */
     @Override
     public ListCommand parse(String args) throws ParseException {
-        if (args.isBlank()) {
+        requireNonNull(args);
+        String trimmed = args.trim();
+        if (trimmed.isEmpty()) {
             return new ListCommand();
         }
-        if (args.trim().equals(ListCommand.SUMMARY_FLAG)) {
-            return new ListCommand(true);
+        boolean isSummary = trimmed.equals(ListCommand.SUMMARY_FLAG);
+        String filterArgs = isSummary ? "" : trimmed;
+        if (filterArgs.startsWith(ListCommand.SUMMARY_FLAG + " ")) {
+            isSummary = true;
+            filterArgs = filterArgs.substring(ListCommand.SUMMARY_FLAG.length()).trim();
+        }
+        if (filterArgs.contains(ListCommand.SUMMARY_FLAG)) {
+            throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+        }
+        if (filterArgs.isEmpty()) {
+            return new ListCommand(isSummary);
+        }
+
+        String filterPrefix = null;
+        Matcher matcher = PREFIX_PATTERN.matcher(filterArgs);
+        while (matcher.find()) {
+            String prefix = matcher.group(1);
+            if (!PREFIX_SUBJECT.toString().equals(prefix) && !PREFIX_TAG.toString().equals(prefix)) {
+                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+            }
+            if (filterPrefix != null && !filterPrefix.equals(prefix)) {
+                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+            }
+            filterPrefix = prefix;
+        }
+        if (PREFIX_SUBJECT.toString().equals(filterPrefix)) {
+            ArgumentMultimap values = ArgumentTokenizer.tokenize(" " + filterArgs, PREFIX_SUBJECT);
+            if (!values.getPreamble().isEmpty() || values.getAllValues(PREFIX_SUBJECT).isEmpty()) {
+                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+            }
+            Set<Subject> subjects = ParserUtil.parseSubjects(values.getAllValues(PREFIX_SUBJECT));
+            return new ListCommand(subjects, isSummary);
+        }
+        if (PREFIX_TAG.toString().equals(filterPrefix)) {
+            ArgumentMultimap values = ArgumentTokenizer.tokenize(" " + filterArgs, PREFIX_TAG);
+            if (!values.getPreamble().isEmpty() || values.getAllValues(PREFIX_TAG).isEmpty()) {
+                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+            }
+            Set<Tag> tags = ParserUtil.parseTags(values.getAllValues(PREFIX_TAG));
+            return new ListCommand(new PersonHasAnyTagPredicate(tags), isSummary);
         }
         throw new ParseException(MESSAGE_INVALID_PARAMETERS);
     }
-
 }
