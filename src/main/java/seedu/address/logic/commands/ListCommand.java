@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
 import java.util.Set;
@@ -62,8 +63,9 @@ public class ListCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(subjects.isEmpty() ? predicate
-                : person -> person.getSubjects().stream().anyMatch(subjects::contains));
+        Predicate<Person> filter = subjects.isEmpty()
+                ? predicate : person -> person.getSubjects().stream().anyMatch(subjects::contains);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(filter));
         int count = model.getFilteredPersonList().size();
         if (isSummary) {
             int paidStudents = (int) model.getFilteredPersonList().stream()

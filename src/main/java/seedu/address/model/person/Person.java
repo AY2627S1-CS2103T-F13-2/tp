@@ -24,6 +24,7 @@ public class Person {
     private final Set<Subject> subjects;
     private final Notes notes;
     private final Set<Tag> tags;
+    private final boolean archived;
 
     /** Creates a profile without optional details. */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
@@ -61,6 +62,15 @@ public class Person {
      */
     public Person(Name name, Phone phone, Address address, StartDate startDate,
             OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes, Set<Subject> subjects) {
+        this(name, phone, address, startDate, outstandingAmount, tags, notes, subjects, false);
+    }
+
+    /**
+     * Creates a profile with tags, notes, subjects, and archive state.
+     */
+    public Person(Name name, Phone phone, Address address, StartDate startDate,
+            OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes, Set<Subject> subjects,
+            boolean archived) {
         requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
         this.name = name;
         this.phone = phone;
@@ -70,6 +80,7 @@ public class Person {
         this.subjects = Collections.unmodifiableSet(new LinkedHashSet<>(subjects));
         this.notes = notes;
         this.tags = Set.copyOf(tags);
+        this.archived = archived;
     }
 
     public Name getName() {
@@ -102,6 +113,15 @@ public class Person {
 
     public Set<Tag> getTags() {
         return tags;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    /** Returns a new person with the requested archive state. */
+    public Person withArchived(boolean archived) {
+        return new Person(name, phone, address, startDate, outstandingAmount, tags, notes, subjects, archived);
     }
 
     /**
@@ -142,13 +162,14 @@ public class Person {
                 && outstandingAmount.equals(otherPerson.outstandingAmount)
                 && tags.equals(otherPerson.tags)
                 && notes.equals(otherPerson.notes)
-                && subjects.equals(otherPerson.subjects);
+                && subjects.equals(otherPerson.subjects)
+                && archived == otherPerson.archived;
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
+        return Objects.hash(name, phone, address, startDate, outstandingAmount, tags, notes, subjects, archived);
     }
 
     @Override
