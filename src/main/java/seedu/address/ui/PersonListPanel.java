@@ -38,10 +38,14 @@ public class PersonListPanel extends UiPart<Region> {
             super.updateItem(person, empty);
 
             if (empty || person == null) {
+                setAccessibleText(null);
                 setGraphic(null);
                 setText(null);
             } else {
-                setGraphic(new PersonCard(person, getIndex() + 1).getRoot());
+                Region card = new PersonCard(person, getIndex() + 1).getRoot();
+                card.prefWidthProperty().bind(widthProperty().subtract(10));
+                setGraphic(card);
+                setAccessibleText(card.getAccessibleText());
             }
         }
     }
