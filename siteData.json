@@ -65,6 +65,7 @@
         "launch-and-shutdown": "Launch and shutdown",
         "deleting-a-person": "Deleting a person",
         "listing-students-by-tags": "Listing students by tags",
+        "listing-archived-students": "Listing archived students",
         "editing-a-student-profile": "Editing a student profile",
         "editing-student-tags": "Editing student tags",
         "editing-student-subjects": "Editing student subjects",
