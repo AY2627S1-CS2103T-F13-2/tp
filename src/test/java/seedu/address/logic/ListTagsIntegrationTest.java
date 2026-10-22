@@ -58,6 +58,18 @@ public class ListTagsIntegrationTest {
     }
 
     @Test
+    public void execute_switchBetweenSubjectAndTagFilters_keepsBothAvailable() throws Exception {
+        List<Person> original = List.copyOf(model.getAddressBook().getPersonList());
+        assertEquals("Listed 2 contacts.", logic.execute("list s/Maths").getFeedbackToUser());
+        assertEquals(List.of(original.get(0), original.get(2)), model.getFilteredPersonList());
+        assertEquals("Listed 1 contact.", logic.execute("list t/Needs revision").getFeedbackToUser());
+        assertEquals(List.of(original.get(1)), model.getFilteredPersonList());
+        assertEquals(String.format(ListCommand.MESSAGE_SUMMARY_FORMAT, "Total: 2", "Paid: 2"),
+                logic.execute("list -summary s/Maths").getFeedbackToUser());
+        assertEquals(List.of(original.get(0), original.get(2)), model.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_invalidTagFilter_preservesCurrentFilterAndSavedData() throws Exception {
         logic.execute("find Bob");
         List<Person> displayed = List.copyOf(model.getFilteredPersonList());

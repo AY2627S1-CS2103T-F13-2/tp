@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -34,6 +35,37 @@ public class PersonCardTest extends FxTestSupport {
         Label subjects = (Label) card.getRoot().lookup("#subjects");
         assertNotNull(subjects);
         assertEquals(expectedText, subjects.getText());
+    }
+
+    @Test
+    public void constructor_tagsAndLongNotes_preservesDetailsInWrappingTooltip() throws Exception {
+        runOnFxThread(() -> {
+            PersonCard emptyCard = new PersonCard(ALICE, 1);
+            assertProfileDetails(emptyCard, "Not specified", "");
+
+            String longNote = "Revise fractions & 中文! " + "Practise algebra. ".repeat(25);
+            Person student = new PersonBuilder(ALICE).withSubjects("Maths", "H2 Chemistry")
+                    .withTags("Needs revision", "A-Level").withNotes(longNote).build();
+            PersonCard card = new PersonCard(student, 1);
+            assertProfileDetails(card, "a-level, needs revision", longNote.trim());
+            Label subjects = (Label) card.getRoot().lookup("#subjects");
+            assertEquals("Maths, H2 Che..", subjects.getText());
+            assertEquals("Subjects: Maths, H2 Chemistry", subjects.getTooltip().getText());
+            assertEquals(4, card.getRoot().getChildrenUnmodifiable().size(), "Keep the compact row layout");
+
+            Person edited = new PersonBuilder(student).withTags("Updated").withNotes("Updated note").build();
+            assertProfileDetails(new PersonCard(edited, 1), "updated", "Updated note");
+        });
+    }
+
+    private void assertProfileDetails(PersonCard card, String expectedTags, String expectedNotes) {
+        Label name = (Label) card.getRoot().lookup("#name");
+        Tooltip tooltip = name.getTooltip();
+        assertNotNull(tooltip);
+        assertTrue(tooltip.getText().contains("Tags: " + expectedTags + "; Notes: " + expectedNotes));
+        assertTrue(tooltip.isWrapText());
+        assertEquals(420, tooltip.getMaxWidth());
+        assertEquals("1. " + tooltip.getText(), card.getRoot().getAccessibleText());
     }
 
     private void assertSummaryAndFeedback() {

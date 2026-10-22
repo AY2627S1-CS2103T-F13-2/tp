@@ -107,8 +107,29 @@ public class LogicManagerTest {
                 .withAddress("1 Test Street").withStartDate("14-Oct")
                 .withSubjects("Maths", "H2 Chemistry").build(), saved);
         assertEquals("Name: Subject Student\nPhone: 87654321\nAddress: 1 Test Street\nStart date: 14-Oct"
-                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nNotes: ",
+                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nTags: Not specified\nNotes: ",
                 logic.execute("view 1").getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_subjectFilter_preservesDisplayedIndices() throws Exception {
+        logic.execute("add n/Anna Tutor p/81234567 a/1 Test Street d/14-Oct s/Maths");
+        logic.execute("add n/Ben Tutor p/81234568 a/2 Test Street d/14-Oct s/Physics");
+        logic.execute("add n/Cara Tutor p/81234569 a/3 Test Street d/14-Oct s/maths s/Chemistry");
+
+        logic.execute("find Ben");
+        assertEquals("Listed 2 contacts.",
+                logic.execute("list s/MATHS s/maths s/Chemistry").getFeedbackToUser());
+        assertEquals(List.of("Anna Tutor", "Cara Tutor"), logic.getFilteredPersonList().stream()
+                .map(person -> person.getName().toString()).toList());
+        assertThrows(ParseException.class, "Subject must not be blank.", () -> logic.execute("list s/"));
+        assertEquals(2, logic.getFilteredPersonList().size());
+        assertEquals("Name: Cara Tutor", logic.execute("view 2").getFeedbackToUser().split("\\n")[0]);
+
+        logic.execute("delete 2");
+        assertEquals("Listed 2 contacts.", logic.execute("list").getFeedbackToUser());
+        assertEquals(List.of("Anna Tutor", "Ben Tutor"), logic.getFilteredPersonList().stream()
+                .map(person -> person.getName().toString()).toList());
     }
 
     @Test
@@ -186,7 +207,7 @@ public class LogicManagerTest {
         Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
         assertEquals("Name: Amy Tan\nPhone: 91234567\nAddress: Block 9, Clementi Road\nStart date: 20-Oct"
-                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified\nNotes: ",
+                + "\nOutstanding amount: SGD 20.50\nSubjects: Not specified\nTags: Not specified\nNotes: ",
                 reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 

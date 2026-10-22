@@ -41,7 +41,7 @@ public class PersonListPanelTest extends FxTestSupport {
             cell.updateItem(ALICE, false);
             Region card = (Region) cell.getGraphic();
             assertEquals("001", ((Label) card.lookup("#id")).getText());
-            assertEquals("1. " + Messages.format(ALICE), cell.getAccessibleText());
+            assertEquals("1. " + Messages.format(ALICE) + "; Tags: Not specified; Notes: ", cell.getAccessibleText());
             assertEquals(card.getAccessibleText(), cell.getAccessibleText());
             assertTrue(card.prefWidthProperty().isBound());
             assertEquals(310, card.getPrefWidth());

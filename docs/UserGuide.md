@@ -29,7 +29,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all active contacts.
 
    * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug s/Maths o/20` : Adds a student profile named `John Doe` to TuteeDex.
 
@@ -122,39 +122,82 @@ Examples:
 
 Format: `view INDEX`
 
-Displays the name, phone, address, start date, outstanding amount, subjects, and notes
+Displays the name, phone, address, start date, outstanding amount, subjects, tags, and notes
 of the student at `INDEX` in the currently displayed list. A student with no
 note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
-### Listing students by tags: `list`
+Subjects, tags, and notes also appear on each contact card without running `view`.
+Subjects keep their stored order; tags appear alphabetically using their stored
+lowercase labels. Missing subjects or tags show `Not specified`; missing notes
+show an empty `Notes:` value. Long subjects, tags, and notes wrap within the card.
+### Exporting contacts: `export`
 
-Shows all student profiles, or only profiles having one or more specified tags.
+Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
 
-Format: `list [t/TAG]...`
+Format: `export`
 
-* `list` without tags restores all students, including after a Find or tag filter.
+The generated file is named `contacts-YYYYMMDD-HHMMSS-milliseconds.csv`. Each contact occupies one row. The CSV
+contains the name, phone, address, start date, outstanding amount, subjects, tags, notes, and archive status. Multiple
+subjects or tags are joined with `; `.
+
+### Listing and filtering students: `list`
+
+Shows active student profiles, or filters active profiles by one or more subjects
+or tags. Archived students are not shown.
+Each card displays the contact's name, phone, address, start date, outstanding
+amount, subjects, tags, and notes.
+
+Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`
+
+* Plain `list` restores all active students, including after a Find or filter.
+* Supply one `s/` per subject. A student matches if they take **any** requested subject.
+  Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
+  Subjects use the same validation as Add; equivalent repeated values are combined.
 * Supply one `t/` per tag. A student matches if they have **any** requested tag (OR matching).
-* Match complete tags, ignoring case and surrounding spaces. Internal spaces remain significant:
-  `t/Needs revision` matches `needs revision`, but `t/revision` does not match it.
-* Tags use the same validation as Add. Equivalent repeated filters, such as `t/A-Level t/a-level`, are combined.
-  Profiles without tags do not match a tag filter. Results retain their stored order.
-* Each tag filter searches all stored students, rather than just the current search results.
-  Indexes used by commands such as `view`, `edit`, and `delete` refer to the newly displayed list.
-* The status message reports the displayed count, for example `Listed 2 contacts.` or `Listed 1 contact.`.
-  A tag filter with no matches shows `No contacts match the specified tags.` and an empty list.
+  Match complete tags, ignoring case and surrounding spaces: `t/Needs revision` matches
+  `needs revision`, but `t/revision` does not. Tags use the same validation as Add;
+  equivalent repeated values are combined. Profiles without tags do not match.
+* Use either subject or tag prefixes in one command; mixing them is invalid.
+* Each filter searches all stored students, rather than just the current search results.
+  Results retain their stored order. Indexes used by `view`, `edit`, and `delete` refer
+  to the newly displayed list.
+* The status message reports the displayed count, for example `Listed 2 contacts.`
+  or `Listed 1 contact.` A subject filter with no matches shows
+  `No contacts match the specified subjects.`; a tag filter with no matches shows
+  `No contacts match the specified tags.` Both leave the displayed list empty.
   Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
-* Blank or invalid tags, uppercase or unknown prefixes, and unprefixed arguments such as `list 3` are rejected.
-  Invalid input leaves the displayed list and stored profiles unchanged. Listing never changes profile fields.
+* Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
+  such as `list 3` are rejected. Invalid input leaves the displayed list and stored
+  profiles unchanged. Listing never changes profile fields.
+* Add `-summary` to display total and paid counts for the displayed students, for example
+  `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
+  The flag must be entered exactly as shown.
 
 Examples:
-* `list t/A-Level` shows students tagged `a-level`.
-* `list t/A-Level t/Needs revision` shows students having either tag, including students having both.
+* `list s/Maths s/H2 Chemistry` shows students taking either subject.
+* `list t/A-Level t/Needs revision` shows students having either tag.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
-* `list` shows every student again.
-* Add `-summary` to display total and paid counts for the displayed students, for example `list -summary` or `list -summary t/A-Level`.
-* The `-summary` flag must be entered exactly as shown. Other parameters (e.g. `list 3`) show an error and the list is not changed.
+* `list` shows every active student again.
+
+#### Listing archived students
+
+`list -archived` displays only archived students in their stored order. It
+replaces any previous search or filter and does not change saved profiles.
+Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
+exist, the list is empty and feedback is `No archived contacts.`.
+
+Use `-archived` on its own. Combining it with `-summary`, subject/tag filters,
+or other arguments is not supported and shows an error without changing the
+current list. A standalone `-archived` token is reserved for this option and
+cannot be included as a separate word within a tag or subject filter value.
+Plain `list` returns to active students; subject/tag lists and summaries also
+continue to exclude archived students. For example:
+
+* `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
+* `view 1` shows the first student in that displayed archived list.
+* `list` returns to the active list without restoring archived students.
 
 ### Editing a student profile: `edit`
 
@@ -220,7 +263,9 @@ Examples:
 
 ### Locating persons by name: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds active students whose names contain any of the given keywords. Archived
+students are excluded, even when their names match. Searching does not change
+archive status or any other profile fields.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
@@ -229,6 +274,10 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search considers only names.
 * Only full words match; for example, `Han` does not match `Hans`.
 * Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
+* No matches produce an empty list with `No contacts match the specified name keywords.`.
+* Each search replaces the previous filter. Plain `list` restores all active students.
+* Missing keywords cause an error without changing the current results or saved data.
 
 Examples:
 * `find John` returns `john` and `John Doe`
@@ -249,6 +298,36 @@ Format: `delete INDEX`
 Examples:
 * `list` followed by `delete 2` deletes the 2nd contact in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st contact in the results of the `find` command.
+
+### Archiving a student: `archive`
+
+Archives a student without deleting the student profile. Archived students are hidden from `list` and are excluded from its summary counts, but their data remains saved in TuteeDex.
+
+Format: `archive s/STUDENT_NAME`
+
+* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
+* The name must match the student's full name exactly, ignoring letter case. For example, `archive s/john doe` can archive a student named `John Doe`.
+* A successful command displays `Student archived.` and refreshes the active student list.
+* If no student with the specified name exists, the command displays `Student cannot be found.`
+* If the student is already archived, the command displays `Student already archived.`
+
+Example:
+* `archive s/John Doe` archives John Doe and removes the student from the active list.
+
+### Unarchiving a student: `unarchive`
+
+Restores an archived student to the active student list. Unarchiving does not change the student's profile details.
+
+Format: `unarchive s/STUDENT_NAME`
+
+* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
+* The name must match the student's full name exactly, ignoring letter case.
+* A successful command displays `Student unarchived.` and makes the student appear in `list` again.
+* If no student with the specified name exists, the command displays `Student cannot be found.`
+* If the student is already active, the command displays `Student already active.`
+
+Example:
+* `unarchive s/John Doe` restores John Doe to the active student list.
 
 ### Clearing all entries: `clear`
 
@@ -277,10 +356,6 @@ If your changes make the data file invalid, TuteeDex starts with an empty addres
 Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## FAQ
@@ -308,5 +383,7 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
+**Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`

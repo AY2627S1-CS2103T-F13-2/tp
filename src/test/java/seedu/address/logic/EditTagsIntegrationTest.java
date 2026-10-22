@@ -54,7 +54,8 @@ public class EditTagsIntegrationTest {
         Person updated = new PersonBuilder(bob).withTags("a-level", "needs revision").build();
         assertEquals(List.of(amy, updated), model.getFilteredPersonList());
         assertEquals(List.of(amy, updated), storage.readAddressBook().orElseThrow().getPersonList());
-        assertTrue(logic.execute("view 2").getFeedbackToUser().endsWith("Subjects: Physics\nNotes: Bob note"));
+        assertTrue(logic.execute("view 2").getFeedbackToUser()
+                .endsWith("Subjects: Physics\nTags: a-level, needs revision\nNotes: Bob note"));
 
         Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
         Logic reloadedLogic = createLogic(reloaded);

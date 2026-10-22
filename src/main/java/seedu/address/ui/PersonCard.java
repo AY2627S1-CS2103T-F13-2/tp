@@ -43,10 +43,15 @@ public class PersonCard extends UiPart<Region> {
         id.setText(String.format(java.util.Locale.ROOT, "%03d", displayedIndex));
         name.setText(abbreviate(person.getName().fullName, 31));
         subjects.setText(abbreviate(Messages.formatSubjects(person), 14));
-        name.setTooltip(new Tooltip(person.getName().fullName));
+        String profileDetails = Messages.format(person) + "; Tags: " + Messages.formatTags(person)
+                + "; Notes: " + person.getNotes();
+        Tooltip profileTooltip = new Tooltip(profileDetails);
+        profileTooltip.setWrapText(true);
+        profileTooltip.setMaxWidth(420);
+        name.setTooltip(profileTooltip);
         subjects.setTooltip(new Tooltip("Subjects: " + Messages.formatSubjects(person)));
-        Tooltip.install(cardPane, new Tooltip(Messages.format(person)));
-        cardPane.setAccessibleText(displayedIndex + ". " + Messages.format(person));
+        Tooltip.install(cardPane, profileTooltip);
+        cardPane.setAccessibleText(displayedIndex + ". " + profileDetails);
     }
 
     /** Replaces the final character slot with two dots when the design's limit is exceeded. */

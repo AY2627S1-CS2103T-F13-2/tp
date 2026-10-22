@@ -524,6 +524,23 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
 
+### Listing archived students
+
+Use a fresh test copy of the JAR in an empty writable folder.
+
+1. Add two students with different names, then archive the second by its full name.
+2. Run `find Nobody`, then `list -archived`.<br>
+   Expected: only the archived student appears, with `Listed 1 contact.`.
+3. Run `view 1`.<br>
+   Expected: the archived student's details, not the first stored active student.
+4. Run `list`, `list s/Maths`, or `list t/A-Level` with suitable test data.<br>
+   Expected: each list excludes archived students. `list -summary` counts active students only.
+5. Run `list -archived`, then try `list -archived -summary` and `list t/A-Level -archived`.<br>
+   Expected: both invalid combinations fail without changing the archived list or saved profiles.
+6. Restart the app, then run `list -archived`.<br>
+   Expected: the same archived student remains available. Unarchive the student and repeat
+   `list -archived`; expect an empty list with `No archived contacts.`.
+
 ### Editing a student profile
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.

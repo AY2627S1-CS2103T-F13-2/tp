@@ -59,7 +59,7 @@ public class EditSubjectsIntegrationTest {
         assertEquals(List.of("Physics", "H2 Chemistry"), reloaded.getAddressBook().getPersonList().get(1)
                 .getSubjects().stream().map(subject -> subject.value).toList());
         assertTrue(createLogic(reloaded).execute("view 2").getFeedbackToUser()
-                .endsWith("Subjects: Physics, H2 Chemistry\nNotes: Bob note"));
+                .endsWith("Subjects: Physics, H2 Chemistry\nTags: needs revision\nNotes: Bob note"));
     }
 
     @Test
@@ -72,7 +72,8 @@ public class EditSubjectsIntegrationTest {
                 logic.execute("edit 1 s/PHYSICS s/maths s/physics").getFeedbackToUser());
         assertEquals(displayed, model.getFilteredPersonList());
         assertEquals(json, Files.readString(storage.getAddressBookFilePath()));
-        assertTrue(logic.execute("view 1").getFeedbackToUser().endsWith("Subjects: Maths, Physics\nNotes: Bob note"));
+        assertTrue(logic.execute("view 1").getFeedbackToUser()
+                .endsWith("Subjects: Maths, Physics\nTags: needs revision\nNotes: Bob note"));
     }
 
     @Test

@@ -109,6 +109,19 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void view_tagsAndNotes_preservesUpstreamProfileDetails() throws Exception {
+        runOnFxThread(() -> {
+            Person original = logic.getFilteredPersonList().get(0);
+            Person edited = new PersonBuilder(original).withTags("Needs revision", "A-Level")
+                    .withNotes("Revise fractions & 中文!").build();
+            logic.model.setPerson(original, edited);
+            enterCommand("view 1");
+            assertTrue(feedbackText().contains("Tags: a-level, needs revision | Notes: Revise fractions & 中文!"));
+            assertTrue(feedback().getTooltip().getText().contains("\nTags: a-level, needs revision\nNotes:"));
+        });
+    }
+
+    @Test
     public void failedCommands_showErrorsAndPreserveInput() throws Exception {
         runOnFxThread(() -> {
             enterCommand("unknown");
