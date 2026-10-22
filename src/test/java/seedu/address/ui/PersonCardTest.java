@@ -6,48 +6,27 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.junit.jupiter.api.Test;
 
-import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
-public class PersonCardTest {
+public class PersonCardTest extends FxTestSupport {
 
     @Test
     public void constructor_displaysSubjectsAndLegacyFallback() throws Exception {
-        CountDownLatch completed = new CountDownLatch(1);
-        AtomicReference<Throwable> failure = new AtomicReference<>();
-        Platform.startup(() -> {
-            try {
-                assertSubjectsText(ALICE, "Not specified");
-                assertSubjectsText(new PersonBuilder(ALICE).withSubjects("Maths", "H2 Chemistry").build(),
-                        "Maths, H2 Che..");
-                assertEquals("1234567890123456789012345678901",
-                        PersonCard.abbreviate("1234567890123456789012345678901", 31));
-                assertEquals("123456789012345678901234567890..",
-                        PersonCard.abbreviate("12345678901234567890123456789012", 31));
-                assertSummaryAndFeedback();
-            } catch (Throwable exception) {
-                failure.set(exception);
-            } finally {
-                completed.countDown();
-            }
+        runOnFxThread(() -> {
+            assertSubjectsText(ALICE, "Not specified");
+            assertSubjectsText(new PersonBuilder(ALICE).withSubjects("Maths", "H2 Chemistry").build(),
+                    "Maths, H2 Che..");
+            assertEquals("1234567890123456789012345678901",
+                    PersonCard.abbreviate("1234567890123456789012345678901", 31));
+            assertEquals("123456789012345678901234567890..",
+                    PersonCard.abbreviate("12345678901234567890123456789012", 31));
+            assertSummaryAndFeedback();
         });
-        try {
-            assertTrue(completed.await(10, TimeUnit.SECONDS));
-            if (failure.get() != null) {
-                throw new AssertionError(failure.get());
-            }
-        } finally {
-            Platform.exit();
-        }
     }
 
     private void assertSubjectsText(Person person, String expectedText) {
