@@ -8,6 +8,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
@@ -38,10 +39,19 @@
         <StackPane fx:id="commandBoxPlaceholder" styleClass="command-container" />
         <HBox styleClass="bottom-bar" alignment="CENTER_LEFT">
           <Button fx:id="findButton" text="FIND" styleClass="find-button" onAction="#handleFind">
-            <graphic><Region styleClass="find-icon" /></graphic>
+            <graphic>
+              <ImageView fitWidth="30" fitHeight="30" preserveRatio="true">
+                <image><Image url="@/images/Search.png" /></image>
+              </ImageView>
+            </graphic>
           </Button>
           <Region HBox.hgrow="ALWAYS" />
           <Button fx:id="exitButton" styleClass="exit-button" onAction="#handleExit" accessibleText="Exit TuteeDex">
+            <graphic>
+              <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
+                <image><Image url="@/images/close.png" /></image>
+              </ImageView>
+            </graphic>
             <tooltip><Tooltip text="Exit TuteeDex" /></tooltip>
           </Button>
         </HBox>
