@@ -1,9 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
-
-<StackPane fx:id="placeHolder" styleClass="pane-with-border" xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1">
-  <TextArea fx:id="resultDisplay" editable="false" styleClass="result-display"/>
+<StackPane styleClass="result-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <GridPane fx:id="summary" styleClass="summary">
+    <columnConstraints>
+      <ColumnConstraints percentWidth="47" />
+      <ColumnConstraints percentWidth="53" />
+    </columnConstraints>
+    <HBox alignment="CENTER_RIGHT" GridPane.columnIndex="0">
+      <HBox alignment="CENTER" minWidth="190" prefWidth="190">
+        <Label text="TOTAL" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="totalCount" text="0" />
+      </HBox>
+    </HBox>
+    <HBox alignment="CENTER_RIGHT" GridPane.columnIndex="1">
+      <HBox alignment="CENTER" minWidth="214" prefWidth="214">
+        <Label text="PAID" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="paidCount" text="0" />
+      </HBox>
+    </HBox>
+  </GridPane>
+  <ScrollPane fx:id="resultDisplay" fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED"
+              visible="false" managed="false" styleClass="result-display">
+    <content><Label fx:id="feedbackText" minWidth="-Infinity" styleClass="feedback-text" /></content>
+  </ScrollPane>
 </StackPane>

@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.logic.Messages;
@@ -31,14 +32,6 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label id;
     @FXML
-    private Label phone;
-    @FXML
-    private Label address;
-    @FXML
-    private Label startDate;
-    @FXML
-    private Label outstandingAmount;
-    @FXML
     private Label subjects;
 
     /**
@@ -47,12 +40,23 @@ public class PersonCard extends UiPart<Region> {
     public PersonCard(Person person, int displayedIndex) {
         super(FXML);
         this.person = person;
-        id.setText(displayedIndex + ". ");
-        name.setText(person.getName().fullName);
-        phone.setText(person.getPhone().value);
-        address.setText(person.getAddress().value);
-        startDate.setText(person.getStartDate().value);
-        outstandingAmount.setText(person.getOutstandingAmount().toCurrencyString());
-        subjects.setText("Subjects: " + Messages.formatSubjects(person));
+        id.setText(String.format(java.util.Locale.ROOT, "%03d", displayedIndex));
+        name.setText(abbreviate(person.getName().fullName, 31));
+        subjects.setText(abbreviate(Messages.formatSubjects(person), 14));
+        String profileDetails = Messages.format(person) + "; Tags: " + Messages.formatTags(person)
+                + "; Notes: " + person.getNotes();
+        Tooltip profileTooltip = new Tooltip(profileDetails);
+        profileTooltip.setWrapText(true);
+        profileTooltip.setMaxWidth(420);
+        name.setTooltip(profileTooltip);
+        subjects.setTooltip(new Tooltip("Subjects: " + Messages.formatSubjects(person)));
+        Tooltip.install(cardPane, profileTooltip);
+        cardPane.setAccessibleText(displayedIndex + ". " + profileDetails);
+    }
+
+    /** Replaces the final character slot with two dots when the design's limit is exceeded. */
+    static String abbreviate(String text, int limit) {
+        int length = text.codePointCount(0, text.length());
+        return length <= limit ? text : text.substring(0, text.offsetByCodePoints(0, limit - 1)) + "..";
     }
 }

@@ -50,6 +50,12 @@ public class Messages {
         return builder.toString();
     }
 
+    /** Formats optional tags in a stable order for profile details and contact cards. */
+    public static String formatTags(Person person) {
+        return person.getTags().isEmpty() ? "Not specified" : person.getTags().stream()
+                .map(tag -> tag.tagName).sorted().collect(Collectors.joining(", "));
+    }
+
     /** Formats a person's subjects for display in messages and contact cards. */
     public static String formatSubjects(Person person) {
         return person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()

@@ -122,19 +122,36 @@ Examples:
 
 Format: `view INDEX`
 
-Displays the name, phone, address, start date, outstanding amount, subjects, and notes
+Displays the name, phone, address, start date, outstanding amount, subjects, tags, and notes
 of the student at `INDEX` in the currently displayed list. A student with no
 note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
+Subjects, tags, and notes also appear on each contact card without running `view`.
+Subjects keep their stored order; tags appear alphabetically using their stored
+lowercase labels. Missing subjects or tags show `Not specified`; missing notes
+show an empty `Notes:` value. Long subjects, tags, and notes wrap within the card.
+### Exporting contacts: `export`
+
+Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
+
+Format: `export`
+
+The generated file is named `contacts-YYYYMMDD-HHMMSS-milliseconds.csv`. Each contact occupies one row. The CSV
+contains the name, phone, address, start date, outstanding amount, subjects, tags, notes, and archive status. Multiple
+subjects or tags are joined with `; `.
+
 ### Listing and filtering students: `list`
 
-Shows active student profiles, or filters active profiles by one or more subjects or tags. Archived students are not shown.
+Shows active student profiles, or filters active profiles by one or more subjects
+or tags. Archived students are not shown.
+Each card displays the contact's name, phone, address, start date, outstanding
+amount, subjects, tags, and notes.
 
-Format: `list [-summary] [s/SUBJECT]...` or `list [-summary] [t/TAG]...`
+Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`
 
-* Plain `list` restores all students, including after a Find or filter.
+* Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
   Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
   Subjects use the same validation as Add; equivalent repeated values are combined.
@@ -162,7 +179,25 @@ Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
 * `list t/A-Level t/Needs revision` shows students having either tag.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
-* `list` shows every student again.
+* `list` shows every active student again.
+
+#### Listing archived students
+
+`list -archived` displays only archived students in their stored order. It
+replaces any previous search or filter and does not change saved profiles.
+Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
+exist, the list is empty and feedback is `No archived contacts.`.
+
+Use `-archived` on its own. Combining it with `-summary`, subject/tag filters,
+or other arguments is not supported and shows an error without changing the
+current list. A standalone `-archived` token is reserved for this option and
+cannot be included as a separate word within a tag or subject filter value.
+Plain `list` returns to active students; subject/tag lists and summaries also
+continue to exclude archived students. For example:
+
+* `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
+* `view 1` shows the first student in that displayed archived list.
+* `list` returns to the active list without restoring archived students.
 
 ### Editing a student profile: `edit`
 
@@ -228,7 +263,9 @@ Examples:
 
 ### Locating persons by name: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds active students whose names contain any of the given keywords. Archived
+students are excluded, even when their names match. Searching does not change
+archive status or any other profile fields.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
@@ -237,6 +274,10 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search considers only names.
 * Only full words match; for example, `Han` does not match `Hans`.
 * Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
+* No matches produce an empty list with `No contacts match the specified name keywords.`.
+* Each search replaces the previous filter. Plain `list` restores all active students.
+* Missing keywords cause an error without changing the current results or saved data.
 
 Examples:
 * `find John` returns `john` and `John Doe`
@@ -342,7 +383,7 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]...` or `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
 **Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`

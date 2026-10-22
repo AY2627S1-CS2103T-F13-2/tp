@@ -18,6 +18,20 @@ public class ListCommandParserTest {
     private ListCommandParser parser = new ListCommandParser();
 
     @Test
+    public void parse_archivedFlag_returnsArchivedList() {
+        assertParseSuccess(parser, " -archived ", ListCommand.forArchivedStudents());
+    }
+
+    @Test
+    public void parse_archivedFlagWithOtherOptions_failure() {
+        String[] invalid = {"-archived -summary", "-summary -archived", "-archived s/Maths",
+            "t/A-Level -archived", "s/Maths -archived", "-archived -archived", "-Archived", "-archived extra"};
+        for (String args : invalid) {
+            assertParseFailure(parser, args, ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        }
+    }
+
+    @Test
     public void parse_noArgs_returnsListCommand() {
         assertParseSuccess(parser, "", new ListCommand());
     }

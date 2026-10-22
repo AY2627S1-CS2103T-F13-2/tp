@@ -1,21 +1,24 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import seedu.address.commons.util.ToStringBuilder;
-import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 
 /**
- * Finds and lists all persons in the address book whose name contains any of the argument keywords.
+ * Finds active students whose names contain any of the argument keywords.
  * Keyword matching is case insensitive.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
+    public static final String MESSAGE_NO_MATCHES = "No contacts match the specified name keywords.";
+    public static final String MESSAGE_SINGULAR = "Found 1 contact.";
+    public static final String MESSAGE_PLURAL_FORMAT = "Found %1$d contacts.";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose names contain any of "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds active students whose names contain any of "
             + "the specified keywords (case-insensitive) and displays them as a list with index numbers.\n"
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
             + "Example: " + COMMAND_WORD + " alice bob charlie";
@@ -29,9 +32,11 @@ public class FindCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(predicate);
-        return new CommandResult(
-                String.format(Messages.MESSAGE_PERSONS_LISTED_OVERVIEW, model.getFilteredPersonList().size()));
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(predicate));
+        int count = model.getFilteredPersonList().size();
+        String feedback = count == 0 ? MESSAGE_NO_MATCHES
+                : count == 1 ? MESSAGE_SINGULAR : String.format(MESSAGE_PLURAL_FORMAT, count);
+        return new CommandResult(feedback);
     }
 
     @Override

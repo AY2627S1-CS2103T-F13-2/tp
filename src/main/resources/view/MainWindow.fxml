@@ -1,59 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import java.net.URL?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="TuteeDex" minWidth="450" minHeight="600" onCloseRequest="#handleExit">
-  <icons>
-    <Image url="@/images/address_book_32.png" />
-  </icons>
+         title="TuteeDex" minWidth="600" minHeight="480" onCloseRequest="#handleExit">
+  <icons><Image url="@/images/address_book_32.png" /></icons>
   <scene>
     <Scene>
-      <stylesheets>
-        <URL value="@DarkTheme.css" />
-        <URL value="@Extensions.css" />
-      </stylesheets>
-
-      <VBox>
-        <MenuBar fx:id="menuBar" VBox.vgrow="NEVER">
-          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <MenuItem fx:id="helpMenuItem" mnemonicParsing="false" onAction="#handleHelp" text="Help" />
-          </Menu>
-        </MenuBar>
-
-        <StackPane VBox.vgrow="NEVER" fx:id="commandBoxPlaceholder" styleClass="pane-with-border">
-          <padding>
-            <Insets top="5" right="10" bottom="5" left="10" />
-          </padding>
-        </StackPane>
-
-        <StackPane VBox.vgrow="NEVER" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                   minHeight="100" prefHeight="100" maxHeight="100">
-          <padding>
-            <Insets top="5" right="10" bottom="5" left="10" />
-          </padding>
-        </StackPane>
-
-        <VBox fx:id="personList" styleClass="pane-with-border" minWidth="340" prefWidth="340" VBox.vgrow="ALWAYS">
-          <padding>
-            <Insets top="10" right="10" bottom="10" left="10" />
-          </padding>
-          <StackPane fx:id="personListPanelPlaceholder" VBox.vgrow="ALWAYS"/>
-        </VBox>
-
-        <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />
+      <stylesheets><URL value="@TuteeDex.css" /></stylesheets>
+      <VBox styleClass="tuteedex">
+        <HBox styleClass="app-header" alignment="CENTER_LEFT">
+          <Label text="&gt;" styleClass="header-accent" />
+          <Label text="TuteeDex" styleClass="app-title" />
+          <Region HBox.hgrow="ALWAYS" />
+          <MenuBar fx:id="menuBar">
+            <Menu mnemonicParsing="false" text="File">
+              <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
+            </Menu>
+            <Menu mnemonicParsing="false" text="Help">
+              <MenuItem fx:id="helpMenuItem" mnemonicParsing="false" onAction="#handleHelp" text="Help" />
+            </Menu>
+          </MenuBar>
+        </HBox>
+        <StackPane fx:id="resultDisplayPlaceholder" styleClass="result-container" />
+        <StackPane fx:id="personListPanelPlaceholder" styleClass="student-list-container"
+                   minHeight="0" VBox.vgrow="ALWAYS" />
+        <StackPane fx:id="commandBoxPlaceholder" styleClass="command-container" />
+        <HBox styleClass="bottom-bar" alignment="CENTER_LEFT">
+          <Button fx:id="findButton" text="FIND" styleClass="find-button" onAction="#handleFind">
+            <graphic>
+              <ImageView fitWidth="30" fitHeight="30" preserveRatio="true">
+                <image><Image url="@/images/Search.png" /></image>
+              </ImageView>
+            </graphic>
+          </Button>
+          <Region HBox.hgrow="ALWAYS" />
+          <Button fx:id="exitButton" styleClass="exit-button" onAction="#handleExit" accessibleText="Exit TuteeDex">
+            <graphic>
+              <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
+                <image><Image url="@/images/close.png" /></image>
+              </ImageView>
+            </graphic>
+            <tooltip><Tooltip text="Exit TuteeDex" /></tooltip>
+          </Button>
+        </HBox>
       </VBox>
     </Scene>
   </scene>

@@ -68,7 +68,7 @@ public class NotesIntegrationTest {
 
         Logic reloadedLogic = new LogicManager(new ModelManager(reloaded, new UserPrefs()), storage);
         assertEquals("Name: Amy Bee\nPhone: 87654321\nAddress: Block 1\nStart date: 10-Aug"
-                + "\nOutstanding amount: SGD 20.00\nSubjects: Maths\nNotes: " + notes,
+                + "\nOutstanding amount: SGD 20.00\nSubjects: Maths\nTags: Not specified\nNotes: " + notes,
                 reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 
