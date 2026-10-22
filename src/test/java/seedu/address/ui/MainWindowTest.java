@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +21,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Logic;
@@ -56,6 +61,33 @@ public class MainWindowTest extends FxTestSupport {
         runOnFxThread(() -> {
             assertSummary("2", "1");
             assertNotNull(window.getPersonListPanel());
+        });
+    }
+
+    @Test
+    public void startup_buttonIcons_loadsMatchingImageResources() throws Exception {
+        runOnFxThread(() -> {
+            root.applyCss();
+            root.layout();
+            assertButtonIcon("findButton", "/images/Search.png");
+            assertButtonIcon("exitButton", "/images/close.png");
+        });
+    }
+
+    @Test
+    public void startup_commandPrompt_showsHintAtHalfOpacity() throws Exception {
+        runOnFxThread(() -> {
+            root.applyCss();
+            root.layout();
+            assertEquals("", input.getText(), "The prompt must not become command input");
+            assertEquals("Enter command here...", input.getPromptText());
+            Text prompt = input.lookupAll(".text").stream()
+                    .filter(Text.class::isInstance)
+                    .map(Text.class::cast)
+                    .filter(text -> input.getPromptText().equals(text.getText()))
+                    .findFirst().orElseThrow(() -> new AssertionError("Rendered command prompt is missing"));
+            assertTrue(prompt.isVisible());
+            assertEquals(Color.color(1, 1, 1, 0.5), prompt.getFill());
         });
     }
 
@@ -158,6 +190,19 @@ public class MainWindowTest extends FxTestSupport {
     private void enterCommand(String text) {
         input.setText(text);
         input.fireEvent(new ActionEvent());
+    }
+
+    private void assertButtonIcon(String buttonId, String resourcePath) {
+        Button button = (Button) root.lookup("#" + buttonId);
+        assertNotNull(button);
+        ImageView icon = assertInstanceOf(ImageView.class, button.getGraphic());
+        Image image = icon.getImage();
+        assertNotNull(image);
+        assertFalse(image.isError(), "Button icon must decode successfully");
+        assertEquals(getClass().getResource(resourcePath).toExternalForm(), image.getUrl());
+        assertTrue(image.getWidth() > 0 && image.getHeight() > 0);
+        assertTrue(icon.isPreserveRatio());
+        assertTrue(icon.getBoundsInLocal().getWidth() > 0 && icon.getBoundsInLocal().getHeight() > 0);
     }
 
     private ScrollPane feedback() {
