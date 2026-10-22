@@ -16,6 +16,8 @@ import seedu.address.model.person.Subject;
 public class ListCommand extends Command {
     public static final String COMMAND_WORD = "list";
     public static final String SUMMARY_FLAG = "-summary";
+    public static final String ARCHIVED_FLAG = "-archived";
+    public static final String MESSAGE_NO_ARCHIVED_CONTACTS = "No archived contacts.";
     public static final String MESSAGE_EMPTY = "No contacts stored. Use the add command to add one.";
     public static final String MESSAGE_SINGULAR = "Listed 1 contact.";
     public static final String MESSAGE_PLURAL_FORMAT = "Listed %1$d contacts.";
@@ -26,6 +28,7 @@ public class ListCommand extends Command {
     private final Predicate<Person> predicate;
     private final Set<Subject> subjects;
     private final boolean isSummary;
+    private final boolean isArchivedOnly;
 
     public ListCommand() {
         this(PREDICATE_SHOW_ALL_PERSONS, Set.of(), false);
@@ -55,9 +58,19 @@ public class ListCommand extends Command {
     }
 
     private ListCommand(Predicate<Person> predicate, Set<Subject> subjects, boolean isSummary) {
+        this(predicate, subjects, isSummary, false);
+    }
+
+    private ListCommand(Predicate<Person> predicate, Set<Subject> subjects, boolean isSummary, boolean isArchivedOnly) {
         this.predicate = requireNonNull(predicate);
         this.subjects = Set.copyOf(requireNonNull(subjects));
         this.isSummary = isSummary;
+        this.isArchivedOnly = isArchivedOnly;
+    }
+
+    /** Lists only archived students, without active filters or summary options. */
+    public static ListCommand forArchivedStudents() {
+        return new ListCommand(PREDICATE_SHOW_ALL_PERSONS, Set.of(), false, true);
     }
 
     @Override
@@ -65,8 +78,12 @@ public class ListCommand extends Command {
         requireNonNull(model);
         Predicate<Person> filter = subjects.isEmpty()
                 ? predicate : person -> person.getSubjects().stream().anyMatch(subjects::contains);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(filter));
+        Predicate<Person> visibility = isArchivedOnly ? Person::isArchived : PREDICATE_SHOW_ACTIVE_PERSONS;
+        model.updateFilteredPersonList(visibility.and(filter));
         int count = model.getFilteredPersonList().size();
+        if (isArchivedOnly && count == 0) {
+            return new CommandResult(MESSAGE_NO_ARCHIVED_CONTACTS);
+        }
         if (isSummary) {
             int paidStudents = (int) model.getFilteredPersonList().stream()
                     .filter(person -> person.getOutstandingAmount().equals(OutstandingAmount.ZERO)).count();
@@ -97,6 +114,7 @@ public class ListCommand extends Command {
         return other == this || other instanceof ListCommand otherCommand
                 && predicate.equals(otherCommand.predicate)
                 && subjects.equals(otherCommand.subjects)
-                && isSummary == otherCommand.isSummary;
+                && isSummary == otherCommand.isSummary
+                && isArchivedOnly == otherCommand.isArchivedOnly;
     }
 }

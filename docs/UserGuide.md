@@ -142,9 +142,9 @@ subjects or tags are joined with `; `.
 
 Shows active student profiles, or filters active profiles by one or more subjects or tags. Archived students are not shown.
 
-Format: `list [-summary] [s/SUBJECT]...` or `list [-summary] [t/TAG]...`
+Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`
 
-* Plain `list` restores all students, including after a Find or filter.
+* Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
   Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
   Subjects use the same validation as Add; equivalent repeated values are combined.
@@ -172,7 +172,25 @@ Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
 * `list t/A-Level t/Needs revision` shows students having either tag.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
-* `list` shows every student again.
+* `list` shows every active student again.
+
+#### Listing archived students
+
+`list -archived` displays only archived students in their stored order. It
+replaces any previous search or filter and does not change saved profiles.
+Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
+exist, the list is empty and feedback is `No archived contacts.`.
+
+Use `-archived` on its own. Combining it with `-summary`, subject/tag filters,
+or other arguments is not supported and shows an error without changing the
+current list. A standalone `-archived` token is reserved for this option and
+cannot be included as a separate word within a tag or subject filter value.
+Plain `list` returns to active students; subject/tag lists and summaries also
+continue to exclude archived students. For example:
+
+* `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
+* `view 1` shows the first student in that displayed archived list.
+* `list` returns to the active list without restoring archived students.
 
 ### Editing a student profile: `edit`
 
@@ -358,7 +376,7 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]...` or `list [-summary] [t/TAG]...`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
 **Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`

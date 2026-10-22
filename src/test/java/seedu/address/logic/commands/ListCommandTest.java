@@ -33,6 +33,13 @@ public class ListCommandTest {
     private Model model;
     private Model expectedModel;
 
+    @Test
+    public void equals_archivedVisibility_distinguishesCommands() {
+        assertEquals(ListCommand.forArchivedStudents(), ListCommand.forArchivedStudents());
+        assertNotEquals(new ListCommand(), ListCommand.forArchivedStudents());
+        assertNotEquals(new ListCommand(true), ListCommand.forArchivedStudents());
+    }
+
     @BeforeEach
     public void setUp() {
         model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
