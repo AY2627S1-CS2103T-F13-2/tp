@@ -238,7 +238,9 @@ Examples:
 
 ### Locating persons by name: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds active students whose names contain any of the given keywords. Archived
+students are excluded, even when their names match. Searching does not change
+archive status or any other profile fields.
 
 Format: `find KEYWORD [MORE_KEYWORDS]`
 
@@ -247,6 +249,10 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search considers only names.
 * Only full words match; for example, `Han` does not match `Hans`.
 * Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
+* No matches produce an empty list with `No contacts match the specified name keywords.`.
+* Each search replaces the previous filter. Plain `list` restores all active students.
+* Missing keywords cause an error without changing the current results or saved data.
 
 Examples:
 * `find John` returns `john` and `John Doe`
