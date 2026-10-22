@@ -40,6 +40,10 @@ public class PersonCard extends UiPart<Region> {
     private Label outstandingAmount;
     @FXML
     private Label subjects;
+    @FXML
+    private Label tags;
+    @FXML
+    private Label notes;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -54,5 +58,7 @@ public class PersonCard extends UiPart<Region> {
         startDate.setText(person.getStartDate().value);
         outstandingAmount.setText(person.getOutstandingAmount().toCurrencyString());
         subjects.setText("Subjects: " + Messages.formatSubjects(person));
+        tags.setText("Tags: " + Messages.formatTags(person));
+        notes.setText("Notes: " + person.getNotes());
     }
 }

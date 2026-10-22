@@ -122,12 +122,16 @@ Examples:
 
 Format: `view INDEX`
 
-Displays the name, phone, address, start date, outstanding amount, subjects, and notes
+Displays the name, phone, address, start date, outstanding amount, subjects, tags, and notes
 of the student at `INDEX` in the currently displayed list. A student with no
 note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
+Subjects, tags, and notes also appear on each contact card without running `view`.
+Subjects keep their stored order; tags appear alphabetically using their stored
+lowercase labels. Missing subjects or tags show `Not specified`; missing notes
+show an empty `Notes:` value. Long subjects, tags, and notes wrap within the card.
 ### Exporting contacts: `export`
 
 Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
@@ -140,7 +144,10 @@ subjects or tags are joined with `; `.
 
 ### Listing and filtering students: `list`
 
-Shows active student profiles, or filters active profiles by one or more subjects or tags. Archived students are not shown.
+Shows active student profiles, or filters active profiles by one or more subjects
+or tags. Archived students are not shown.
+Each card displays the contact's name, phone, address, start date, outstanding
+amount, subjects, tags, and notes.
 
 Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`
 

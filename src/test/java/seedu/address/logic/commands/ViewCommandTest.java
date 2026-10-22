@@ -27,6 +27,16 @@ public class ViewCommandTest {
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
+    public void execute_studentWithAllNewFields_displaysStoredDetails() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person updated = new PersonBuilder(original).withSubjects("Maths", "H2 Chemistry")
+                .withTags("Needs revision", "A-Level").withNotes("Revise  fractions & 中文!").build();
+        model.setPerson(original, updated);
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        assertCommandSuccess(new ViewCommand(INDEX_FIRST_PERSON), model, expectedDetails(updated), expectedModel);
+    }
+
+    @Test
     public void execute_studentWithNotes_displaysNotes() {
         Person original = model.getFilteredPersonList().get(0);
         Person withNotes = new PersonBuilder(original).withNotes("Revise  fractions & algebra!").build();
@@ -88,6 +98,8 @@ public class ViewCommandTest {
                 + "\nOutstanding amount: " + person.getOutstandingAmount().toCurrencyString()
                 + "\nSubjects: " + (person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()
                         .map(Object::toString).collect(Collectors.joining(", ")))
+                + "\nTags: " + (person.getTags().isEmpty() ? "Not specified" : person.getTags().stream()
+                        .map(tag -> tag.tagName).sorted().collect(Collectors.joining(", ")))
                 + "\nNotes: " + person.getNotes();
     }
 }
