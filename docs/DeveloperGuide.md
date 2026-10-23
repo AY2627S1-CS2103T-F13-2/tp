@@ -71,16 +71,22 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+`UiManager` implements `Ui` and starts the JavaFX interface by creating and showing a `MainWindow`, then filling its placeholders. It also handles fatal errors during UI initialization. `UiManager` and `MainWindow` both keep a reference to `Logic`.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+`MainWindow` assembles the TuteeDex interface:
 
-The `UI` component,
+* The header contains the application title and the File and Help menus.
+* `ResultDisplay` shows either the TOTAL/PAID summary or command feedback. Feedback appears on a horizontally scrollable line, with line breaks replaced by ` | `; a tooltip preserves the original message.
+* `PersonListPanel` displays the filtered `ObservableList<Person>` obtained from `Logic`. Its custom `PersonListViewCell` creates a `PersonCard` for each non-empty cell, so changes to the observable list update the displayed students.
+* `PersonCard` shows a three-digit, zero-padded list index, the student's name, and subjects. Long names and subject text are abbreviated; tooltips expose the full profile and subjects, and accessible text includes the profile details.
+* `CommandBox` accepts commands at the bottom of the window. The FIND button calls `prepareFind()`, which inserts `find ` only when the input is blank, then focuses the input and moves the caret to its end without executing a command.
+* The exit button and File > Exit close the application window. Help is available through the Help menu and F1, using a `HelpWindow` created with `MainWindow` and reused when requested.
 
-* executes user commands using the `Logic` component.
-* listens for changes to `Model` data so that the UI can be updated with the modified data.
-* keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
+`MainWindow`, `CommandBox`, `ResultDisplay`, `PersonListPanel`, `PersonCard`, and `HelpWindow` inherit from the abstract `UiPart<T>` class. `UiPart` loads an FXML layout, sets the controller, and exposes the root JavaFX object through `getRoot()`. `StatusBarFooter` and its FXML file remain in the source tree, but the current `MainWindow` does not instantiate or display a status bar; it is omitted from the diagram above.
+
+The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) defines the main layout and loads `TuteeDex.css`, while `PersonListCard.fxml` defines the layout for `PersonCard`. The main window also loads the bundled pixel fonts. `HelpWindow` has its own FXML layout and stylesheet.
+
+The UI depends on `Model` classes to display `Person` data and to identify students whose outstanding amount is zero for the PAID count. Commands and access to the filtered list and GUI settings go through `Logic`.
 
 ### Logic component
 
