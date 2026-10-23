@@ -142,12 +142,21 @@ The `Model` component,
 
 **API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
-<puml src="diagrams/StorageClassDiagram.puml" width="550" />
+<puml src="diagrams/StorageClassDiagram.puml" width="700" />
 
-The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
-* depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+The `Storage` interface is implemented by `StorageManager`, which delegates student-data access to
+`JsonAddressBookStorage` and user-preference access to `JsonUserPrefsStorage`.
+
+* `JsonAddressBookStorage` reads and writes `JsonSerializableAddressBook`, which contains zero or more
+  `JsonAdaptedPerson` records. Each record stores the student's core profile fields, subjects, notes,
+  archive status, and zero or more tags represented by `JsonAdaptedTag`.
+* Subjects are stored as strings, not as a separate `JsonAdaptedSubject` class. The diagram shows the
+  `persons` and `tags` collections as associations rather than repeating them as attributes.
+* The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
+  `JsonSerializableAddressBook.toModelType()` also rejects duplicate students. These conversions explain
+  the Storage component's dependency on the Model component; model classes are omitted from this diagram.
+* Older student records without subjects, tags, notes, or archive status load with empty subjects/tags,
+  empty notes, and `archived = false`. User preferences are serialized directly without a separate adapter.
 
 ### Common classes
 
