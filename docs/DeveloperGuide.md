@@ -88,6 +88,17 @@ The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.
 
 The UI depends on `Model` classes to display `Person` data and to identify students whose outstanding amount is zero for the PAID count. Commands and access to the filtered list and GUI settings go through `Logic`.
 
+The following sequence diagram shows submission of a successful `list` command and the resulting summary:
+
+<puml src="diagrams/UiCommandSequenceDiagram.puml" alt="UI command execution and list summary"/>
+
+1. When Enter is pressed, `CommandBox` ignores an empty string; otherwise, it passes the input to its `CommandExecutor`. `MainWindow` supplies this callback as `this::executeCommand`, keeping `CommandBox` independent of `Logic`.
+1. `MainWindow` calls `Logic.execute(commandText)` and displays the returned `CommandResult` feedback. For a successful `list` command, it then replaces that feedback with the TOTAL/PAID summary. `showListSummary()` reads the filtered list: TOTAL is its size, and PAID counts students whose outstanding amount equals `OutstandingAmount.ZERO`. The summary is calculated at startup and after successful `list` commands; it is not continuously bound to list changes.
+1. `MainWindow` also checks the result's help and exit flags. Help opens or focuses the existing `HelpWindow`; exit saves the current window size and position through `Logic.setGuiSettings()`, then hides the help and main windows. The menu and exit button use the same handlers.
+1. When execution succeeds, `CommandBox` clears the input. If `Logic` throws a `CommandException` or `ParseException`, `MainWindow` displays the exception message and rethrows it. `CommandBox` retains the input and applies its error style, which is removed when the text next changes.
+
+The sequence diagram omits error handling, help/exit flag handling, and the observable list's JavaFX cell updates for clarity.
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
