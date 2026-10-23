@@ -2,6 +2,8 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_DAY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_TIME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
@@ -32,7 +34,7 @@ public class EditCommandParser implements Parser<EditCommand> {
 
     private static final Set<Prefix> SUPPORTED_PREFIXES = Set.of(
             PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE, PREFIX_OUTSTANDING_AMOUNT,
-            PREFIX_TAG, PREFIX_SUBJECT, PREFIX_NOTES);
+            PREFIX_TAG, PREFIX_SUBJECT, PREFIX_LESSON_DAY, PREFIX_LESSON_TIME, PREFIX_NOTES);
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
 
     /**
@@ -45,7 +47,8 @@ public class EditCommandParser implements Parser<EditCommand> {
         verifyKnownPrefixes(args);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG, PREFIX_SUBJECT, PREFIX_NOTES);
+                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG, PREFIX_SUBJECT, PREFIX_LESSON_DAY,
+                        PREFIX_LESSON_TIME, PREFIX_NOTES);
 
         Index index;
 
@@ -86,7 +89,13 @@ public class EditCommandParser implements Parser<EditCommand> {
                     ? Set.of() : ParserUtil.parseTags(tags));
         }
         if (argMultimap.getValue(PREFIX_SUBJECT).isPresent()) {
-            editPersonDescriptor.setSubjects(ParserUtil.parseSubjects(argMultimap.getAllValues(PREFIX_SUBJECT)));
+            ParserUtil.verifySubjectScheduleOrder(args);
+            editPersonDescriptor.setSubjects(ParserUtil.parseScheduledSubjects(
+                    argMultimap.getAllValues(PREFIX_SUBJECT), argMultimap.getAllValues(PREFIX_LESSON_DAY),
+                    argMultimap.getAllValues(PREFIX_LESSON_TIME)));
+        } else if (argMultimap.getValue(PREFIX_LESSON_DAY).isPresent()
+                || argMultimap.getValue(PREFIX_LESSON_TIME).isPresent()) {
+            throw new ParseException(ParserUtil.MESSAGE_INVALID_SUBJECT_SCHEDULE);
         }
         if (argMultimap.getValue(PREFIX_NOTES).isPresent()) {
             editPersonDescriptor.setNotes(ParserUtil.parseNotes(argMultimap.getValue(PREFIX_NOTES).get()));

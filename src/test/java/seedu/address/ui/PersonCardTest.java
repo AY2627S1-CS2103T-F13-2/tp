@@ -21,7 +21,7 @@ public class PersonCardTest extends FxTestSupport {
         runOnFxThread(() -> {
             assertSubjectsText(ALICE, "Not specified");
             assertSubjectsText(new PersonBuilder(ALICE).withSubjects("Maths", "H2 Chemistry").build(),
-                    "Maths, H2 Che..");
+                    "Maths (Mon 09..");
             assertEquals("1234567890123456789012345678901",
                     PersonCard.abbreviate("1234567890123456789012345678901", 31));
             assertEquals("123456789012345678901234567890..",
@@ -49,8 +49,9 @@ public class PersonCardTest extends FxTestSupport {
             PersonCard card = new PersonCard(student, 1);
             assertProfileDetails(card, "a-level, needs revision", longNote.trim());
             Label subjects = (Label) card.getRoot().lookup("#subjects");
-            assertEquals("Maths, H2 Che..", subjects.getText());
-            assertEquals("Subjects: Maths, H2 Chemistry", subjects.getTooltip().getText());
+            assertEquals("Maths (Mon 09..", subjects.getText());
+            assertEquals("Subjects: Maths (Mon 09:00), H2 Chemistry (Mon 09:00)",
+                    subjects.getTooltip().getText());
             assertEquals(4, card.getRoot().getChildrenUnmodifiable().size(), "Keep the compact row layout");
 
             Person edited = new PersonBuilder(student).withTags("Updated").withNotes("Updated note").build();

@@ -38,9 +38,12 @@ public class ListTagsIntegrationTest {
         model = new ModelManager();
         storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressbook.json"));
         logic = createLogic(model);
-        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/Maths t/A-Level");
-        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Physics t/Needs revision");
-        logic.execute("add n/Cara Dee p/33333333 a/Block 3 d/20-Oct s/Maths");
+        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug"
+                + " s/Maths day/MON time/09:00 t/A-Level");
+        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep"
+                + " s/Physics day/MON time/09:00 t/Needs revision");
+        logic.execute("add n/Cara Dee p/33333333 a/Block 3 d/20-Oct"
+                + " s/Maths day/MON time/09:00");
     }
 
     @Test

@@ -39,8 +39,8 @@ public class FindIntegrationTest {
         savedPath = temporaryFolder.resolve("students.json");
         logic = new LogicManager(model, new StorageManager(new JsonAddressBookStorage(savedPath),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("preferences.json"))));
-        logic.execute("add n/Alice Tan p/91234567 a/Block 1 d/10-Aug s/Maths");
-        logic.execute("add n/Bob Lee p/92345678 a/Block 2 d/10-Aug s/English");
+        logic.execute("add n/Alice Tan p/91234567 a/Block 1 d/10-Aug s/Maths day/MON time/09:00");
+        logic.execute("add n/Bob Lee p/92345678 a/Block 2 d/10-Aug s/English day/MON time/09:00");
         students = List.copyOf(model.getAddressBook().getPersonList());
         originalJson = Files.readString(savedPath);
     }

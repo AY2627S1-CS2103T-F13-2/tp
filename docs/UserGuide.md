@@ -31,7 +31,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
    * `list` : Lists all active contacts.
 
-   * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug s/Maths o/20` : Adds a student profile named `John Doe` to TuteeDex.
+   * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug s/Maths day/MON time/15:30 o/20` : Adds a student profile named `John Doe` to TuteeDex.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -80,7 +80,7 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
-Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]`
+Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]`
 
 <box type="tip" seamless>
 
@@ -88,7 +88,14 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT].
 
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
 
-**Note:** At least one `s/SUBJECT` is required for new profiles. Repeat `s/` for multiple subjects, for example `s/Maths s/H2 Chemistry`. Each subject must be 1–50 characters after trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including at least one letter or digit. Subjects are compared without regard to case; duplicates are stored once, retaining the first spelling. Comma-separated subjects are not supported.
+**Note:** At least one subject lesson is required for new profiles. Enter each lesson as
+`s/SUBJECT day/DAY time/TIME`, in that order. `DAY` is one of `MON`, `TUE`, `WED`, `THU`,
+`FRI`, `SAT`, or `SUN` (letter case is ignored), and `TIME` is a 24-hour start time in strict
+`HH:mm` format, such as `09:00` or `15:30`. Each subject has exactly one weekly lesson.
+Repeat the complete triplet for multiple subjects. Subject names must be 1–50 characters after
+trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including
+at least one letter or digit. A student cannot have two subjects with the same name, ignoring case.
+Comma-separated subjects are not supported.
 
 **Note:** `notes/NOTE` is optional and stores one free-text note per student.
 Omitting it or supplying a blank value stores no note. Surrounding spaces are
@@ -113,16 +120,17 @@ equivalent. A duplicate produces `This contact already exists in TuteeDex` and
 does not add another profile.
 
 Examples:
-* `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug s/Maths`
-* `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600 s/H2 Chemistry s/Physics`
-* `add n/Amy Bee a/Block 1 p/91234567 d/10-Aug s/Maths notes/Revise fractions`
-* `add n/Peter Parker a/Block 9 p/91234567 d/10-Aug s/Physics t/A-Level t/Needs revision`
+* `add n/John Doe a/John street, block 123, #01-01 p/98765432 d/10-Aug s/Maths day/MON time/15:30`
+* `add n/Betsy Crowe a/Newgate Prison p/12345678 d/19-Sep o/600 s/H2 Chemistry day/TUE time/09:00 s/Physics day/FRI time/16:30`
+* `add n/Amy Bee a/Block 1 p/91234567 d/10-Aug s/Maths day/WED time/14:00 notes/Revise fractions`
+* `add n/Peter Parker a/Block 9 p/91234567 d/10-Aug s/Physics day/SAT time/10:30 t/A-Level t/Needs revision`
 
 ### Viewing a student profile: `view`
 
 Format: `view INDEX`
 
-Displays the name, phone, address, start date, outstanding amount, subjects, tags, and notes
+Displays the name, phone, address, start date, outstanding amount, subjects with their weekly lesson
+day and start time, tags, and notes
 of the student at `INDEX` in the currently displayed list. A student with no
 note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
@@ -203,18 +211,18 @@ continue to exclude archived students. For example:
 
 Updates one or more fields of an existing student profile in TuteeDex.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`
+Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`
 
 * Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
 * After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
 * Fields that are not supplied remain unchanged, including the outstanding amount, tags, subjects, and notes.
-* Supplied `s/SUBJECT` values replace the entire subject set. Repeat `s/` for multiple subjects.
-  Subjects use Add's validation: 1-50 characters after trimming, containing only English letters, digits,
-  spaces, or hyphens, with at least one letter or digit. Blank subjects, including a bare `s/`, are invalid.
-  Equivalent subjects are combined without regard to case, retaining the first spelling and input order.
-  Changing only subject case or order is a no-op and retains the existing spelling and order.
+* Supplied subject lesson triplets replace the entire subject set. Repeat the complete
+  `s/SUBJECT day/DAY time/TIME` triplet for multiple subjects. The triplet order, day names,
+  time format, subject validation, and unique-name rule are the same as for `add`.
+  Changing only subject case or order while keeping the same lesson slots is a no-op and retains
+  the existing spelling and order.
 * Supplied `t/TAG` values replace the entire tag set. Repeat `t/` for multiple tags.
   Tags use Add's validation and lowercase normalization; equivalent repeated tags are combined.
   A single blank `t/` clears all tags. Mixing blank and nonblank tags, or repeating blank `t/`, is invalid.
@@ -226,7 +234,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * Use `o/0` to reset the outstanding amount to zero. Blank values for the five scalar fields, including `o/`, are invalid.
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.
-* The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index.
+* The command word `edit` and all prefixes are lowercase and case-sensitive. Fields may appear in any order after the index, except that each subject's `s/`, `day/`, and `time/` prefixes must stay together in that order.
 * Each single-valued field, including notes, may appear only once in an edit command. Tags accept repeated `t/` prefixes,
   and subjects accept repeated `s/` prefixes.
 * Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
@@ -256,7 +264,7 @@ Examples:
 * `edit 1 o/0` resets the first profile's outstanding amount to zero.
 * `edit 1 t/A-Level t/Needs revision` replaces the first profile's tags with these two tags.
 * `edit 1 t/` clears the first profile's tags while keeping its other fields.
-* `edit 1 s/Maths s/H2 Chemistry` replaces the first profile's subjects while keeping its other fields.
+* `edit 1 s/Maths day/MON time/15:30 s/H2 Chemistry day/THU time/17:00` replaces the first profile's subjects and lesson slots while keeping its other fields.
 * `edit 1 notes/Revise fractions` replaces the first profile's note while keeping its other fields.
 * `edit 1 notes/` clears the first profile's note.
 * `find Betsy` followed by `edit 1 a/32, Clementi Road` updates only the address of the first search result.
@@ -377,11 +385,11 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT [s/SUBJECT]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths o/20 t/A-Level notes/Revise algebra`
+**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths t/A-Level notes/Revise algebra`
+**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`

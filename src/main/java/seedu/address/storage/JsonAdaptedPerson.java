@@ -32,7 +32,7 @@ class JsonAdaptedPerson {
     private final String address;
     private final String startDate;
     private final String outstandingAmount;
-    private final List<String> subjects;
+    private final List<JsonAdaptedSubject> subjects;
     private final String notes;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final boolean archived;
@@ -56,7 +56,7 @@ class JsonAdaptedPerson {
 
     /** Legacy constructor retaining the pre-archive adapter API. */
     public JsonAdaptedPerson(String name, String phone, String address, String startDate,
-            String outstandingAmount, List<JsonAdaptedTag> tags, String notes, List<String> subjects) {
+            String outstandingAmount, List<JsonAdaptedTag> tags, String notes, List<JsonAdaptedSubject> subjects) {
         this(name, phone, address, startDate, outstandingAmount, tags, notes, subjects, false);
     }
 
@@ -68,7 +68,7 @@ class JsonAdaptedPerson {
             @JsonProperty("address") String address, @JsonProperty("startDate") String startDate,
             @JsonProperty("outstandingAmount") String outstandingAmount,
             @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("notes") String notes,
-            @JsonProperty("subjects") List<String> subjects, @JsonProperty("archived") Boolean archived) {
+            @JsonProperty("subjects") List<JsonAdaptedSubject> subjects, @JsonProperty("archived") Boolean archived) {
         this.name = name;
         this.phone = phone;
         this.address = address;
@@ -91,7 +91,7 @@ class JsonAdaptedPerson {
         address = source.getAddress().value;
         startDate = source.getStartDate().value;
         outstandingAmount = source.getOutstandingAmount().toPlainString();
-        subjects = source.getSubjects().stream().map(Object::toString).toList();
+        subjects = source.getSubjects().stream().map(JsonAdaptedSubject::new).toList();
         notes = source.getNotes().value;
         archived = source.isArchived();
         source.getTags().stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
@@ -148,11 +148,16 @@ class JsonAdaptedPerson {
         }
 
         Set<Subject> modelSubjects = new LinkedHashSet<>();
-        for (String subject : subjects == null ? List.<String>of() : subjects) {
-            if (subject == null || !Subject.isValidSubject(subject)) {
+        Set<String> subjectNames = new HashSet<>();
+        for (JsonAdaptedSubject subject : subjects == null ? List.<JsonAdaptedSubject>of() : subjects) {
+            if (subject == null) {
                 throw new IllegalValueException(Subject.MESSAGE_CONSTRAINTS);
             }
-            modelSubjects.add(new Subject(subject));
+            Subject modelSubject = subject.toModelType();
+            if (!subjectNames.add(modelSubject.value.toLowerCase(java.util.Locale.ROOT))) {
+                throw new IllegalValueException("Subject names must be unique for each student.");
+            }
+            modelSubjects.add(modelSubject);
         }
 
         Notes modelNotes = notes == null ? Notes.EMPTY : new Notes(notes);

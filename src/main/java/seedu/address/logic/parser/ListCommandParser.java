@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.PersonHasAnyTagPredicate;
-import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 /** Parses plain lists, summary lists, and repeated subject or tag filters. */
@@ -65,8 +64,8 @@ public class ListCommandParser implements Parser<ListCommand> {
             if (!values.getPreamble().isEmpty() || values.getAllValues(PREFIX_SUBJECT).isEmpty()) {
                 throw new ParseException(MESSAGE_INVALID_PARAMETERS);
             }
-            Set<Subject> subjects = ParserUtil.parseSubjects(values.getAllValues(PREFIX_SUBJECT));
-            return new ListCommand(subjects, isSummary);
+            Set<String> subjectNames = ParserUtil.parseSubjectNames(values.getAllValues(PREFIX_SUBJECT));
+            return new ListCommand(subjectNames, isSummary);
         }
         if (PREFIX_TAG.toString().equals(filterPrefix)) {
             ArgumentMultimap values = ArgumentTokenizer.tokenize(" " + filterArgs, PREFIX_TAG);

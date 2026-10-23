@@ -2,6 +2,8 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_DAY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_TIME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
@@ -38,7 +40,8 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_SUBJECT, PREFIX_TAG, PREFIX_NOTES);
+                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_SUBJECT, PREFIX_LESSON_DAY, PREFIX_LESSON_TIME,
+                        PREFIX_TAG, PREFIX_NOTES);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE, PREFIX_START_DATE)
                 || !argMultimap.getPreamble().isEmpty()) {
@@ -47,6 +50,7 @@ public class AddCommandParser implements Parser<AddCommand> {
         if (argMultimap.getAllValues(PREFIX_SUBJECT).isEmpty()) {
             throw new ParseException("At least one subject must be supplied.");
         }
+        ParserUtil.verifySubjectScheduleOrder(args);
 
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
                 PREFIX_OUTSTANDING_AMOUNT, PREFIX_NOTES);
@@ -57,7 +61,9 @@ public class AddCommandParser implements Parser<AddCommand> {
         OutstandingAmount outstandingAmount = argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).isPresent()
                 ? ParserUtil.parseOutstandingAmount(argMultimap.getValue(PREFIX_OUTSTANDING_AMOUNT).get())
                 : OutstandingAmount.ZERO;
-        Set<Subject> subjects = ParserUtil.parseSubjects(argMultimap.getAllValues(PREFIX_SUBJECT));
+        Set<Subject> subjects = ParserUtil.parseScheduledSubjects(
+                argMultimap.getAllValues(PREFIX_SUBJECT), argMultimap.getAllValues(PREFIX_LESSON_DAY),
+                argMultimap.getAllValues(PREFIX_LESSON_TIME));
 
         Notes notes = argMultimap.getValue(PREFIX_NOTES).map(ParserUtil::parseNotes).orElse(Notes.EMPTY);
         Set<Tag> tags = ParserUtil.parseTags(argMultimap.getAllValues(PREFIX_TAG));

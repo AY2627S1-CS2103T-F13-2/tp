@@ -39,8 +39,10 @@ public class EditSubjectsIntegrationTest {
         model = new ModelManager();
         storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressbook.json"));
         logic = createLogic(model);
-        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/English t/A-Level notes/Amy note");
-        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Maths s/Physics"
+        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug"
+                + " s/English day/MON time/09:00 t/A-Level notes/Amy note");
+        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep"
+                + " s/Maths day/MON time/09:00 s/Physics day/MON time/09:00"
                 + " o/600 t/Needs revision notes/Bob note");
     }
 
@@ -51,7 +53,8 @@ public class EditSubjectsIntegrationTest {
         logic.execute("find Bob");
 
         assertEquals("Edited contact: Bob Choo",
-                logic.execute("edit 1 s/Physics s/H2 Chemistry s/PHYSICS").getFeedbackToUser());
+                logic.execute("edit 1 s/Physics day/MON time/09:00"
+                        + " s/H2 Chemistry day/MON time/09:00").getFeedbackToUser());
         Person updated = new PersonBuilder(bob).withSubjects("Physics", "H2 Chemistry").build();
         assertEquals(List.of(amy, updated), model.getFilteredPersonList());
         Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
@@ -59,7 +62,8 @@ public class EditSubjectsIntegrationTest {
         assertEquals(List.of("Physics", "H2 Chemistry"), reloaded.getAddressBook().getPersonList().get(1)
                 .getSubjects().stream().map(subject -> subject.value).toList());
         assertTrue(createLogic(reloaded).execute("view 2").getFeedbackToUser()
-                .endsWith("Subjects: Physics, H2 Chemistry\nTags: needs revision\nNotes: Bob note"));
+                .endsWith("Subjects: Physics (Mon 09:00), H2 Chemistry (Mon 09:00)"
+                        + "\nTags: needs revision\nNotes: Bob note"));
     }
 
     @Test
@@ -69,11 +73,13 @@ public class EditSubjectsIntegrationTest {
         String json = Files.readString(storage.getAddressBookFilePath());
 
         assertEquals("No changes made to contact: Bob Choo",
-                logic.execute("edit 1 s/PHYSICS s/maths s/physics").getFeedbackToUser());
+                logic.execute("edit 1 s/PHYSICS day/MON time/09:00"
+                        + " s/maths day/MON time/09:00").getFeedbackToUser());
         assertEquals(displayed, model.getFilteredPersonList());
         assertEquals(json, Files.readString(storage.getAddressBookFilePath()));
         assertTrue(logic.execute("view 1").getFeedbackToUser()
-                .endsWith("Subjects: Maths, Physics\nTags: needs revision\nNotes: Bob note"));
+                .endsWith("Subjects: Maths (Mon 09:00), Physics (Mon 09:00)"
+                        + "\nTags: needs revision\nNotes: Bob note"));
     }
 
     @Test
@@ -81,7 +87,7 @@ public class EditSubjectsIntegrationTest {
         Person amy = model.getAddressBook().getPersonList().get(0);
         Person bob = model.getAddressBook().getPersonList().get(1);
         logic.execute("find Bob");
-        logic.execute("edit 1 s/H2 Chemistry t/ p/87654321");
+        logic.execute("edit 1 s/H2 Chemistry day/MON time/09:00 t/ p/87654321");
         Person updated = new PersonBuilder(bob).withSubjects("H2 Chemistry").withTags().withPhone("87654321").build();
         assertEquals(List.of(amy, updated), storage.readAddressBook().orElseThrow().getPersonList());
         logic.execute("edit 2 o/20");
@@ -95,15 +101,17 @@ public class EditSubjectsIntegrationTest {
         List<Person> displayed = List.copyOf(model.getFilteredPersonList());
         List<Person> stored = List.copyOf(model.getAddressBook().getPersonList());
         String json = Files.readString(storage.getAddressBookFilePath());
-        String[] invalidCommands = {"edit 1 s/", "edit 1 s/Maths s/", "edit 1 p/87654321 t/A-Level s/---",
-            "edit 1 s/" + "A".repeat(51), "edit 1 S/Maths", "edit 1 s/Maths x/value"};
+        String[] invalidCommands = {"edit 1 s/", "edit 1 s/Maths day/MON time/09:00 s/",
+            "edit 1 p/87654321 t/A-Level s/--- day/MON time/09:00",
+            "edit 1 s/" + "A".repeat(51) + " day/MON time/09:00", "edit 1 S/Maths",
+            "edit 1 s/Maths day/MON time/09:00 x/value"};
         for (String command : invalidCommands) {
             assertThrows(ParseException.class, () -> logic.execute(command));
             assertEquals(displayed, model.getFilteredPersonList());
             assertEquals(stored, model.getAddressBook().getPersonList());
             assertEquals(json, Files.readString(storage.getAddressBookFilePath()));
         }
-        String repeatedPhone = "edit 1 s/Maths p/11111111 p/22222222";
+        String repeatedPhone = "edit 1 s/Maths day/MON time/09:00 p/11111111 p/22222222";
         String message = EditCommandParser.MESSAGE_DUPLICATE_FIELDS;
         assertThrows(ParseException.class, message, () -> logic.execute(repeatedPhone));
     }
@@ -113,7 +121,8 @@ public class EditSubjectsIntegrationTest {
         logic.execute("find Bob");
         List<Person> displayed = List.copyOf(model.getFilteredPersonList());
         String json = Files.readString(storage.getAddressBookFilePath());
-        String duplicate = "edit 1 n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/0 s/Physics";
+        String duplicate = "edit 1 n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/0"
+                + " s/Physics day/MON time/09:00";
 
         assertThrows(CommandException.class, EditCommand.MESSAGE_DUPLICATE_PERSON, () -> logic.execute(duplicate));
         assertEquals(displayed, model.getFilteredPersonList());
@@ -133,7 +142,7 @@ public class EditSubjectsIntegrationTest {
         assertTrue(withoutSubjects.getSubjects().isEmpty());
         assertEquals("87654321", withoutSubjects.getPhone().value);
         Person expected = new PersonBuilder(withoutSubjects).withSubjects("Maths").build();
-        legacyLogic.execute("edit 1 s/Maths");
+        legacyLogic.execute("edit 1 s/Maths day/MON time/09:00");
         assertEquals(List.of(expected), storage.readAddressBook().orElseThrow().getPersonList());
     }
 

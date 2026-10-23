@@ -25,7 +25,7 @@ import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandParserTest {
-    private static final String SUBJECT = " s/Maths";
+    private static final String SUBJECT = " s/Maths day/MON time/09:00";
     private final AddCommandParser parser = new AddCommandParser();
 
     @Test
@@ -155,21 +155,34 @@ public class AddCommandParserTest {
     }
 
     @Test
-    public void parse_repeatedSubjects_caseInsensitiveDuplicatesCombined() {
-        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
-                        + " s/Maths s/maths s/H2 Chemistry",
-                new AddCommand(new PersonBuilder(BOB).withSubjects("Maths", "H2 Chemistry").build()));
+    public void parse_repeatedSubjects_caseInsensitiveDuplicatesRejected() {
+        assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                        + " s/Maths day/MON time/09:00 s/maths day/TUE time/10:00",
+                ParserUtil.MESSAGE_DUPLICATE_SUBJECT);
     }
 
     @Test
     public void parse_blankSubjectAmongValidSubjects_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
-                + " s/Maths s/", "Subject must not be blank.");
+                + " s/Maths day/MON time/09:00 s/ day/TUE time/10:00", "Subject must not be blank.");
     }
 
     @Test
     public void parse_commaSeparatedSubjects_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
-                + " s/Maths, Physics", seedu.address.model.person.Subject.MESSAGE_CONSTRAINTS);
+                + " s/Maths, Physics day/MON time/09:00",
+                seedu.address.model.person.Subject.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_missingOrMisorderedLessonFields_failure() {
+        String fields = NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB;
+        for (String subjects : new String[] {" s/Maths", " s/Maths day/MON", " day/MON time/09:00 s/Maths",
+            " s/Maths time/09:00 day/MON", " s/Maths day/Monday time/09:00", " s/Maths day/MON time/9:00"}) {
+            assertParseFailure(parser, fields + subjects,
+                    subjects.contains("Monday") ? ParserUtil.MESSAGE_INVALID_LESSON_DAY
+                            : subjects.endsWith("9:00") ? ParserUtil.MESSAGE_INVALID_LESSON_TIME
+                            : ParserUtil.MESSAGE_INVALID_SUBJECT_SCHEDULE);
+        }
     }
 }

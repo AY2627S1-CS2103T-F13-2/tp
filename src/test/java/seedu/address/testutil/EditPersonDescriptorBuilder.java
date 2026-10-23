@@ -12,7 +12,6 @@ import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.StartDate;
-import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -95,7 +94,7 @@ public class EditPersonDescriptorBuilder {
 
     /** Sets nonempty replacement subjects in input order. */
     public EditPersonDescriptorBuilder withSubjects(String... subjects) {
-        descriptor.setSubjects(Arrays.stream(subjects).map(Subject::new)
+        descriptor.setSubjects(Arrays.stream(subjects).map(TypicalSubjects::scheduledSubject)
                 .collect(Collectors.toCollection(LinkedHashSet::new)));
         return this;
     }

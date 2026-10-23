@@ -6,6 +6,8 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +23,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Notes;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Subject;
@@ -35,7 +38,8 @@ import seedu.address.testutil.PersonBuilder;
  */
 public class NotesIntegrationTest {
 
-    private static final String ADD_STUDENT = "add n/Amy Bee p/91234567 a/Block 1 d/10-Aug o/20 s/Maths";
+    private static final String ADD_STUDENT =
+            "add n/Amy Bee p/91234567 a/Block 1 d/10-Aug o/20 s/Maths day/MON time/15:30";
 
     @TempDir
     public Path temporaryFolder;
@@ -68,7 +72,8 @@ public class NotesIntegrationTest {
 
         Logic reloadedLogic = new LogicManager(new ModelManager(reloaded, new UserPrefs()), storage);
         assertEquals("Name: Amy Bee\nPhone: 87654321\nAddress: Block 1\nStart date: 10-Aug"
-                + "\nOutstanding amount: SGD 20.00\nSubjects: Maths\nTags: Not specified\nNotes: " + notes,
+                + "\nOutstanding amount: SGD 20.00\nSubjects: Maths (Mon 15:30)"
+                + "\nTags: Not specified\nNotes: " + notes,
                 reloadedLogic.execute("view 1").getFeedbackToUser());
     }
 
@@ -77,7 +82,9 @@ public class NotesIntegrationTest {
         logic.execute(ADD_STUDENT + " t/A-Level t/Needs revision notes/Revise fractions");
         Person added = model.getFilteredPersonList().get(0);
         assertEquals(new Notes("Revise fractions"), added.getNotes());
-        assertEquals(Set.of(new Subject("Maths")), added.getSubjects());
+        assertEquals(Set.of(new Subject("Maths",
+                        new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(15, 30)))),
+                added.getSubjects());
         assertEquals(Set.of(new Tag("a-level"), new Tag("needs revision")), added.getTags());
 
         logic.execute("edit 1 p/87654321");

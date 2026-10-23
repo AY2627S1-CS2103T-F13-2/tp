@@ -1,6 +1,8 @@
 package seedu.address.testutil;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_DAY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_TIME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
@@ -35,7 +37,10 @@ public class PersonUtil {
         sb.append(PREFIX_ADDRESS + person.getAddress().value + " ");
         sb.append(PREFIX_START_DATE + person.getStartDate().value + " ");
         sb.append(PREFIX_OUTSTANDING_AMOUNT + person.getOutstandingAmount().toPlainString() + " ");
-        person.getSubjects().forEach(subject -> sb.append(PREFIX_SUBJECT).append(subject).append(" "));
+        person.getSubjects().forEach(subject -> sb.append(PREFIX_SUBJECT).append(subject.value).append(" ")
+                .append(PREFIX_LESSON_DAY)
+                .append(subject.getLessonSlot().getDay().name(), 0, 3).append(" ")
+                .append(PREFIX_LESSON_TIME).append(subject.getLessonSlot().getStartTime()).append(" "));
         sb.append(PREFIX_NOTES + person.getNotes().value + " ");
         person.getTags().stream().sorted((first, second) -> first.tagName.compareTo(second.tagName))
                 .forEach(tag -> sb.append(PREFIX_TAG).append(tag.tagName).append(" "));
@@ -54,7 +59,10 @@ public class PersonUtil {
         descriptor.getOutstandingAmount().ifPresent(amount ->
                 sb.append(PREFIX_OUTSTANDING_AMOUNT).append(amount.toPlainString()).append(" "));
         descriptor.getSubjects().ifPresent(subjects -> subjects.forEach(subject ->
-                sb.append(PREFIX_SUBJECT).append(subject.value).append(" ")));
+                sb.append(PREFIX_SUBJECT).append(subject.value).append(" ")
+                        .append(PREFIX_LESSON_DAY)
+                        .append(subject.getLessonSlot().getDay().name(), 0, 3).append(" ")
+                        .append(PREFIX_LESSON_TIME).append(subject.getLessonSlot().getStartTime()).append(" ")));
         descriptor.getTags().ifPresent(tags -> {
             if (tags.isEmpty()) {
                 sb.append(PREFIX_TAG).append(" ");

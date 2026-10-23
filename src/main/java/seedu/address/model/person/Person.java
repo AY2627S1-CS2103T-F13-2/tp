@@ -4,6 +4,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -72,6 +73,14 @@ public class Person {
             OutstandingAmount outstandingAmount, Set<Tag> tags, Notes notes, Set<Subject> subjects,
             boolean archived) {
         requireAllNonNull(name, phone, address, startDate, outstandingAmount, tags, notes, subjects);
+        Set<String> subjectNames = new LinkedHashSet<>();
+        for (Subject subject : subjects) {
+            requireAllNonNull(subject);
+            boolean isUnique = subjectNames.add(subject.value.toLowerCase(Locale.ROOT));
+            if (!isUnique) {
+                throw new IllegalArgumentException("Subject names must be unique for each student.");
+            }
+        }
         this.name = name;
         this.phone = phone;
         this.address = address;

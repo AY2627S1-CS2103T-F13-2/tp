@@ -168,15 +168,28 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_invalidSubject_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null, List.of("Maths", "Invalid!"));
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null,
+                List.of(new JsonAdaptedSubject("Maths", "MONDAY", "09:00"),
+                        new JsonAdaptedSubject("Invalid!", "TUESDAY", "10:00")));
         assertThrows(IllegalValueException.class, Subject.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
     @Test
     public void toModelType_nullSubject_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null, Arrays.asList("Maths", null));
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null,
+                Arrays.asList(new JsonAdaptedSubject("Maths", "MONDAY", "09:00"), null));
         assertThrows(IllegalValueException.class, Subject.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_duplicateSubjectNames_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_START_DATE, VALID_OUTSTANDING_AMOUNT, null, null,
+                List.of(new JsonAdaptedSubject("Maths", "MONDAY", "09:00"),
+                        new JsonAdaptedSubject("maths", "TUESDAY", "10:00")));
+        assertThrows(IllegalValueException.class, "Subject names must be unique for each student.",
+                person::toModelType);
     }
 
     @Test

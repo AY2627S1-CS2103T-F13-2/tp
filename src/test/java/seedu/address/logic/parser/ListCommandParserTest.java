@@ -72,7 +72,7 @@ public class ListCommandParserTest {
     @Test
     public void parse_summaryWithEitherFilter_returnsFilteredSummaryCommand() {
         assertParseSuccess(parser, " -summary s/Maths ",
-                new ListCommand(Set.of(new Subject("Maths")), true));
+                new ListCommand(Set.of("Maths"), true));
         assertParseSuccess(parser, " -summary t/A-Level ",
                 new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("a-level"))), true));
     }
@@ -88,9 +88,9 @@ public class ListCommandParserTest {
     @Test
     public void parse_subjects_returnsFilteredListCommand() {
         assertParseSuccess(parser, " s/Maths s/H2 Chemistry",
-                new ListCommand(Set.of(new Subject("maths"), new Subject("H2 Chemistry"))));
+                new ListCommand(Set.of("maths", "H2 Chemistry")));
         assertParseSuccess(parser, " s/ Maths  s/maths s/ H2 Chemistry ",
-                new ListCommand(Set.of(new Subject("Maths"), new Subject("H2 Chemistry"))));
+                new ListCommand(Set.of("Maths", "H2 Chemistry")));
     }
 
     @Test

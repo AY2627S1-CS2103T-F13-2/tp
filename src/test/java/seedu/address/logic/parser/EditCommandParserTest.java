@@ -66,38 +66,53 @@ public class EditCommandParserTest {
     public void parse_notesBeforeOtherFields_recognizesFieldBoundaries() {
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes("Revise fractions")
                 .withSubjects("Physics").withTags("a-level").withPhone(VALID_PHONE_AMY).build();
-        assertParseSuccess(parser, "1 notes/Revise fractions s/Physics t/A-Level p/" + VALID_PHONE_AMY,
+        assertParseSuccess(parser, "1 notes/Revise fractions s/Physics day/MON time/09:00"
+                        + " t/A-Level p/" + VALID_PHONE_AMY,
                 new EditCommand(INDEX_FIRST_PERSON, descriptor));
         assertParseFailure(parser, "1 notes/Revise fractions x/value", EditCommandParser.MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "1 NOTES/Revise fractions", EditCommandParser.MESSAGE_INVALID_FORMAT);
     }
 
     @Test
-    public void parse_subjectsSpecified_replacesCaseInsensitiveSet() {
+    public void parse_subjectsSpecified_replacesScheduledSet() {
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
                 .withSubjects("Physics", "H2 Chemistry").build();
-        assertParseSuccess(parser, "1 s/ Physics  s/H2 Chemistry s/PHYSICS",
+        assertParseSuccess(parser, "1 s/ Physics day/MON time/09:00"
+                        + " s/H2 Chemistry day/MON time/09:00",
                 new EditCommand(INDEX_FIRST_PERSON, descriptor));
-        assertParseSuccess(parser, "1 s/Physics t/A-Level s/H2 Chemistry p/" + VALID_PHONE_AMY,
+        assertParseSuccess(parser, "1 s/Physics day/MON time/09:00 t/A-Level"
+                        + " s/H2 Chemistry day/MON time/09:00 p/" + VALID_PHONE_AMY,
                 new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(descriptor)
                         .withTags("a-level").withPhone(VALID_PHONE_AMY).build()));
+        assertParseFailure(parser, "1 s/Physics day/MON time/09:00"
+                        + " s/PHYSICS day/TUE time/10:00",
+                ParserUtil.MESSAGE_DUPLICATE_SUBJECT);
     }
 
     @Test
     public void parse_blankSubjects_failure() {
-        for (String args : new String[] {"1 s/", "1 s/   ", "1 s/Maths s/", "1 s/ s/Physics"}) {
+        for (String args : new String[] {"1 s/ day/MON time/09:00", "1 s/   day/MON time/09:00",
+            "1 s/Maths day/MON time/09:00 s/ day/TUE time/10:00"}) {
             assertParseFailure(parser, args, "Subject must not be blank.");
         }
     }
 
     @Test
+    public void parse_lessonDayOrTimeWithoutSubject_failure() {
+        assertParseFailure(parser, "1 day/MON", ParserUtil.MESSAGE_INVALID_SUBJECT_SCHEDULE);
+        assertParseFailure(parser, "1 time/09:00", ParserUtil.MESSAGE_INVALID_SUBJECT_SCHEDULE);
+    }
+
+    @Test
     public void parse_subjectValidationBoundaries_matchAddRules() {
         for (String value : new String[] {"A", "A".repeat(50), "H2 Chemistry", "Combined-Science"}) {
-            assertParseSuccess(parser, "1 s/  " + value + "  ", new EditCommand(INDEX_FIRST_PERSON,
+            assertParseSuccess(parser, "1 s/  " + value + "  day/MON time/09:00",
+                    new EditCommand(INDEX_FIRST_PERSON,
                     new EditPersonDescriptorBuilder().withSubjects(value).build()));
         }
         for (String value : new String[] {"A".repeat(51), "---", "Maths,Physics", "中文"}) {
-            assertParseFailure(parser, "1 t/A-Level s/" + value, Subject.MESSAGE_CONSTRAINTS);
+            assertParseFailure(parser, "1 t/A-Level s/" + value + " day/MON time/09:00",
+                    Subject.MESSAGE_CONSTRAINTS);
         }
         assertParseFailure(parser, "1 S/Maths", EditCommandParser.MESSAGE_INVALID_FORMAT);
     }
@@ -148,7 +163,7 @@ public class EditCommandParserTest {
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + NAME_DESC_AMY + PHONE_DESC_BOB
                 + ADDRESS_DESC_AMY + START_DATE_DESC_BOB + OUTSTANDING_AMOUNT_DESC_BOB
-                + " s/Physics t/A-Level notes/Revise fractions";
+                + " s/Physics day/MON time/09:00 t/A-Level notes/Revise fractions";
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
                 .withName(VALID_NAME_AMY)
                 .withPhone(VALID_PHONE_BOB)

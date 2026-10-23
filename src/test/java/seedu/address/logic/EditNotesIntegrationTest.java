@@ -39,8 +39,9 @@ public class EditNotesIntegrationTest {
         model = new ModelManager();
         storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressbook.json"));
         logic = createLogic(model);
-        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/Maths t/A-Level notes/Amy note");
-        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Physics"
+        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug"
+                + " s/Maths day/MON time/09:00 t/A-Level notes/Amy note");
+        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Physics day/MON time/09:00"
                 + " o/600 t/Needs revision notes/Bob note");
     }
 
@@ -87,14 +88,15 @@ public class EditNotesIntegrationTest {
         Person bob = model.getAddressBook().getPersonList().get(1);
         logic.execute("find Bob");
         String command = "edit 1 n/Bob Tan notes/Call parent p/87654321 a/Block 9 d/20-Oct o/20.50"
-                + " s/H2 Chemistry s/Maths t/A-Level t/Needs revision";
+                + " s/H2 Chemistry day/MON time/09:00 s/Maths day/MON time/09:00"
+                + " t/A-Level t/Needs revision";
         assertEquals("Edited contact: Bob Tan", logic.execute(command).getFeedbackToUser());
         Person updated = new PersonBuilder(bob).withName("Bob Tan").withPhone("87654321").withAddress("Block 9")
                 .withStartDate("20-Oct").withOutstandingAmount("20.50").withNotes("Call parent")
                 .withSubjects("H2 Chemistry", "Maths").withTags("a-level", "needs revision").build();
         assertEquals(List.of(amy, updated), storage.readAddressBook().orElseThrow().getPersonList());
 
-        logic.execute("edit 2 t/ s/Physics o/0");
+        logic.execute("edit 2 t/ s/Physics day/MON time/09:00 o/0");
         Person partialEdit = new PersonBuilder(updated).withTags().withSubjects("Physics")
                 .withOutstandingAmount("0").build();
         assertEquals(List.of(amy, partialEdit), storage.readAddressBook().orElseThrow().getPersonList());

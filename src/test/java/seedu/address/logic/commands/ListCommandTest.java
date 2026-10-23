@@ -21,7 +21,6 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonHasAnyTagPredicate;
-import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
@@ -189,7 +188,7 @@ public class ListCommandTest {
 
         // null -> returns false
         assertNotEquals(listCommand, null);
-        assertNotEquals(listCommand, new ListCommand(Set.of(new Subject("Maths"))));
+        assertNotEquals(listCommand, new ListCommand(Set.of("Maths")));
     }
 
     @Test
@@ -205,7 +204,7 @@ public class ListCommandTest {
         model = new ModelManager(addressBook, new UserPrefs());
 
         model.updateFilteredPersonList(person -> false);
-        assertEquals("Listed 2 contacts.", new ListCommand(Set.of(new Subject("maths"), new Subject("PHYSICS")))
+        assertEquals("Listed 2 contacts.", new ListCommand(Set.of("maths", "PHYSICS"))
                 .execute(model).getFeedbackToUser());
         assertEquals(List.of(maths, physics), model.getFilteredPersonList());
         assertEquals("Listed 3 contacts.", new ListCommand().execute(model).getFeedbackToUser());
@@ -220,7 +219,7 @@ public class ListCommandTest {
         model = new ModelManager(addressBook, new UserPrefs());
 
         assertEquals(ListCommand.MESSAGE_NO_SUBJECT_MATCHES,
-                new ListCommand(Set.of(new Subject("Maths"))).execute(model).getFeedbackToUser());
+                new ListCommand(Set.of("Maths")).execute(model).getFeedbackToUser());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
@@ -235,7 +234,7 @@ public class ListCommandTest {
         model = new ModelManager(addressBook, new UserPrefs());
 
         assertEquals(ListCommand.MESSAGE_SINGULAR,
-                new ListCommand(Set.of(new Subject("maths"))).execute(model).getFeedbackToUser());
+                new ListCommand(Set.of("maths")).execute(model).getFeedbackToUser());
         assertEquals(List.of(maths), model.getFilteredPersonList());
     }
 

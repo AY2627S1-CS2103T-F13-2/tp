@@ -25,7 +25,6 @@ class JsonAdaptedPerson {
     - address: String
     - startDate: String
     - outstandingAmount: String
-    - subjects: String [*]
     - notes: String
     - archived: boolean
     + toModelType(): Person
@@ -34,6 +33,12 @@ class JsonAdaptedTag {
     - tagName: String
     + toModelType(): Tag
 }
+class JsonAdaptedSubject {
+    - name: String
+    - day: String
+    - time: String
+    + toModelType(): Subject
+}
 }
 
 }
@@ -41,6 +46,7 @@ class JsonAdaptedTag {
 show JsonSerializableAddressBook methods
 show JsonAdaptedPerson members
 show JsonAdaptedTag members
+show JsonAdaptedSubject members
 
 StorageManager .up.|> Storage
 StorageManager -down-> "1" JsonUserPrefsStorage
@@ -49,5 +55,6 @@ StorageManager -down-> "1" JsonAddressBookStorage
 JsonAddressBookStorage ..> JsonSerializableAddressBook
 JsonSerializableAddressBook --> "0..*" JsonAdaptedPerson : persons
 JsonAdaptedPerson -right-> "0..*" JsonAdaptedTag : tags
+JsonAdaptedPerson -left-> "0..*" JsonAdaptedSubject : subjects
 
 @enduml
