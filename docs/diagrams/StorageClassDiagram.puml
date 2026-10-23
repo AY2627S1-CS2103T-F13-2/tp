@@ -3,34 +3,51 @@
 skinparam arrowThickness 1.1
 skinparam arrowColor STORAGE_COLOR
 skinparam classBackgroundColor STORAGE_COLOR
+skinparam classAttributeIconSize 0
 
 package Storage as StoragePackage {
 
-Class "<<interface>>\nStorage" as Storage
-Class StorageManager
+class Storage <<interface>>
+class StorageManager
 
 package "UserPrefs Storage" #F4F6F6{
-Class JsonUserPrefsStorage
+class JsonUserPrefsStorage
 }
 
 package "AddressBook Storage" #F4F6F6{
-Class JsonAddressBookStorage
-Class JsonSerializableAddressBook
-Class JsonAdaptedPerson
-Class JsonAdaptedTag
+class JsonAddressBookStorage
+class JsonSerializableAddressBook {
+    + toModelType(): AddressBook
+}
+class JsonAdaptedPerson {
+    - name: String
+    - phone: String
+    - address: String
+    - startDate: String
+    - outstandingAmount: String
+    - subjects: String [*]
+    - notes: String
+    - archived: boolean
+    + toModelType(): Person
+}
+class JsonAdaptedTag {
+    - tagName: String
+    + toModelType(): Tag
+}
 }
 
 }
 
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Storage
+show JsonSerializableAddressBook methods
+show JsonAdaptedPerson members
+show JsonAdaptedTag members
 
 StorageManager .up.|> Storage
 StorageManager -down-> "1" JsonUserPrefsStorage
 StorageManager -down-> "1" JsonAddressBookStorage
 
 JsonAddressBookStorage ..> JsonSerializableAddressBook
-JsonSerializableAddressBook --> "*" JsonAdaptedPerson
-JsonAdaptedPerson --> "*" JsonAdaptedTag
+JsonSerializableAddressBook --> "0..*" JsonAdaptedPerson : persons
+JsonAdaptedPerson -right-> "0..*" JsonAdaptedTag : tags
 
 @enduml
