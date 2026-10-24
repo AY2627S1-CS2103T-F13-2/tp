@@ -16,6 +16,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.ListPresentation;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -36,7 +37,6 @@ public class MainWindow extends UiPart<Stage> {
 
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
-    private SubjectGroupPanel subjectGroupPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
     private CommandBox commandBox;
@@ -196,7 +196,7 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
             boolean isListCommand = commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD);
-            refreshPersonList(commandResult.isSubjectList(), isListCommand);
+            refreshPersonList(commandResult.getListPresentation(), isListCommand);
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -215,14 +215,13 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /** Refreshes the central list using the presentation mode requested by the command. */
-    private void refreshPersonList(boolean showSubjectGroups, boolean updateSummary) {
-        personListPanelPlaceholder.getChildren().clear();
-        if (showSubjectGroups) {
-            subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
-            personListPanelPlaceholder.getChildren().add(subjectGroupPanel.getRoot());
-        } else {
-            personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-            personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+    private void refreshPersonList(ListPresentation presentation, boolean updateSummary) {
+        if (presentation == ListPresentation.SUBJECT_GROUPS) {
+            SubjectGroupPanel subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
+            personListPanelPlaceholder.getChildren().setAll(subjectGroupPanel.getRoot());
+        } else if (presentation == ListPresentation.CONTACTS
+                && !personListPanelPlaceholder.getChildren().contains(personListPanel.getRoot())) {
+            personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
         }
         if (updateSummary) {
             showListSummary();
