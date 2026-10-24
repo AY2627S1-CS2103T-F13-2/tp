@@ -3,45 +3,56 @@
 skinparam arrowThickness 1.1
 skinparam arrowColor LOGIC_COLOR_T4
 skinparam classBackgroundColor LOGIC_COLOR
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontColor #FFFFFF
 
 package Logic as LogicPackage {
-
-package "Parser Classes" as ParserClasses{
+class Logic <<interface>> {
+    + execute(commandText: String): CommandResult
 }
-Class XYZCommand
-Class CommandResult
-Class "{abstract}\nCommand" as Command
+class LogicManager
+abstract class Command {
+    {abstract} + execute(model: Model): CommandResult
+}
+class DeleteCommand
+class CommandResult {
+    - feedbackToUser: String
+    - showHelp: boolean
+    - exit: boolean
+}
 
-
-Class "<<interface>>\nLogic" as Logic
-Class LogicManager
+package "Parser Classes" {
+class AddressBookParser
+}
 }
 
 package Model {
-Class HiddenModel #FFFFFF
+class Model <<interface>> MODEL_COLOR
 }
 
 package Storage {
+class Storage <<interface>> STORAGE_COLOR
 }
 
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Logic
+show Logic methods
+show Command methods
+show CommandResult fields
 
-LogicManager .right.|> Logic
-LogicManager -right->"1" ParserClasses
-ParserClasses ..> XYZCommand : <<create>>
+LogicManager .up.|> Logic
+LogicManager -left-> "1" Model : model
+LogicManager -right-> "1" Storage : storage
+LogicManager -down-> "1" AddressBookParser : addressBookParser
+LogicManager ..> Command : executes
+AddressBookParser ..> Command : returns
+DeleteCommand -up-|> Command
+Command ..> Model : uses
+Command .right.> CommandResult : returns
+DeleteCommand ..> CommandResult : <<create>>
 
-XYZCommand -up-|> Command
-LogicManager .left.> Command : <<call>>
-
-LogicManager --> Model
-LogicManager --> Storage
-Storage --[hidden] Model
-Command .[hidden]up.> Storage
-Command .right.> Model
-note right of XYZCommand: XYZCommand = AddCommand, \nFindCommand, etc
-
-Logic ..> CommandResult
-LogicManager .down.> CommandResult
-Command .up.> CommandResult : <<create>>
+note bottom of DeleteCommand
+  Representative concrete command.
+  Other examples include AddCommand,
+  EditCommand, FindCommand,
+  ListCommand and ViewCommand.
+end note
 @enduml
