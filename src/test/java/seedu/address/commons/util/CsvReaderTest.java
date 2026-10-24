@@ -28,7 +28,7 @@ public class CsvReaderTest {
     @Test
     public void read_crlfAndByteOrderMark_ignored() throws Exception {
         assertEquals(List.of(List.of("Name", "Phone"), List.of("Amy", "1")),
-                CsvReader.read("﻿Name,Phone\r\nAmy,1\r\n"));
+                CsvReader.read("\uFEFFName,Phone\r\nAmy,1\r\n"));
     }
 
     @Test
@@ -54,13 +54,34 @@ public class CsvReaderTest {
     @Test
     public void read_emptyText_returnsNoRows() throws Exception {
         assertEquals(List.of(), CsvReader.read(""));
-        assertEquals(List.of(), CsvReader.read("﻿"));
+        assertEquals(List.of(), CsvReader.read("\uFEFF"));
     }
 
     @Test
     public void read_unclosedQuote_throwsIllegalValueException() {
         assertThrows(IllegalValueException.class, String.format(CsvReader.MESSAGE_UNCLOSED_QUOTE, 2), () ->
                 CsvReader.read("a,b\n\"never closed,c\n"));
+    }
+
+    @Test
+    public void read_quoteInsideUnquotedValue_throwsIllegalValueException() {
+        assertThrows(IllegalValueException.class, String.format(CsvReader.MESSAGE_STRAY_QUOTE, 2), () ->
+                CsvReader.read("Notes\nNeeds \"revision\"\n"));
+        assertThrows(IllegalValueException.class, String.format(CsvReader.MESSAGE_STRAY_QUOTE, 1), () ->
+                CsvReader.read("a,b\"c"));
+    }
+
+    @Test
+    public void read_textAfterClosingQuote_throwsIllegalValueException() {
+        assertThrows(IllegalValueException.class, String.format(CsvReader.MESSAGE_TEXT_AFTER_QUOTE, 2), () ->
+                CsvReader.read("Notes\n\"Needs\" revision\n"));
+        assertThrows(IllegalValueException.class, String.format(CsvReader.MESSAGE_TEXT_AFTER_QUOTE, 1), () ->
+                CsvReader.read("\"a\" ,b"));
+    }
+
+    @Test
+    public void read_quotedValueNextToSeparators_accepted() throws Exception {
+        assertEquals(List.of(List.of("", "a", "b\"c"), List.of("d")), CsvReader.read("\"\",\"a\",\"b\"\"c\"\r\n\"d\""));
     }
 
     @Test

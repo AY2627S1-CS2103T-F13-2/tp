@@ -176,6 +176,10 @@ Format: `import FILE_PATH [confirm]`
 * A row with the same name, phone, address, start date and outstanding amount as a stored student, but different
   subjects, tags, notes or archive status, is reported as a problem. Use `edit` to change the stored student instead.
 * Files saved by Excel work too, as long as the columns are not changed.
+* If you edit the file in a text editor, wrap any value that contains a comma, a double quote or a line break
+  in double quotes, and write each double quote inside it twice, for example `"Needs ""revision"""`.
+  Spreadsheet apps such as Excel do this for you. A row with unbalanced or misplaced double quotes is reported
+  as a problem instead of being imported with changed text.
 
 Examples:
 * `import contacts-20261024-175424-176.csv` checks a file that `export` saved earlier.

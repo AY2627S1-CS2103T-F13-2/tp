@@ -177,6 +177,13 @@ public class ImportCommandTest {
                 String.format(ImportCommand.MESSAGE_ERRORS, badQuote) + "\n"
                         + String.format(CsvReader.MESSAGE_UNCLOSED_QUOTE, 2));
 
+        // A note typed as Needs "revision" without wrapping quotes must not lose its quotes silently.
+        Path strayQuote = writeFile("stray.csv", CsvExporter.HEADER + "\n"
+                + "Amy Bee,11111111,Block 1,10-Aug,0,Maths (Mon 09:00),,Needs \"revision\",false\n");
+        assertCommandFailure(new ImportCommand(strayQuote, true, temporaryFolder), model,
+                String.format(ImportCommand.MESSAGE_ERRORS, strayQuote) + "\n"
+                        + String.format(CsvReader.MESSAGE_STRAY_QUOTE, 2));
+
         Path notUtf8 = temporaryFolder.resolve("latin1.csv");
         Files.write(notUtf8, (CsvExporter.HEADER + "\nJosé,1").getBytes(StandardCharsets.ISO_8859_1));
         assertCommandFailure(new ImportCommand(notUtf8, false, temporaryFolder), model,
@@ -224,7 +231,7 @@ public class ImportCommandTest {
     @Test
     public void execute_excelStyleFile_imported() throws Exception {
         // Excel adds a byte order mark and CRLF line endings; header case should not matter either.
-        String text = "﻿" + CsvExporter.format(List.of(AMY)).replace("\n", "\r\n")
+        String text = "\uFEFF" + CsvExporter.format(List.of(AMY)).replace("\n", "\r\n")
                 .replace(CsvExporter.HEADER, CsvExporter.HEADER.toUpperCase());
         Path file = writeFile("excel.csv", text);
         new ImportCommand(file, true, temporaryFolder).execute(model);
