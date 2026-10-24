@@ -36,6 +36,7 @@ public class MainWindow extends UiPart<Stage> {
 
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
+    private SubjectGroupPanel subjectGroupPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
     private CommandBox commandBox;
@@ -194,9 +195,8 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
-            if (commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD)) {
-                showListSummary();
-            }
+            boolean isListCommand = commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD);
+            refreshPersonList(commandResult.isSubjectList(), isListCommand);
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -211,6 +211,21 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("An error occurred while executing command: " + commandText);
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
+        }
+    }
+
+    /** Refreshes the central list using the presentation mode requested by the command. */
+    private void refreshPersonList(boolean showSubjectGroups, boolean updateSummary) {
+        personListPanelPlaceholder.getChildren().clear();
+        if (showSubjectGroups) {
+            subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
+            personListPanelPlaceholder.getChildren().add(subjectGroupPanel.getRoot());
+        } else {
+            personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+            personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        }
+        if (updateSummary) {
+            showListSummary();
         }
     }
 }
