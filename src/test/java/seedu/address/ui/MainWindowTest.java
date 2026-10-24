@@ -4,12 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.nio.file.Path;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +39,11 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
+import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Subject;
+import seedu.address.model.sort.LessonRow;
+import seedu.address.model.sort.SortOrder;
 import seedu.address.testutil.PersonBuilder;
 
 public class MainWindowTest extends FxTestSupport {
@@ -192,6 +200,43 @@ public class MainWindowTest extends FxTestSupport {
         input.fireEvent(new ActionEvent());
     }
 
+    @Test
+    public void sort_lessonRows_shareStudentIndexesAndKeepSummaryCountsUnique() throws Exception {
+        runOnFxThread(() -> {
+            Person original = logic.getFilteredPersonList().getFirst();
+            Person updated = new PersonBuilder(original).withScheduledSubjects(
+                    new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0))),
+                    new Subject("Physics", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(15, 0)))).build();
+            logic.model.setPerson(original, updated);
+            enterCommand("sort slot/asc");
+            root.applyCss();
+            root.layout();
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            assertEquals(3, root.lookupAll(".lesson-row").size());
+            assertEquals(2, root.lookupAll("#id").stream().map(Label.class::cast)
+                    .filter(label -> label.getText().equals("001")).count());
+            enterCommand("list -summary");
+            assertSummary("2", "1");
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            enterCommand("sort reset");
+            assertNotNull(window.getPersonListPanel());
+            assertNull(root.lookup(".lesson-list-panel"));
+        });
+    }
+
+    @Test
+    public void sort_queryAndInvalidInput_preserveTheSelectedSort() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("sort n/desc");
+            SortOrder order = logic.getSortOrder();
+            enterCommand("sort");
+            assertEquals(order, logic.getSortOrder());
+            enterCommand("sort n/up");
+            assertEquals(order, logic.getSortOrder());
+            assertTrue(feedbackText().contains("Sorting direction must be asc or desc."));
+        });
+    }
+
     private void assertButtonIcon(String buttonId, String resourcePath) {
         Button button = (Button) root.lookup("#" + buttonId);
         assertNotNull(button);
@@ -238,6 +283,16 @@ public class MainWindowTest extends FxTestSupport {
         @Override
         public ObservableList<Person> getFilteredPersonList() {
             return model.getFilteredPersonList();
+        }
+
+        @Override
+        public SortOrder getSortOrder() {
+            return model.getSortOrder();
+        }
+
+        @Override
+        public List<LessonRow> getLessonRows() {
+            return model.getLessonRows();
         }
 
         @Override

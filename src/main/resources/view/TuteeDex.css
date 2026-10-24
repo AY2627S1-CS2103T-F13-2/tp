@@ -41,6 +41,9 @@
 .list-view { -fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0; }
 .list-cell { -fx-background-color: transparent; -fx-padding: 3 10 3 0; }
 .list-cell:empty { -fx-padding: 0; }
+.lesson-row { -fx-background-color: black; -fx-padding: 0 8 0 0; }
+.lesson-slot { -fx-text-fill: white; -fx-font-family: "Pokemon Pixel Font"; -fx-font-size: 24.2px; }
+.lesson-list-panel .placeholder .label { -fx-text-fill: white; }
 .list-cell:filled:selected .person-card { -fx-border-color: #94ef18; }
 .person-card {
     -fx-background-color: black;

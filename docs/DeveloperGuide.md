@@ -207,19 +207,32 @@ This section describes some noteworthy details on how certain features are imple
 `SortOrder` is an immutable, ordered list of field/direction pairs. Its first criterion has the highest
 priority. Fields cannot repeat, and an empty order represents the original stored order. The supported
 fields are student name, outstanding amount, start date, and upcoming lesson slot. A lesson slot is a
-combined day/time criterion; a later display increment will associate each lesson row with its subject.
+combined day/time criterion; each lesson row associates that schedule with its subject.
 
 `SortOrderParser` validates criteria arguments such as `o/desc n/asc` or `slot/asc`, preserving their order
 and independent directions. It rejects malformed arguments, unknown fields, repeated fields, and directions
 other than lowercase `asc` or `desc`. The criteria model and parser do not mutate profiles or user preferences.
-This foundation is not yet registered as an executable `sort` command. Display integration will follow the
-grouping work; saving and restoring the sorting state belongs to the separate preference-persistence feature.
+`SortCommandParser` handles the current-order query and reset, and the registered `SortCommand` applies
+criteria to the session's `ModelManager`. Saving and restoring state belongs to the separate persistence feature.
 
 `SortComparators` compares names without regard to case, amounts numerically, and start dates as annual
 month/day values. Invalid existing dates and absent lessons stay last in both directions. `LessonRow`
 references a profile and one of its subjects without duplicating stored data. Upcoming lesson comparisons
 use one captured local date/time: a start equal to that time is due now, while a start that has already
 passed is compared using its next weekly occurrence. Complete ties retain input order.
+
+`ModelManager` exposes a `SortedList` over the existing filtered students. The stored address-book list is
+not reordered. Original stored positions explicitly resolve complete ties, including after an earlier sort.
+The unique-student order compares the student attributes only; it supplies the printed index used by
+View/Edit/Delete. When slot sorting is active, `LessonListPanel` displays separately sorted `LessonRow`
+references, so one student can have multiple rows sharing that index. Counts continue to use unique students.
+Deleting a printed student index removes the profile and therefore all its lesson rows.
+
+The default clock is the computer's local clock; tests inject a fixed clock through the model constructor.
+Sort, filter changes, and profile mutations capture a fresh reference time. Query/View do not recalculate
+time-based ordering. No timer reorders rows while a tutor is entering an indexed command. A repeated Sort
+or List refreshes upcoming occurrences, and indexed command targets are resolved before mutation refreshes.
+The grouped view is owned by the separate grouping feature and is not integrated in this increment.
 
 ### Weekly subject lessons
 

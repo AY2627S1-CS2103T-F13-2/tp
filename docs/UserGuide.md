@@ -207,6 +207,42 @@ continue to exclude archived students. For example:
 * `view 1` shows the first student in that displayed archived list.
 * `list` returns to the active list without restoring archived students.
 
+### Sorting the current display: `sort`
+
+Format: `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`
+
+Supported fields are `n/` (name), `o/` (outstanding amount), `d/` (start date), and `slot/` (upcoming lesson).
+Each field may appear once and must use lowercase `asc` or `desc`. The first field has highest priority;
+later fields resolve ties. A new Sort replaces the previous criteria. Bare `sort` reports the current order.
+`sort reset` restores original stored order within the current filter.
+
+* Names are compared alphabetically without regard to case; amounts are compared numerically.
+* Start dates are compared by calendar month and day, without a year. Existing invalid dates stay last.
+* `slot/asc` orders each lesson's next weekly start from nearest to furthest relative to the computer's local
+  date and time. `slot/desc` reverses that order. A start exactly equal to the reference time is due now;
+  once its start has passed, that lesson's next occurrence is next week. Only starts are recorded, not durations.
+* With slot sorting, a student appears once per subject lesson. Each row shows the relevant subject and slot;
+  no `for/SUBJECT` argument is needed. Students with no subjects appear once with `No lesson slot` and stay last
+  at the slot-comparison level in either direction. Other criteria can have higher priority than the slot.
+* **Use the printed student index, rather than counting lesson rows.** The same student has the same index on
+  all their rows. View/Edit/Delete act on the whole profile; deleting either row deletes that student and all
+  their lessons. Total and paid counts count each student once.
+* Sort preserves the current filter. Filters select students: slot sorting shows all lessons of those selected
+  students, including other subjects they take. Find/List retain the chosen sort; profile changes are reordered as needed.
+  Sort does not rewrite stored profile order, change student details, or change CSV export order. Full ties
+  retain original stored order. Valid criteria can be selected on an empty display.
+* Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
+  time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
+* Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
+  the current order or filter. Sorting is currently session-only and resets on restart; preference persistence
+  and subject-grouped sorting are separate integrations.
+
+Examples:
+
+* `sort o/desc n/asc` puts the largest balances first, then sorts equal balances by name.
+* `sort slot/asc n/asc` shows upcoming lessons first, breaking equal-slot ties by student name.
+* `find Amy` followed by `sort d/asc` sorts only the current search results.
+
 ### Editing a student profile: `edit`
 
 Updates one or more fields of an existing student profile in TuteeDex.
@@ -385,6 +421,7 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**Sort**   | `sort [n/asc\|desc] [o/asc\|desc] [d/asc\|desc] [slot/asc\|desc]`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`

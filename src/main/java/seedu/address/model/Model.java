@@ -1,10 +1,13 @@
 package seedu.address.model;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.Person;
+import seedu.address.model.sort.LessonRow;
+import seedu.address.model.sort.SortOrder;
 
 /**
  * The API of the Model component.
@@ -63,6 +66,15 @@ public interface Model {
 
     /** Returns an unmodifiable view of the filtered person list */
     ObservableList<Person> getFilteredPersonList();
+
+    /** Returns the current session's ordered sorting criteria. */
+    SortOrder getSortOrder();
+
+    /** Applies sorting without changing profile data or the current filter. */
+    void setSortOrder(SortOrder order);
+
+    /** Returns sorted lesson rows referring to the unique students in the current filtered list. */
+    List<LessonRow> getLessonRows();
 
     /**
      * Updates the filter of the filtered person list to filter by the given {@code predicate}.

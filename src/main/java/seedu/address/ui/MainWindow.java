@@ -116,8 +116,7 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-        personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        refreshPersonList();
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -192,6 +191,7 @@ public class MainWindow extends UiPart<Stage> {
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
         try {
             CommandResult commandResult = logic.execute(commandText);
+            refreshPersonList();
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
             if (commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD)) {
@@ -211,6 +211,18 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("An error occurred while executing command: " + commandText);
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
+        }
+    }
+
+    /** Keeps lesson snapshots current after commands without replacing the ordinary observable student list. */
+    private void refreshPersonList() {
+        if (logic.getSortOrder().hasLessonSlot()) {
+            LessonListPanel lessonListPanel = new LessonListPanel(logic.getFilteredPersonList(), logic.getLessonRows());
+            personListPanelPlaceholder.getChildren().setAll(lessonListPanel.getRoot());
+            personListPanel = null;
+        } else if (personListPanel == null) {
+            personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+            personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
         }
     }
 }

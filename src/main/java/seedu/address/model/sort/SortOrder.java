@@ -27,6 +27,11 @@ public record SortOrder(List<SortOrder.Criterion> criteria) {
         }
     }
 
+    /** Returns whether the display needs one row per lesson rather than one row per student. */
+    public boolean hasLessonSlot() {
+        return criteria.stream().anyMatch(criterion -> criterion.field() == Field.LESSON_SLOT);
+    }
+
     /** An attribute that can determine the display order. */
     public enum Field {
         NAME, OUTSTANDING_AMOUNT, START_DATE, LESSON_SLOT
