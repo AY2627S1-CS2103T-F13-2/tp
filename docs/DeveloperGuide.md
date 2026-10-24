@@ -86,27 +86,37 @@ The `UI` component,
 
 **API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
 
-Here's a (partial) class diagram of the `Logic` component:
+The partial class diagram below shows the command-execution boundary of the `Logic` component.
+`LogicManager` implements `Logic` and keeps one reference each to `AddressBookParser`, `Model`, and `Storage`.
+It parses command text into a `Command`, executes the command against the model, and saves the address book.
 
-<puml src="diagrams/LogicClassDiagram.puml" width="550"/>
+<puml src="diagrams/LogicClassDiagram.puml" width="800" alt="Partial class diagram of the Logic component"/>
 
-The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
+`DeleteCommand` represents the concrete command subclasses in this diagram; its note lists other examples.
+Command-specific parser classes and utility classes are omitted here. `CommandResult` carries feedback and the
+`showHelp` and `exit` flags, which the UI uses after a successful execution.
 
-<puml src="diagrams/DeleteSequenceDiagram.puml" alt="Interactions Inside the Logic Component for the `delete 1` Command" />
+The sequence diagram below follows a successful `execute("delete 1")` call. It assumes that the displayed list
+contains at least one student and that saving succeeds. `index` is an `Index` object with a one-based value of 1.
 
-<box type="info" seamless>
-
-**Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, the lifeline continues till the end of diagram.
-</box>
-
+<puml src="diagrams/DeleteSequenceDiagram.puml" alt="Successful Delete command execution and saving through Logic" />
 
 How the `Logic` component works:
 
-1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
-1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
-1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
+1. `LogicManager.execute(commandText)` calls `AddressBookParser.parseCommand(commandText)`. For `delete 1`,
+   the parser creates `DeleteCommandParser`, which validates the argument and returns a `DeleteCommand`.
+2. `LogicManager` calls the command's `execute(model)` method. `DeleteCommand` reads the filtered person list
+   and checks that the requested index exists before selecting the `Person` to delete. The index therefore
+   refers to the currently displayed list, including search results or an archived list.
+3. The command passes that `Person` to `model.deletePerson(personToDelete)` and constructs a `CommandResult`
+   containing the success feedback. Message-formatting helpers and list-access calls are omitted from the
+   diagram to keep the component interactions readable.
+4. After the command returns, `LogicManager` obtains the address book from `Model` and calls
+   `Storage.saveAddressBook(addressBook)`. Only after saving succeeds does it return the result to the caller.
+
+Invalid command syntax produces a `ParseException`; an out-of-range Delete index produces a `CommandException`
+before any student is deleted. These failure paths are omitted from the success sequence. A storage failure
+also becomes a `CommandException`, but occurs after command execution and does not roll back its model changes.
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
