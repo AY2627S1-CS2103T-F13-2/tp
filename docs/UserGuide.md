@@ -199,6 +199,10 @@ Archived students are excluded. The option is standalone and cannot be combined 
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
+`view`, `help`, and `export` preserve the current grouping and scroll position. Failed
+commands also leave the displayed list unchanged. Find and other List options switch
+back to the normal contact list for their results.
+
 #### Listing archived students
 
 `list -archived` displays only archived students in their stored order. It

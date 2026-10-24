@@ -28,6 +28,7 @@ public class ExportCommandTest {
         CommandResult result = new ExportCommand(() -> output).execute(model);
 
         assertEquals("Exported 2 contact(s) to " + output.toAbsolutePath() + ".", result.getFeedbackToUser());
+        assertEquals(CommandResult.ListPresentation.UNCHANGED, result.getListPresentation());
         String csv = Files.readString(output);
         assertEquals(3, csv.lines().count());
         assertEquals(true, csv.contains("Alice Pauline"));
