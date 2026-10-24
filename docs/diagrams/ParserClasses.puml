@@ -5,34 +5,114 @@ skinparam arrowColor LOGIC_COLOR_T4
 skinparam classBackgroundColor LOGIC_COLOR
 
 Class "{abstract}\nCommand" as Command
-Class XYZCommand
 
-package "Parser classes"{
-Class "<<interface>>\nParser" as Parser
-Class AddressBookParser
-Class XYZCommandParser
-Class CliSyntax
-Class ParserUtil
-Class ArgumentMultimap
-Class ArgumentTokenizer
-Class Prefix
+package "Parser classes" {
+    Class "<<interface>>\nParser<T extends Command>" as Parser
+    Class AddressBookParser
+    Class AddCommandParser
+    Class EditCommandParser
+    Class DeleteCommandParser
+    Class FindCommandParser
+    Class ListCommandParser
+    Class ArchiveCommandParser
+    Class UnarchiveCommandParser
+    Class ExportCommandParser
+    Class ViewCommandParser
+    Class CliSyntax
+    Class ParserUtil
+    Class ArgumentMultimap
+    Class ArgumentTokenizer
+    Class Prefix
+}
+
+package "Commands" {
+    Class AddCommand
+    Class EditCommand
+    Class DeleteCommand
+    Class FindCommand
+    Class ListCommand
+    Class ArchiveCommand
+    Class UnarchiveCommand
+    Class ExportCommand
+    Class ViewCommand
+    Class ClearCommand
+    Class ExitCommand
+    Class HelpCommand
 }
 
 Class HiddenOutside #FFFFFF
-HiddenOutside ..> AddressBookParser
+HiddenOutside ..> AddressBookParser : command text
 
-AddressBookParser .down.> XYZCommandParser: <<create>>
+AddressBookParser .down.> AddCommandParser : <<create>>
+AddressBookParser .down.> EditCommandParser : <<create>>
+AddressBookParser .down.> DeleteCommandParser : <<create>>
+AddressBookParser .down.> FindCommandParser : <<create>>
+AddressBookParser .down.> ListCommandParser : <<create>>
+AddressBookParser .down.> ArchiveCommandParser : <<create>>
+AddressBookParser .down.> UnarchiveCommandParser : <<create>>
+AddressBookParser .down.> ExportCommandParser : <<create>>
+AddressBookParser .down.> ViewCommandParser : <<create>>
+AddressBookParser ..> Command : returns
 
-XYZCommandParser ..> XYZCommand : <<create>>
-AddressBookParser ..> Command : <<use>>
-XYZCommandParser .up.|> Parser
-XYZCommandParser ..> ArgumentMultimap
-XYZCommandParser ..> ArgumentTokenizer
+AddCommandParser .up.|> Parser
+EditCommandParser .up.|> Parser
+DeleteCommandParser .up.|> Parser
+FindCommandParser .up.|> Parser
+ListCommandParser .up.|> Parser
+ArchiveCommandParser .up.|> Parser
+UnarchiveCommandParser .up.|> Parser
+ExportCommandParser .up.|> Parser
+ViewCommandParser .up.|> Parser
+
+AddCommandParser ..> AddCommand : <<create>>
+EditCommandParser ..> EditCommand : <<create>>
+DeleteCommandParser ..> DeleteCommand : <<create>>
+FindCommandParser ..> FindCommand : <<create>>
+ListCommandParser ..> ListCommand : <<create>>
+ArchiveCommandParser ..> ArchiveCommand : <<create>>
+UnarchiveCommandParser ..> UnarchiveCommand : <<create>>
+ExportCommandParser ..> ExportCommand : <<create>>
+ViewCommandParser ..> ViewCommand : <<create>>
+
+AddressBookParser ..> ClearCommand : <<create>>
+AddressBookParser ..> ExitCommand : <<create>>
+AddressBookParser ..> HelpCommand : <<create>>
+
+AddCommandParser ..> ArgumentMultimap
+AddCommandParser ..> ArgumentTokenizer
+EditCommandParser ..> ArgumentMultimap
+EditCommandParser ..> ArgumentTokenizer
+ListCommandParser ..> ArgumentMultimap
+ListCommandParser ..> ArgumentTokenizer
 ArgumentTokenizer .left.> ArgumentMultimap
-XYZCommandParser ..> CliSyntax
+ArgumentTokenizer ..> Prefix
+AddCommandParser ..> CliSyntax
+EditCommandParser ..> CliSyntax
+ListCommandParser ..> CliSyntax
 CliSyntax ..> Prefix
-XYZCommandParser ..> ParserUtil
-ParserUtil .down.> Prefix
-ArgumentTokenizer .down.> Prefix
-XYZCommand -up-|> Command
+AddCommandParser ..> ParserUtil
+EditCommandParser ..> ParserUtil
+ListCommandParser ..> ParserUtil
+ViewCommandParser ..> ParserUtil
+ParserUtil ..> Prefix
+
+AddCommand -up-|> Command
+EditCommand -up-|> Command
+DeleteCommand -up-|> Command
+FindCommand -up-|> Command
+ListCommand -up-|> Command
+ArchiveCommand -up-|> Command
+UnarchiveCommand -up-|> Command
+ExportCommand -up-|> Command
+ViewCommand -up-|> Command
+ClearCommand -up-|> Command
+ExitCommand -up-|> Command
+HelpCommand -up-|> Command
+
+note right of AddressBookParser
+  Commands without arguments are created directly:
+  clear, exit, and help.
+  All other supported commands are delegated to
+  their corresponding command parser.
+end note
 @enduml
