@@ -35,9 +35,9 @@ The following provides a quick overview of the main components and their interac
 
 **Main components of the architecture**
 
-**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
-* At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
-* At shut down, it shuts down the other components and invokes cleanup methods where necessary.
+**`Main`** and **`MainApp`** are in charge of the app launch and shut down. [`Main`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/Main.java) is the Java entry point that launches [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/MainApp.java), which initializes and connects the other components.
+* During initialization, `MainApp` loads user preferences and address-book data through `Storage`, creates `Model` and `Logic`, and then creates `UI` with the `Logic` API.
+* During shutdown, `MainApp` saves the current user preferences through `Storage`.
 
 The bulk of the app's work is done by the following four components:
 
@@ -140,8 +140,10 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-* When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
-* All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
+* `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `FindCommandParser`, `ListCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, and `ViewCommandParser`.
+* Commands without arguments (`clear`, `exit`, and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
+* The command parsers implement the generic `Parser<T extends Command>` interface. Prefix-based parsers use `CliSyntax` and `Prefix` to identify fields, `ArgumentTokenizer` to split the input, and `ArgumentMultimap` to collect repeated values. `ParserUtil` validates and converts values such as indexes, subjects, tags, notes, names, and contact fields before the command is created.
+* Invalid command words, malformed arguments, unsupported prefixes, duplicate fields, and invalid field values result in a `ParseException`; the command is not executed.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/model/Model.java)
