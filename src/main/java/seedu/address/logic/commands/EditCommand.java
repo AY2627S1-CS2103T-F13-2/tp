@@ -3,6 +3,8 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_DAY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_TIME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
@@ -50,7 +52,8 @@ public class EditCommand extends Command {
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_START_DATE + "START_DATE] "
             + "[" + PREFIX_OUTSTANDING_AMOUNT + "OUTSTANDING_AMOUNT] "
-            + "[" + PREFIX_SUBJECT + "SUBJECT]... "
+            + "[" + PREFIX_SUBJECT + "SUBJECT " + PREFIX_LESSON_DAY + "DAY "
+            + PREFIX_LESSON_TIME + "TIME]... "
             + "[" + PREFIX_TAG + "TAG]... "
             + "[" + PREFIX_NOTES + "NOTE]\n"
             + "Example: " + COMMAND_WORD + " 1 "

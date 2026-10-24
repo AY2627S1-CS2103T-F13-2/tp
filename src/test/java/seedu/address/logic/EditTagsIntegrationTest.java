@@ -39,8 +39,10 @@ public class EditTagsIntegrationTest {
         model = new ModelManager();
         storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressbook.json"));
         logic = createLogic(model);
-        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/Maths o/20 t/A-Level notes/Amy note");
-        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Physics o/600 t/Old notes/Bob note");
+        logic.execute("add n/Amy Bee p/11111111 a/Block 1 d/10-Aug"
+                + " s/Maths day/MON time/09:00 o/20 t/A-Level notes/Amy note");
+        logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep"
+                + " s/Physics day/MON time/09:00 o/600 t/Old notes/Bob note");
     }
 
     @Test
@@ -55,7 +57,8 @@ public class EditTagsIntegrationTest {
         assertEquals(List.of(amy, updated), model.getFilteredPersonList());
         assertEquals(List.of(amy, updated), storage.readAddressBook().orElseThrow().getPersonList());
         assertTrue(logic.execute("view 2").getFeedbackToUser()
-                .endsWith("Subjects: Physics\nTags: a-level, needs revision\nNotes: Bob note"));
+                .endsWith("Subjects: Physics (Mon 09:00)"
+                        + "\nTags: a-level, needs revision\nNotes: Bob note"));
 
         Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
         Logic reloadedLogic = createLogic(reloaded);

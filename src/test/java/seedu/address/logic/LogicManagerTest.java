@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +34,10 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -86,7 +90,8 @@ public class LogicManagerTest {
                 .withSubjects("Maths").build();
 
         CommandResult result = logic.execute(
-                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0 s/Maths");
+                "add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct o/0"
+                        + " s/Maths day/MON time/09:00");
 
         assertEquals("Zero Balance's profile has been added to TuteeDex!", result.getFeedbackToUser());
         assertEquals(List.of(expectedPerson), logic.getFilteredPersonList());
@@ -97,7 +102,8 @@ public class LogicManagerTest {
 
     @Test
     public void execute_addSubjects_subjectsPersist() throws Exception {
-        logic.execute("add n/Subject Student p/81234567 a/1 Test Street d/14-Oct s/Maths s/H2 Chemistry");
+        logic.execute("add n/Subject Student p/81234567 a/1 Test Street d/14-Oct"
+                + " s/Maths day/MON time/09:00 s/H2 Chemistry day/TUE time/15:30");
         logic.execute("edit 1 p/87654321");
 
         JsonAddressBookStorage savedStorage =
@@ -105,17 +111,25 @@ public class LogicManagerTest {
         Person saved = savedStorage.readAddressBook().orElseThrow().getPersonList().get(0);
         assertEquals(new PersonBuilder().withName("Subject Student").withPhone("87654321")
                 .withAddress("1 Test Street").withStartDate("14-Oct")
-                .withSubjects("Maths", "H2 Chemistry").build(), saved);
+                .withScheduledSubjects(
+                        new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0))),
+                        new Subject("H2 Chemistry", new LessonSlot(DayOfWeek.TUESDAY, LocalTime.of(15, 30))))
+                .build(), saved);
         assertEquals("Name: Subject Student\nPhone: 87654321\nAddress: 1 Test Street\nStart date: 14-Oct"
-                + "\nOutstanding amount: SGD 0.00\nSubjects: Maths, H2 Chemistry\nTags: Not specified\nNotes: ",
+                + "\nOutstanding amount: SGD 0.00"
+                + "\nSubjects: Maths (Mon 09:00), H2 Chemistry (Tue 15:30)"
+                + "\nTags: Not specified\nNotes: ",
                 logic.execute("view 1").getFeedbackToUser());
     }
 
     @Test
     public void execute_subjectFilter_preservesDisplayedIndices() throws Exception {
-        logic.execute("add n/Anna Tutor p/81234567 a/1 Test Street d/14-Oct s/Maths");
-        logic.execute("add n/Ben Tutor p/81234568 a/2 Test Street d/14-Oct s/Physics");
-        logic.execute("add n/Cara Tutor p/81234569 a/3 Test Street d/14-Oct s/maths s/Chemistry");
+        logic.execute("add n/Anna Tutor p/81234567 a/1 Test Street d/14-Oct"
+                + " s/Maths day/MON time/09:00");
+        logic.execute("add n/Ben Tutor p/81234568 a/2 Test Street d/14-Oct"
+                + " s/Physics day/MON time/09:00");
+        logic.execute("add n/Cara Tutor p/81234569 a/3 Test Street d/14-Oct"
+                + " s/maths day/MON time/09:00 s/Chemistry day/TUE time/10:00");
 
         logic.execute("find Ben");
         assertEquals("Listed 2 contacts.",
@@ -342,7 +356,7 @@ public class LogicManagerTest {
 
         // Triggers the saveAddressBook method by executing an add command
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + ADDRESS_DESC_AMY + START_DATE_DESC_AMY + " s/Maths";
+                + ADDRESS_DESC_AMY + START_DATE_DESC_AMY + " s/Maths day/MON time/09:00";
         Person expectedPerson = new PersonBuilder(AMY).withSubjects("Maths").build();
         ModelManager expectedModel = new ModelManager();
         expectedModel.addPerson(expectedPerson);

@@ -2,16 +2,23 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Notes;
 import seedu.address.model.person.OutstandingAmount;
@@ -26,6 +33,15 @@ import seedu.address.model.tag.Tag;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+    public static final String MESSAGE_INVALID_LESSON_DAY =
+            "Lesson day must be MON, TUE, WED, THU, FRI, SAT, or SUN.";
+    public static final String MESSAGE_INVALID_LESSON_TIME =
+            "Lesson time must be a valid 24-hour time in HH:mm format.";
+    public static final String MESSAGE_INVALID_SUBJECT_SCHEDULE =
+            "Each subject must use s/SUBJECT day/DAY time/TIME, in that order.";
+    public static final String MESSAGE_DUPLICATE_SUBJECT =
+            "Each student may have only one lesson for a given subject.";
+    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
@@ -155,8 +171,8 @@ public class ParserUtil {
         return tagSet;
     }
 
-    /** Parses one subject after trimming surrounding spaces. */
-    public static Subject parseSubject(String subject) throws ParseException {
+    /** Parses and validates a subject name after trimming surrounding spaces. */
+    public static String parseSubjectName(String subject) throws ParseException {
         requireNonNull(subject);
         String trimmed = subject.trim();
         if (trimmed.isEmpty()) {
@@ -165,16 +181,91 @@ public class ParserUtil {
         if (!Subject.isValidSubject(trimmed)) {
             throw new ParseException(Subject.MESSAGE_CONSTRAINTS);
         }
-        return new Subject(trimmed);
+        return trimmed;
     }
 
-    /** Parses repeated subject values, retaining the first spelling and input order. */
-    public static Set<Subject> parseSubjects(Collection<String> subjects) throws ParseException {
+    /** Parses a weekly lesson day using the documented three-letter names. */
+    public static DayOfWeek parseLessonDay(String day) throws ParseException {
+        requireNonNull(day);
+        return switch (day.trim().toUpperCase(Locale.ROOT)) {
+            case "MON" -> DayOfWeek.MONDAY;
+            case "TUE" -> DayOfWeek.TUESDAY;
+            case "WED" -> DayOfWeek.WEDNESDAY;
+            case "THU" -> DayOfWeek.THURSDAY;
+            case "FRI" -> DayOfWeek.FRIDAY;
+            case "SAT" -> DayOfWeek.SATURDAY;
+            case "SUN" -> DayOfWeek.SUNDAY;
+            default -> throw new ParseException(MESSAGE_INVALID_LESSON_DAY);
+        };
+    }
+
+    /** Parses a lesson start time in strict 24-hour HH:mm format. */
+    public static LocalTime parseLessonTime(String time) throws ParseException {
+        requireNonNull(time);
+        String trimmed = time.trim();
+        if (!trimmed.matches("(?:[01]\\d|2[0-3]):[0-5]\\d")) {
+            throw new ParseException(MESSAGE_INVALID_LESSON_TIME);
+        }
+        return LocalTime.parse(trimmed);
+    }
+
+    /** Parses aligned subject, day, and time values into scheduled subjects. */
+    public static Set<Subject> parseScheduledSubjects(List<String> subjects, List<String> days, List<String> times)
+            throws ParseException {
         requireNonNull(subjects);
+        requireNonNull(days);
+        requireNonNull(times);
+        if (subjects.isEmpty() || subjects.size() != days.size() || subjects.size() != times.size()) {
+            throw new ParseException(MESSAGE_INVALID_SUBJECT_SCHEDULE);
+        }
         Set<Subject> parsed = new LinkedHashSet<>();
-        for (String subject : subjects) {
-            parsed.add(parseSubject(subject));
+        Set<String> names = new HashSet<>();
+        for (int index = 0; index < subjects.size(); index++) {
+            String name = parseSubjectName(subjects.get(index));
+            if (!names.add(name.toLowerCase(Locale.ROOT))) {
+                throw new ParseException(MESSAGE_DUPLICATE_SUBJECT);
+            }
+            LessonSlot slot = new LessonSlot(parseLessonDay(days.get(index)), parseLessonTime(times.get(index)));
+            parsed.add(new Subject(name, slot));
         }
         return parsed;
+    }
+
+    /** Parses subject names used by filters, retaining unique values case-insensitively. */
+    public static Set<String> parseSubjectNames(Collection<String> subjects) throws ParseException {
+        requireNonNull(subjects);
+        Set<String> parsed = new LinkedHashSet<>();
+        Set<String> normalized = new HashSet<>();
+        for (String subject : subjects) {
+            String name = parseSubjectName(subject);
+            if (normalized.add(name.toLowerCase(Locale.ROOT))) {
+                parsed.add(name);
+            }
+        }
+        return parsed;
+    }
+
+    /** Ensures each subject prefix is immediately followed by day and time prefixes. */
+    public static void verifySubjectScheduleOrder(String args) throws ParseException {
+        requireNonNull(args);
+        List<String> prefixes = new java.util.ArrayList<>();
+        Matcher matcher = PREFIX_PATTERN.matcher(args);
+        while (matcher.find()) {
+            prefixes.add(matcher.group(1));
+        }
+        for (int index = 0; index < prefixes.size(); index++) {
+            String prefix = prefixes.get(index);
+            if (prefix.equals(CliSyntax.PREFIX_SUBJECT.toString())) {
+                if (index + 2 >= prefixes.size()
+                        || !prefixes.get(index + 1).equals(CliSyntax.PREFIX_LESSON_DAY.toString())
+                        || !prefixes.get(index + 2).equals(CliSyntax.PREFIX_LESSON_TIME.toString())) {
+                    throw new ParseException(MESSAGE_INVALID_SUBJECT_SCHEDULE);
+                }
+                index += 2;
+            } else if (prefix.equals(CliSyntax.PREFIX_LESSON_DAY.toString())
+                    || prefix.equals(CliSyntax.PREFIX_LESSON_TIME.toString())) {
+                throw new ParseException(MESSAGE_INVALID_SUBJECT_SCHEDULE);
+            }
+        }
     }
 }

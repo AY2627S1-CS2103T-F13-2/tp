@@ -10,7 +10,10 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
+import static seedu.address.testutil.TypicalSubjects.scheduledSubject;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -102,12 +105,23 @@ public class PersonTest {
                 ALICE.getStartDate(), ALICE.getOutstandingAmount());
         assertEquals(Set.of(), legacyPerson.getSubjects());
 
-        Set<Subject> sourceSubjects = new LinkedHashSet<>(Set.of(new Subject("Maths")));
+        Set<Subject> sourceSubjects = new LinkedHashSet<>(Set.of(scheduledSubject("Maths")));
         Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getAddress(),
                 ALICE.getStartDate(), ALICE.getOutstandingAmount(), Set.of(), Notes.EMPTY, sourceSubjects);
-        sourceSubjects.add(new Subject("Physics"));
-        assertEquals(Set.of(new Subject("Maths")), person.getSubjects());
-        assertThrows(UnsupportedOperationException.class, () -> person.getSubjects().add(new Subject("English")));
+        sourceSubjects.add(scheduledSubject("Physics"));
+        assertEquals(Set.of(scheduledSubject("Maths")), person.getSubjects());
+        assertThrows(UnsupportedOperationException.class, () ->
+                person.getSubjects().add(scheduledSubject("English")));
+    }
+
+    @Test
+    public void constructor_duplicateSubjectNamesWithDifferentSlots_throwsIllegalArgumentException() {
+        Set<Subject> duplicateNames = new LinkedHashSet<>();
+        duplicateNames.add(new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0))));
+        duplicateNames.add(new Subject("maths", new LessonSlot(DayOfWeek.TUESDAY, LocalTime.of(10, 0))));
+        assertThrows(IllegalArgumentException.class, () -> new Person(ALICE.getName(), ALICE.getPhone(),
+                ALICE.getAddress(), ALICE.getStartDate(), ALICE.getOutstandingAmount(), Set.of(),
+                Notes.EMPTY, duplicateNames));
     }
 
     @Test

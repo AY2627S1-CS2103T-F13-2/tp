@@ -152,6 +152,8 @@ How the parsing works:
 The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
+* stores each student's subjects as `Subject` objects. Each `Subject` owns one required `LessonSlot`,
+  which records a `DayOfWeek` and a `LocalTime` start time.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
@@ -175,15 +177,18 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
 `JsonAddressBookStorage` and user-preference access to `JsonUserPrefsStorage`.
 
 * `JsonAddressBookStorage` reads and writes `JsonSerializableAddressBook`, which contains zero or more
-  `JsonAdaptedPerson` records. Each record stores the student's core profile fields, subjects, notes,
-  archive status, and zero or more tags represented by `JsonAdaptedTag`.
-* Subjects are stored as strings, not as a separate `JsonAdaptedSubject` class. The diagram shows the
-  `persons` and `tags` collections as associations rather than repeating them as attributes.
+  `JsonAdaptedPerson` records. Each record stores the student's core profile fields, notes, archive status,
+  zero or more tags represented by `JsonAdaptedTag`, and zero or more scheduled subjects represented by
+  `JsonAdaptedSubject`.
+* `JsonAdaptedSubject` stores the subject name, weekly lesson day, and lesson start time. It reconstructs
+  a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
   `JsonSerializableAddressBook.toModelType()` also rejects duplicate students. These conversions explain
   the Storage component's dependency on the Model component; model classes are omitted from this diagram.
-* Older student records without subjects, tags, notes, or archive status load with empty subjects/tags,
-  empty notes, and `archived = false`. User preferences are serialized directly without a separate adapter.
+* Student records without any `subjects` field load with an empty subject set. Records from v1.4 that store
+  subjects as plain strings are incompatible because they do not contain a lesson day or start time.
+  Older records without tags, notes, or archive status still load with empty tags, empty notes, and
+  `archived = false`. User preferences are serialized directly without a separate adapter.
 
 ### Common classes
 
@@ -194,6 +199,15 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Weekly subject lessons
+
+`Subject` contains its validated display name and one required `LessonSlot`. `LessonSlot` contains a
+`DayOfWeek` and `LocalTime`, which prevents incomplete subjects inside the model. Add and Edit accept one
+ordered `s/SUBJECT day/DAY time/TIME` triplet per subject. `ParserUtil` validates the triplet counts and
+order, accepts the documented three-letter day names, requires strict 24-hour `HH:mm` times, and rejects
+duplicate subject names case-insensitively. List filters continue to compare only the subject name so that
+`list s/Maths` works regardless of when each student's Maths lesson begins.
 
 ### Shared tag data
 
@@ -542,9 +556,9 @@ testers are expected to do more *exploratory* testing.
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
 1. Run `clear` in this test copy, then add three profiles:
-   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level`,
-   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics t/Needs revision`, and
-   `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths`.
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level`,
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 t/Needs revision`, and
+   `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths day/WED time/11:00`.
 2. Run `find Nobody`, then `list t/A-Level t/Needs revision`.<br>
    Expected: Amy and Bob are displayed in that order, with `Listed 2 contacts.`.
    This checks OR matching across the full address book, including students hidden by Find.
@@ -582,8 +596,8 @@ Use a fresh test copy of the JAR in an empty writable folder.
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
 1. Run `clear` in this test copy to remove sample profiles, then add two test profiles:
-   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths o/20` and
-   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics o/600`.
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 o/20` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/600`.
 2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
    Expected: `Edited contact: Bob Choo`. The full list returns; Bob's card immediately shows the new phone
    and `SGD 20.50`, while his name, address, and start date remain unchanged.
@@ -607,8 +621,8 @@ Use a fresh copy of the app in an empty folder. Inspect saved tags in `data/addr
 after successful edits; these checks do not require changes to the profile-card display.
 
 1. Run `clear`, then add
-   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/Old notes/Keep note` and
-   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics`.
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/Old notes/Keep note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 t/A-Level t/Needs revision t/a-level`.<br>
    Expected: `Edited contact: Amy Bee`, and both students return to the list.
    Amy's stored tags are `a-level` and `needs revision`; `old` is removed and the repeated tag is combined.
@@ -628,28 +642,28 @@ after successful edits; these checks do not require changes to the profile-card 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
 1. Run `clear`, then add
-   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level notes/Amy note` and
-   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English o/600 t/Needs revision notes/Bob note`.
-2. Run `find Bob`, then `edit 1 s/Physics s/H2 Chemistry s/PHYSICS`.<br>
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Amy note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English day/TUE time/10:00 o/600 t/Needs revision notes/Bob note`.
+2. Run `find Bob`, then `edit 1 s/Physics day/WED time/15:30 s/H2 Chemistry day/FRI time/17:00`.<br>
    Expected: `Edited contact: Bob Choo`, and both students return to the list.
-   `view 2` shows `Subjects: Physics, H2 Chemistry` and notes `Bob note`; the five core fields and tags are preserved.
-3. Run `find Bob`, then `edit 1 s/h2 chemistry s/physics`.<br>
+   `view 2` shows `Subjects: Physics (Wed 15:30), H2 Chemistry (Fri 17:00)` and notes `Bob note`; the five core fields and tags are preserved.
+3. Run `find Bob`, then `edit 1 s/h2 chemistry day/FRI time/17:00 s/physics day/WED time/15:30`.<br>
    Expected: `No changes made to contact: Bob Choo`. Only Bob remains displayed.
    `view 1` retains the original subject spelling and order from step 2.
-4. Try `edit 1 s/`, `edit 1 s/Maths s/`, and `edit 1 p/87654321 t/A-Level s/---`.<br>
+4. Try `edit 1 s/`, `edit 1 s/Maths day/MON`, and `edit 1 p/87654321 t/A-Level s/--- day/MON time/09:00`.<br>
    Expected: Each command fails; Bob's subjects, phone, tags, and current search results remain unchanged.
-5. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/0 s/Physics`.<br>
+5. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/0 s/Physics day/WED time/15:30`.<br>
    Expected: `This contact already exists in TuteeDex.` Different subjects, tags, and notes do not bypass duplicate checks.
 6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
-   Expected: `view 2` shows Bob's updated phone and still lists `Physics, H2 Chemistry`, with his original notes.
+   Expected: `view 2` shows Bob's updated phone and still lists both scheduled subjects, with his original notes.
 
 ### Editing student notes
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
 1. Run `clear`, then add
-   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths t/A-Level notes/Original note` and
-   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics`.
+   `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Original note` and
+   `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
    Expected: `Edited contact: Amy Bee`, and both students return to the list.
    `view 1` shows `Notes: Revise fractions, graphs & 中文!`; all other profile fields are unchanged.

@@ -1,5 +1,7 @@
 package seedu.address.testutil;
 
+import static seedu.address.testutil.TypicalSubjects.scheduledSubject;
+
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -106,9 +108,15 @@ public class PersonBuilder {
     public PersonBuilder withSubjects(String... subjects) {
         Set<Subject> parsed = new LinkedHashSet<>();
         for (String subject : subjects) {
-            parsed.add(new Subject(subject));
+            parsed.add(scheduledSubject(subject));
         }
         this.subjects = parsed;
+        return this;
+    }
+
+    /** Sets scheduled subjects in insertion order. */
+    public PersonBuilder withScheduledSubjects(Subject... subjects) {
+        this.subjects = new LinkedHashSet<>(Arrays.asList(subjects));
         return this;
     }
 

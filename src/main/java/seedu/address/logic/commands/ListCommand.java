@@ -4,13 +4,14 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import seedu.address.model.Model;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
-import seedu.address.model.person.Subject;
 
 /** Lists all students or students matching a subject or tag filter. */
 public class ListCommand extends Command {
@@ -26,7 +27,7 @@ public class ListCommand extends Command {
     public static final String MESSAGE_SUMMARY_FORMAT = "%-24s%24s";
 
     private final Predicate<Person> predicate;
-    private final Set<Subject> subjects;
+    private final Set<String> subjectNames;
     private final boolean isSummary;
     private final boolean isArchivedOnly;
 
@@ -39,13 +40,13 @@ public class ListCommand extends Command {
     }
 
     /** Lists contacts with any of the specified subjects. */
-    public ListCommand(Set<Subject> subjects) {
-        this(subjects, false);
+    public ListCommand(Set<String> subjectNames) {
+        this(subjectNames, false);
     }
 
     /** Lists contacts with any of the specified subjects, with optional summary output. */
-    public ListCommand(Set<Subject> subjects, boolean isSummary) {
-        this(PREDICATE_SHOW_ALL_PERSONS, subjects, isSummary);
+    public ListCommand(Set<String> subjectNames, boolean isSummary) {
+        this(PREDICATE_SHOW_ALL_PERSONS, subjectNames, isSummary);
     }
 
     public ListCommand(Predicate<Person> predicate) {
@@ -57,13 +58,16 @@ public class ListCommand extends Command {
         this(predicate, Set.of(), isSummary);
     }
 
-    private ListCommand(Predicate<Person> predicate, Set<Subject> subjects, boolean isSummary) {
-        this(predicate, subjects, isSummary, false);
+    private ListCommand(Predicate<Person> predicate, Set<String> subjectNames, boolean isSummary) {
+        this(predicate, subjectNames, isSummary, false);
     }
 
-    private ListCommand(Predicate<Person> predicate, Set<Subject> subjects, boolean isSummary, boolean isArchivedOnly) {
+    private ListCommand(Predicate<Person> predicate, Set<String> subjectNames, boolean isSummary,
+            boolean isArchivedOnly) {
         this.predicate = requireNonNull(predicate);
-        this.subjects = Set.copyOf(requireNonNull(subjects));
+        this.subjectNames = requireNonNull(subjectNames).stream()
+                .map(name -> name.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toUnmodifiableSet());
         this.isSummary = isSummary;
         this.isArchivedOnly = isArchivedOnly;
     }
@@ -76,8 +80,9 @@ public class ListCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        Predicate<Person> filter = subjects.isEmpty()
-                ? predicate : person -> person.getSubjects().stream().anyMatch(subjects::contains);
+        Predicate<Person> filter = subjectNames.isEmpty()
+                ? predicate : person -> person.getSubjects().stream()
+                        .anyMatch(subject -> subjectNames.stream().anyMatch(subject::hasName));
         Predicate<Person> visibility = isArchivedOnly ? Person::isArchived : PREDICATE_SHOW_ACTIVE_PERSONS;
         model.updateFilteredPersonList(visibility.and(filter));
         int count = model.getFilteredPersonList().size();
@@ -90,7 +95,7 @@ public class ListCommand extends Command {
             return new CommandResult(String.format(MESSAGE_SUMMARY_FORMAT,
                     "Total: " + count, "Paid: " + paidStudents));
         }
-        if (count == 0 && !subjects.isEmpty()) {
+        if (count == 0 && !subjectNames.isEmpty()) {
             return new CommandResult(MESSAGE_NO_SUBJECT_MATCHES);
         }
         if (count == 0 && predicate != PREDICATE_SHOW_ALL_PERSONS) {
@@ -113,7 +118,7 @@ public class ListCommand extends Command {
     public boolean equals(Object other) {
         return other == this || other instanceof ListCommand otherCommand
                 && predicate.equals(otherCommand.predicate)
-                && subjects.equals(otherCommand.subjects)
+                && subjectNames.equals(otherCommand.subjectNames)
                 && isSummary == otherCommand.isSummary
                 && isArchivedOnly == otherCommand.isArchivedOnly;
     }

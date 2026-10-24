@@ -2,6 +2,8 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_DAY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_LESSON_TIME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_OUTSTANDING_AMOUNT;
@@ -28,7 +30,8 @@ public class AddCommand extends Command {
             + PREFIX_PHONE + "PHONE "
             + PREFIX_ADDRESS + "ADDRESS "
             + PREFIX_START_DATE + "START_DATE "
-            + PREFIX_SUBJECT + "SUBJECT [" + PREFIX_SUBJECT + "SUBJECT]... "
+            + PREFIX_SUBJECT + "SUBJECT " + PREFIX_LESSON_DAY + "DAY " + PREFIX_LESSON_TIME + "TIME ["
+            + PREFIX_SUBJECT + "SUBJECT " + PREFIX_LESSON_DAY + "DAY " + PREFIX_LESSON_TIME + "TIME]... "
             + "[" + PREFIX_OUTSTANDING_AMOUNT + "OUTSTANDING_AMOUNT] "
             + "[" + PREFIX_TAG + "TAG]... "
             + "[" + PREFIX_NOTES + "NOTE]\n"
@@ -38,6 +41,8 @@ public class AddCommand extends Command {
             + PREFIX_ADDRESS + "311, Clementi Ave 2, #02-25 "
             + PREFIX_START_DATE + "10-Aug "
             + PREFIX_SUBJECT + "Maths "
+            + PREFIX_LESSON_DAY + "MON "
+            + PREFIX_LESSON_TIME + "15:30 "
             + PREFIX_OUTSTANDING_AMOUNT + "20 "
             + PREFIX_TAG + "A-Level "
             + PREFIX_NOTES + "Revise fractions";

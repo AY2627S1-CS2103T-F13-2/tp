@@ -10,6 +10,7 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_START_DATE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalSubjects.scheduledSubject;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -106,7 +107,8 @@ public class EditPersonDescriptorTest {
 
     @Test
     public void subjects_preserveOrderAndSnapshotWithImmutableValues() {
-        Set<Subject> source = new LinkedHashSet<>(List.of(new Subject("Physics"), new Subject("Maths")));
+        Set<Subject> source = new LinkedHashSet<>(List.of(
+                scheduledSubject("Physics"), scheduledSubject("Maths")));
         EditPersonDescriptor descriptor = new EditPersonDescriptor();
         assertTrue(descriptor.getSubjects().isEmpty());
         descriptor.setSubjects(source);
@@ -118,7 +120,7 @@ public class EditPersonDescriptorTest {
                 .map(subject -> subject.value).toList());
         assertThrows(UnsupportedOperationException.class, () -> copy.getSubjects().orElseThrow().clear());
         assertEquals(descriptor, copy);
-        descriptor.setSubjects(Set.of(new Subject("English")));
+        descriptor.setSubjects(Set.of(scheduledSubject("English")));
         assertFalse(descriptor.equals(copy));
         assertEquals(new EditPersonDescriptorBuilder().withSubjects("maths", "PHYSICS").build(), copy);
     }

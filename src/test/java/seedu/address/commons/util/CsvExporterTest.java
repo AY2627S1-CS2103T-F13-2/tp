@@ -20,7 +20,8 @@ public class CsvExporterTest {
 
         String expected = "Name,Phone,Address,Start Date,Outstanding Amount,Subjects,Tags,Notes,"
                 + "Archived\n"
-                + "Amy Bee,85355255,\"Block 1, #02-03\",10-Aug,0,Maths; Physics,a-tag; z-tag,"
+                + "Amy Bee,85355255,\"Block 1, #02-03\",10-Aug,0,Maths (Mon 09:00); Physics (Mon 09:00),"
+                + "a-tag; z-tag,"
                 + "\"Bring, calculator\"\".\",true\n";
 
         assertEquals(expected, CsvExporter.format(List.of(person)));
