@@ -242,6 +242,35 @@ introduced by this contract.
 `LogicManagerTest` verifies Add with real temporary JSON storage: normalized tags survive loading into
 a new model, and invalid tags or duplicate profiles leave saved data and search results unchanged.
 
+### CSV import
+
+`import FILE_PATH [confirm]` reads the CSV format written by `export`, so a file exported from one copy of
+TuteeDex can be imported into another. The work is split into three small classes:
+
+* `CsvReader` (in `commons.util`) turns the text into rows of fields. It follows `CsvExporter`'s quoting rules,
+  ignores the byte order mark that Excel adds, accepts LF and CRLF, and keeps line breaks inside quoted fields.
+  Blank lines are kept as blank rows so that row numbers in error messages match what a spreadsheet shows.
+* `CsvPersonParser` (in `logic.parser`) turns one row into a `Person`. It reuses the `ParserUtil` methods used by
+  `add`, so imported values follow exactly the same rules and produce the same error messages. Because `Subject`
+  holds a `LessonSlot`, a subject cell such as `Maths (Mon 09:00); Physics (Tue 10:00)` is split on semicolons and
+  each part is parsed into a name, a day and a start time, matching `Subject#toString()`, which the export uses.
+* `ImportCommand` checks the header against `CsvExporter.HEADER`, parses every row, and collects all problems
+  before changing anything.
+
+**Duplicates.** The model already rejects two students with the same identity (`Person#isSamePerson()`). A row
+that is equal in every field to a stored student, or to an earlier row, is skipped, which makes importing the same
+file twice harmless. A row with the same identity but different details is an error, because adding it would break
+the uniqueness rule and silently keeping either version could lose data.
+
+**All or nothing.** Without `confirm`, the command only returns a preview. With `confirm`, it copies the current
+`AddressBook`, adds every new student to the copy and then calls `Model#setAddressBook()` once. Existing students
+are kept, and if any row is invalid the command throws before the copy is made, so the stored data never ends up
+half imported. The filter is then reset to active students so the new students are visible.
+
+**Alternatives considered.** Keeping the preview in memory and confirming it with a separate command would avoid
+reading the file twice, but it adds state that can go stale if the file or the address book changes in between.
+Reading and checking the file again on `confirm` is simpler and always uses the current data.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -383,6 +412,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                                                                       |
 | `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me                                                                                      |
 | `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
+
+| `* *`    | private tutor                              | import students from a file exported by TuteeDex | move my students to another computer without typing them in again                                                       |
 
 *{More to be added}*
 
@@ -681,6 +712,27 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    and preserves the search results. View shows an empty `Notes:` value.
 7. Exit and restart from the same folder.<br>
    Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
+
+### Importing students
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1, #01-01 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Revise "fractions"`
+   and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive s/Bob Choo`.
+2. Run `export` and note the file name in the result, for example `contacts-20261024-175424-176.csv`.
+3. Run `clear`, then `import contacts-20261024-175424-176.csv`.<br>
+   Expected: A preview names Amy Bee and Bob Choo, and the list is still empty.
+4. Run `import contacts-20261024-175424-176.csv confirm`.<br>
+   Expected: `Imported 2 student(s) ...`. Amy is listed; `list -archived` shows Bob. `view 1` shows Amy's
+   subject `Maths (Mon 09:00)`, tag and note exactly as before.
+5. Run the same confirm command again.<br>
+   Expected: `No new students to import...`, and the list does not change.
+6. Open the file in a text editor, change Amy's phone to `123` and Bob's subjects to `Physics`, and save it as a
+   new `.csv` file. Import it with `confirm`.<br>
+   Expected: Two numbered row errors, and no student is added.
+7. Try `import missing.csv`, `import notes.txt` and `import` with no path.<br>
+   Expected: Each command fails with a specific message.
 
 ### Saving data
 

@@ -150,6 +150,35 @@ The generated file is named `contacts-YYYYMMDD-HHMMSS-milliseconds.csv`. Each co
 contains the name, phone, address, start date, outstanding amount, subjects, tags, notes, and archive status. Multiple
 subjects or tags are joined with `; `.
 
+### Importing students: `import`
+
+Adds students from a CSV file written by `export`, for example to move students from another computer or to
+restore students you deleted. Importing never removes or changes the students already in TuteeDex.
+
+Format: `import FILE_PATH [confirm]`
+
+* Without `confirm`, TuteeDex only checks the file and shows which students would be added. Nothing changes.
+* Add `confirm` at the end to add them. If any row has a problem, nothing is imported, so a file is never half imported.
+* `FILE_PATH` can be a full path or a path relative to the folder TuteeDex runs in, which is where `export` saves
+  its files. Paths with spaces work, with or without double quotes around them. Only `.csv` files are accepted.
+* The first row must be the header that `export` writes. Each following row is one student with the same 9 columns:
+  name, phone, address, start date, outstanding amount, subjects, tags, notes and archived (`true` or `false`).
+* Subjects are written as `SUBJECT (DAY HH:mm)` and separated by semicolons, for example
+  `Maths (Mon 09:00); H2 Chemistry (Wed 11:30)`. Tags are separated by semicolons. A blank outstanding amount
+  means `0`, and blank tags or notes mean none.
+* Every value is checked with the same rules as `add`. Problems are listed by spreadsheet row number, for example
+  `Row 4: Phone numbers should only contain numbers, and it should be 8 digits long.` Up to 10 problems are shown.
+* A row that is exactly the same as a student already in TuteeDex, or as an earlier row in the file, is skipped,
+  so importing the same file twice is safe.
+* A row with the same name, phone, address, start date and outstanding amount as a stored student, but different
+  subjects, tags, notes or archive status, is reported as a problem. Use `edit` to change the stored student instead.
+* Files saved by Excel work too, as long as the columns are not changed.
+
+Examples:
+* `import contacts-20261024-175424-176.csv` checks a file that `export` saved earlier.
+* `import contacts-20261024-175424-176.csv confirm` adds the new students from that file.
+* `import "C:\Users\Amy\Desktop\term 4 students.csv" confirm`
+
 ### Listing and filtering students: `list`
 
 Shows active student profiles, or filters active profiles by one or more subjects
@@ -390,6 +419,7 @@ Action     | Format, Examples
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
+**Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
