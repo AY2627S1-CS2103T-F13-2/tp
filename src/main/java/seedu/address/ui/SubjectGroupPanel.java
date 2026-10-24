@@ -23,8 +23,7 @@ public class SubjectGroupPanel {
         for (SubjectGrouping.Group group : groupedSubjects) {
             VBox entries = new VBox(4);
             for (SubjectGrouping.Entry entry : group.entries()) {
-                int displayedIndex = persons.indexOf(entry.person()) + 1;
-                PersonCard card = new PersonCard(entry.person(), displayedIndex);
+                PersonCard card = new PersonCard(entry.person(), entry.displayedIndex());
                 Label lessonSlot = new Label(entry.subject().getLessonSlot().toString());
                 lessonSlot.getStyleClass().add("subject-lesson-slot");
                 HBox row = new HBox(8, card.getRoot(), lessonSlot);

@@ -16,10 +16,12 @@ final class SubjectGrouping {
     /** Groups the supplied contacts by subject, preserving the first subject spelling. */
     static List<Group> group(List<Person> persons) {
         Map<String, List<Entry>> groups = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        int displayedIndex = 0;
         for (Person person : persons) {
+            displayedIndex++;
             for (Subject subject : person.getSubjects()) {
                 groups.computeIfAbsent(subject.value, unused -> new ArrayList<>())
-                        .add(new Entry(person, subject));
+                        .add(new Entry(person, subject, displayedIndex));
             }
         }
         List<Group> result = new ArrayList<>();
@@ -39,5 +41,5 @@ final class SubjectGrouping {
     }
 
     /** One student's own lesson within a subject group. */
-    record Entry(Person person, Subject subject) {}
+    record Entry(Person person, Subject subject, int displayedIndex) {}
 }
