@@ -15,6 +15,9 @@ public class ImportCommandParser implements Parser<ImportCommand> {
 
     public static final String MESSAGE_INVALID_PATH = "%1$s is not a valid file path.";
 
+    /** A path wrapped in a pair of double quotes, such as {@code "C:\My Files\students.csv"}. */
+    private static final String QUOTED_PATH_PATTERN = "\".*\"";
+
     /**
      * Parses the given {@code String} of arguments in the context of the ImportCommand
      * and returns an ImportCommand object for execution.
@@ -29,7 +32,7 @@ public class ImportCommandParser implements Parser<ImportCommand> {
         if (isConfirmed) {
             pathText = pathText.substring(0, pathText.length() - ImportCommand.CONFIRM_WORD.length()).trim();
         }
-        if (pathText.length() >= 2 && pathText.startsWith("\"") && pathText.endsWith("\"")) {
+        if (pathText.matches(QUOTED_PATH_PATTERN)) {
             pathText = pathText.substring(1, pathText.length() - 1).trim();
         }
         if (pathText.isEmpty()) {

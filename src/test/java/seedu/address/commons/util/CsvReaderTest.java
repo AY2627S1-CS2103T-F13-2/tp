@@ -41,6 +41,17 @@ public class CsvReaderTest {
     }
 
     @Test
+    public void read_noFinalLineBreak_keepsLastRow() throws Exception {
+        assertEquals(List.of(List.of("a", "quoted")), CsvReader.read("a,\"quoted\""));
+        assertEquals(List.of(List.of("a", "")), CsvReader.read("a,"));
+    }
+
+    @Test
+    public void read_carriageReturnOnly_endsRow() throws Exception {
+        assertEquals(List.of(List.of("a"), List.of("b")), CsvReader.read("a\rb\r"));
+    }
+
+    @Test
     public void read_emptyText_returnsNoRows() throws Exception {
         assertEquals(List.of(), CsvReader.read(""));
         assertEquals(List.of(), CsvReader.read("﻿"));
