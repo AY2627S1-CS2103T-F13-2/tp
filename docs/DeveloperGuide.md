@@ -215,6 +215,12 @@ other than lowercase `asc` or `desc`. The criteria model and parser do not mutat
 This foundation is not yet registered as an executable `sort` command. Display integration will follow the
 grouping work; saving and restoring the sorting state belongs to the separate preference-persistence feature.
 
+`SortComparators` compares names without regard to case, amounts numerically, and start dates as annual
+month/day values. Invalid existing dates and absent lessons stay last in both directions. `LessonRow`
+references a profile and one of its subjects without duplicating stored data. Upcoming lesson comparisons
+use one captured local date/time: a start equal to that time is due now, while a start that has already
+passed is compared using its next weekly occurrence. Complete ties retain input order.
+
 ### Weekly subject lessons
 
 `Subject` contains its validated display name and one required `LessonSlot`. `LessonSlot` contains a
