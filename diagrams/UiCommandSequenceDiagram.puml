@@ -1,0 +1,57 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+actor User as user USER_COLOR
+box UI UI_COLOR_T1
+participant ":CommandBox" as commandBox UI_COLOR
+participant ":MainWindow" as mainWindow UI_COLOR
+participant ":ResultDisplay" as resultDisplay UI_COLOR
+end box
+box Logic LOGIC_COLOR_T1
+participant ":Logic" as logic LOGIC_COLOR
+end box
+
+user -> commandBox : enter "list" and press Enter
+activate commandBox
+commandBox -> commandBox : handleCommandEntered()
+activate commandBox UI_COLOR_T2
+commandBox -> mainWindow : executeCommand("list")
+note over commandBox, mainWindow
+  Through CommandBox.CommandExecutor,
+  supplied as this::executeCommand
+end note
+activate mainWindow
+mainWindow -> logic : execute("list")
+activate logic
+
+logic --> mainWindow : commandResult
+deactivate logic
+mainWindow -> resultDisplay : setFeedbackToUser(commandResult.getFeedbackToUser())
+activate resultDisplay
+resultDisplay --> mainWindow
+deactivate resultDisplay
+
+mainWindow -> mainWindow : showListSummary()
+activate mainWindow UI_COLOR_T2
+mainWindow -> logic : getFilteredPersonList()
+activate logic
+logic --> mainWindow : filtered persons
+deactivate logic
+note right of mainWindow
+  TOTAL = filtered list size
+  PAID = count with OutstandingAmount.ZERO
+  (list access calls condensed)
+end note
+mainWindow -> resultDisplay : showSummary(total, paid)
+activate resultDisplay
+resultDisplay --> mainWindow
+deactivate resultDisplay
+deactivate mainWindow
+
+mainWindow --> commandBox : commandResult
+deactivate mainWindow
+commandBox -> commandBox : commandTextField.setText("")
+deactivate commandBox
+deactivate commandBox
+@enduml
