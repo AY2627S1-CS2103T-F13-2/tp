@@ -157,7 +157,7 @@ or tags. Archived students are not shown.
 Each card displays the contact's name, phone, address, start date, outstanding
 amount, subjects, tags, and notes.
 
-Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`
+Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`
 
 * Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
@@ -188,6 +188,16 @@ Examples:
 * `list t/A-Level t/Needs revision` shows students having either tag.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every active student again.
+
+#### Grouping students by subject
+
+`list -subjects` switches the display to active students grouped under their subjects.
+Each subject group shows the students taking that subject and each student's own weekly
+lesson day and start time. Students taking the same subject at different times remain in
+one subject group. Subject groups and students within each group are sorted alphabetically.
+Archived students are excluded. The option is standalone and cannot be combined with
+`-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
+student contact list.
 
 #### Listing archived students
 
@@ -391,7 +401,7 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, or `list -archived`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
 **Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`

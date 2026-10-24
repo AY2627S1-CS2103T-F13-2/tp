@@ -23,6 +23,11 @@ public class ListCommandParserTest {
     }
 
     @Test
+    public void parse_subjectsFlag_returnsSubjectGroupedList() {
+        assertParseSuccess(parser, " -subjects ", ListCommand.forSubjectGroups());
+    }
+
+    @Test
     public void parse_archivedFlagWithOtherOptions_failure() {
         String[] invalid = {"-archived -summary", "-summary -archived", "-archived s/Maths",
             "t/A-Level -archived", "s/Maths -archived", "-archived -archived", "-Archived", "-archived extra"};
@@ -83,6 +88,9 @@ public class ListCommandParserTest {
         assertParseFailure(parser, " foo", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
         assertParseFailure(parser, " -summary -summary", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
         assertParseFailure(parser, " -Summary", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseFailure(parser, " -subjects -summary", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseFailure(parser, " -subjects s/Maths", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseFailure(parser, " -subjects extra", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
     }
 
     @Test

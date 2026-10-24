@@ -7,6 +7,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
@@ -236,6 +237,35 @@ public class ListCommandTest {
         assertEquals(ListCommand.MESSAGE_SINGULAR,
                 new ListCommand(Set.of("maths")).execute(model).getFeedbackToUser());
         assertEquals(List.of(maths), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_subjectGroups_showsActiveStudentsAndMarksResult() {
+        Person maths = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        Person archived = new PersonBuilder(BENSON).withSubjects("Maths").build().withArchived(true);
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(maths);
+        addressBook.addPerson(archived);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        CommandResult result = ListCommand.forSubjectGroups().execute(model);
+
+        assertEquals(List.of(maths), model.getFilteredPersonList());
+        assertTrue(result.isSubjectList());
+    }
+
+    @Test
+    public void execute_subjectGroups_noSubjects() {
+        Person student = new PersonBuilder(ALICE).build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(student);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        CommandResult result = ListCommand.forSubjectGroups().execute(model);
+
+        assertEquals(ListCommand.MESSAGE_NO_SUBJECT_GROUPS, result.getFeedbackToUser());
+        assertEquals(List.of(student), model.getFilteredPersonList());
+        assertTrue(result.isSubjectList());
     }
 
     /**

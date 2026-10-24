@@ -16,8 +16,8 @@ import seedu.address.model.tag.Tag;
 /** Parses plain lists, summary lists, and repeated subject or tag filters. */
 public class ListCommandParser implements Parser<ListCommand> {
     public static final String MESSAGE_INVALID_PARAMETERS = "Invalid command format! Use list, list -summary, "
-            + "list s/SUBJECT [s/SUBJECT]..., list t/TAG [t/TAG]..., or list -archived. "
-            + "Use -archived on its own.";
+                + "list s/SUBJECT [s/SUBJECT]..., list t/TAG [t/TAG]..., list -archived, or list -subjects. "
+                + "Use -archived and -subjects on their own.";
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
     private static final Pattern ARCHIVED_FLAG_PATTERN = Pattern.compile("(?:^|\\s)-archived(?:\\s|$)");
 
@@ -30,6 +30,9 @@ public class ListCommandParser implements Parser<ListCommand> {
         }
         if (trimmed.equals(ListCommand.ARCHIVED_FLAG)) {
             return ListCommand.forArchivedStudents();
+        }
+        if (trimmed.equals(ListCommand.SUBJECTS_FLAG)) {
+            return ListCommand.forSubjectGroups();
         }
         if (ARCHIVED_FLAG_PATTERN.matcher(trimmed).find()) {
             throw new ParseException(MESSAGE_INVALID_PARAMETERS);
