@@ -267,6 +267,11 @@ the uniqueness rule and silently keeping either version could lose data.
 are kept, and if any row is invalid the command throws before the copy is made, so the stored data never ends up
 half imported. The filter is then reset to active students so the new students are visible.
 
+**Data sandbox.** The course constraints do not allow the app to read files outside its home folder.
+`ImportCommand` resolves the path against the folder TuteeDex runs from, the same folder `export` writes to,
+and rejects any path that ends up outside it, including `..` steps and links that lead out of the folder.
+Tests pass in a temporary folder as the home folder through a package-private constructor.
+
 **Alternatives considered.** Keeping the preview in memory and confirming it with a separate command would avoid
 reading the file twice, but it adds state that can go stale if the file or the address book changes in between.
 Reading and checking the file again on `confirm` is simpler and always uses the current data.

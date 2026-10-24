@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -55,7 +56,7 @@ public class ImportCommandTest {
         Path file = writeFile("students.csv", CsvExporter.format(List.of(AMY, BOB)));
         String expectedMessage = String.format(ImportCommand.MESSAGE_PREVIEW, 2, file, "Amy Bee, Bob Choo")
                 + "\n" + String.format(ImportCommand.MESSAGE_CONFIRM_HINT, file);
-        assertCommandSuccess(new ImportCommand(file, false), model, expectedMessage, copyOf(model));
+        assertCommandSuccess(new ImportCommand(file, false, temporaryFolder), model, expectedMessage, copyOf(model));
     }
 
     @Test
@@ -66,7 +67,7 @@ public class ImportCommandTest {
         expectedModel.addPerson(BOB);
         expectedModel.updateFilteredPersonList(Model.PREDICATE_SHOW_ACTIVE_PERSONS);
 
-        assertCommandSuccess(new ImportCommand(file, true), model,
+        assertCommandSuccess(new ImportCommand(file, true, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_SUCCESS, 2, file), expectedModel);
         assertEquals(List.of(CARA, AMY, BOB), model.getAddressBook().getPersonList());
     }
@@ -80,13 +81,13 @@ public class ImportCommandTest {
 
         String expectedMessage = String.format(ImportCommand.MESSAGE_SUCCESS, 1, file) + "\n"
                 + String.format(ImportCommand.MESSAGE_SKIPPED, 1, "Cara Lim");
-        assertCommandSuccess(new ImportCommand(file, true), model, expectedMessage, expectedModel);
+        assertCommandSuccess(new ImportCommand(file, true, temporaryFolder), model, expectedMessage, expectedModel);
     }
 
     @Test
     public void execute_onlyStoredStudents_reportsNothingNew() throws Exception {
         Path file = writeFile("students.csv", CsvExporter.format(List.of(CARA)));
-        assertCommandSuccess(new ImportCommand(file, true), model,
+        assertCommandSuccess(new ImportCommand(file, true, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_NOTHING_NEW, 1, file), copyOf(model));
     }
 
@@ -94,7 +95,7 @@ public class ImportCommandTest {
     public void execute_storedStudentWithDifferentDetails_importsNothing() throws Exception {
         Person changedCara = new PersonBuilder(CARA).withNotes("New note").build().withArchived(true);
         Path file = writeFile("students.csv", CsvExporter.format(List.of(AMY, changedCara)));
-        assertCommandFailure(new ImportCommand(file, true), model,
+        assertCommandFailure(new ImportCommand(file, true, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_ERRORS, file) + "\n"
                         + String.format(ImportCommand.MESSAGE_ROW_ERROR, 3,
                                 String.format(ImportCommand.MESSAGE_CONFLICT, "Cara Lim")));
@@ -106,7 +107,7 @@ public class ImportCommandTest {
         Model expectedModel = copyOf(model);
         expectedModel.addPerson(AMY);
         expectedModel.updateFilteredPersonList(Model.PREDICATE_SHOW_ACTIVE_PERSONS);
-        assertCommandSuccess(new ImportCommand(file, true), model,
+        assertCommandSuccess(new ImportCommand(file, true, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_SUCCESS, 1, file), expectedModel);
     }
 
@@ -114,7 +115,7 @@ public class ImportCommandTest {
     public void execute_sameStudentTwiceWithDifferentDetails_importsNothing() throws Exception {
         Person changedAmy = new PersonBuilder(AMY).withTags("needs revision").build();
         Path file = writeFile("students.csv", CsvExporter.format(List.of(AMY, BOB, changedAmy)));
-        assertCommandFailure(new ImportCommand(file, true), model,
+        assertCommandFailure(new ImportCommand(file, true, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_ERRORS, file) + "\n"
                         + String.format(ImportCommand.MESSAGE_ROW_ERROR, 4,
                                 String.format(ImportCommand.MESSAGE_DUPLICATE_IN_FILE, 2)));
@@ -133,8 +134,8 @@ public class ImportCommandTest {
                 + "\nRow 4: " + Phone.MESSAGE_CONSTRAINTS
                 + "\nRow 5: " + CsvPersonParser.MESSAGE_INVALID_SUBJECTS
                 + "\nRow 6: " + String.format(CsvPersonParser.MESSAGE_WRONG_COLUMN_COUNT, 5);
-        assertCommandFailure(new ImportCommand(file, true), model, expectedMessage);
-        assertCommandFailure(new ImportCommand(file, false), model, expectedMessage);
+        assertCommandFailure(new ImportCommand(file, true, temporaryFolder), model, expectedMessage);
+        assertCommandFailure(new ImportCommand(file, false, temporaryFolder), model, expectedMessage);
     }
 
     @Test
@@ -149,36 +150,75 @@ public class ImportCommandTest {
         String expectedMessage = String.format(ImportCommand.MESSAGE_ERRORS, file) + "\n"
                 + String.join("\n", expectedErrors.subList(0, 10)) + "\n"
                 + String.format(ImportCommand.MESSAGE_MORE_ERRORS, 2);
-        assertCommandFailure(new ImportCommand(file, false), model, expectedMessage);
+        assertCommandFailure(new ImportCommand(file, false, temporaryFolder), model, expectedMessage);
     }
 
     @Test
     public void execute_badFiles_throwCommandException() throws Exception {
         Path missing = temporaryFolder.resolve("missing.csv");
-        assertCommandFailure(new ImportCommand(missing, false), model,
-                String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, missing.toAbsolutePath()));
-        assertCommandFailure(new ImportCommand(temporaryFolder, false), model,
-                String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, temporaryFolder.toAbsolutePath()));
-        assertCommandFailure(new ImportCommand(writeFile("students.xlsx", "x"), false), model,
+        assertCommandFailure(new ImportCommand(missing, false, temporaryFolder), model,
+                String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, missing.toAbsolutePath().normalize()));
+        assertCommandFailure(new ImportCommand(temporaryFolder, false, temporaryFolder), model,
+                String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, temporaryFolder.toAbsolutePath().normalize()));
+        assertCommandFailure(new ImportCommand(writeFile("students.xlsx", "x"), false, temporaryFolder), model,
                 ImportCommand.MESSAGE_NOT_CSV);
-        assertCommandFailure(new ImportCommand(writeFile("empty.csv", ""), false), model,
+        assertCommandFailure(new ImportCommand(writeFile("empty.csv", ""), false, temporaryFolder), model,
                 ImportCommand.MESSAGE_WRONG_HEADER);
-        assertCommandFailure(new ImportCommand(writeFile("header.csv", "Name,Phone\nAmy,1\n"), false), model,
+        Path wrongHeader = writeFile("header.csv", "Name,Phone\nAmy,1\n");
+        assertCommandFailure(new ImportCommand(wrongHeader, false, temporaryFolder), model,
                 ImportCommand.MESSAGE_WRONG_HEADER);
 
         Path headerOnly = writeFile("header-only.csv", CsvExporter.HEADER + "\n\n");
-        assertCommandFailure(new ImportCommand(headerOnly, false), model,
+        assertCommandFailure(new ImportCommand(headerOnly, false, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_NO_STUDENTS, headerOnly));
 
         Path badQuote = writeFile("quote.csv", CsvExporter.HEADER + "\n\"Amy Bee,1\n");
-        assertCommandFailure(new ImportCommand(badQuote, false), model,
+        assertCommandFailure(new ImportCommand(badQuote, false, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_ERRORS, badQuote) + "\n"
                         + String.format(CsvReader.MESSAGE_UNCLOSED_QUOTE, 2));
 
         Path notUtf8 = temporaryFolder.resolve("latin1.csv");
         Files.write(notUtf8, (CsvExporter.HEADER + "\nJosé,1").getBytes(StandardCharsets.ISO_8859_1));
-        assertCommandFailure(new ImportCommand(notUtf8, false), model,
+        assertCommandFailure(new ImportCommand(notUtf8, false, temporaryFolder), model,
                 String.format(ImportCommand.MESSAGE_READ_FAILURE, notUtf8));
+    }
+
+    @Test
+    public void execute_fileOutsideHomeFolder_rejected() throws Exception {
+        Path homeFolder = Files.createDirectory(temporaryFolder.resolve("home"));
+        Path outsideFile = writeFile("outside.csv", CsvExporter.format(List.of(AMY)));
+        String expectedMessage = String.format(ImportCommand.MESSAGE_OUTSIDE_HOME_FOLDER, homeFolder);
+
+        assertCommandFailure(new ImportCommand(outsideFile, true, homeFolder), model, expectedMessage);
+        assertCommandFailure(new ImportCommand(Path.of("..", "outside.csv"), true, homeFolder), model,
+                expectedMessage);
+        assertCommandFailure(new ImportCommand(Path.of("sub", "..", "..", "outside.csv"), false, homeFolder), model,
+                expectedMessage);
+    }
+
+    @Test
+    public void execute_linkLeadingOutOfHomeFolder_rejected() throws Exception {
+        Path homeFolder = Files.createDirectory(temporaryFolder.resolve("home"));
+        Path outsideFile = writeFile("outside.csv", CsvExporter.format(List.of(AMY)));
+        Path link = homeFolder.resolve("link.csv");
+        try {
+            Files.createSymbolicLink(link, outsideFile);
+        } catch (IOException | UnsupportedOperationException e) {
+            // Windows needs extra permissions to create links, so this check runs on the other platforms.
+            Assumptions.assumeTrue(false, "Symbolic links are not available here");
+        }
+        assertCommandFailure(new ImportCommand(Path.of("link.csv"), true, homeFolder), model,
+                String.format(ImportCommand.MESSAGE_OUTSIDE_HOME_FOLDER, homeFolder));
+    }
+
+    @Test
+    public void execute_relativePathInsideHomeFolder_imported() throws Exception {
+        Path subFolder = Files.createDirectory(temporaryFolder.resolve("term 4"));
+        Files.writeString(subFolder.resolve("students.csv"), CsvExporter.format(List.of(AMY)));
+        Path relativePath = Path.of("term 4", "students.csv");
+
+        new ImportCommand(relativePath, true, temporaryFolder).execute(model);
+        assertEquals(List.of(CARA, AMY), model.getAddressBook().getPersonList());
     }
 
     @Test
@@ -187,7 +227,7 @@ public class ImportCommandTest {
         String text = "﻿" + CsvExporter.format(List.of(AMY)).replace("\n", "\r\n")
                 .replace(CsvExporter.HEADER, CsvExporter.HEADER.toUpperCase());
         Path file = writeFile("excel.csv", text);
-        new ImportCommand(file, true).execute(model);
+        new ImportCommand(file, true, temporaryFolder).execute(model);
         assertEquals(List.of(CARA, AMY), model.getAddressBook().getPersonList());
     }
 
@@ -208,6 +248,7 @@ public class ImportCommandTest {
         assertEquals(command, new ImportCommand(Path.of("a.csv"), false));
         assertNotEquals(command, new ImportCommand(Path.of("b.csv"), false));
         assertNotEquals(command, new ImportCommand(Path.of("a.csv"), true));
+        assertNotEquals(command, new ImportCommand(Path.of("a.csv"), false, temporaryFolder));
         assertNotEquals(command, null);
         assertNotEquals(command, new ClearCommand());
     }

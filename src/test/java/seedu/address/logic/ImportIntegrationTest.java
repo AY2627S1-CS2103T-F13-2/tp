@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -27,6 +30,7 @@ public class ImportIntegrationTest {
     private Model model;
     private Logic logic;
     private JsonAddressBookStorage storage;
+    private Path importFolder;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -39,12 +43,25 @@ public class ImportIntegrationTest {
         logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Physics day/TUE time/10:00"
                 + " s/H2 Chemistry day/WED time/11:30 o/120.50");
         logic.execute("archive s/Bob Choo");
+
+        // Import only reads files inside the folder TuteeDex runs from, so the CSV files go in a folder under it.
+        Files.createDirectories(Path.of("build"));
+        importFolder = Files.createTempDirectory(Path.of("build"), "import-test");
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        try (Stream<Path> paths = Files.walk(importFolder)) {
+            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                Files.delete(path);
+            }
+        }
     }
 
     @Test
     public void execute_exportedFile_importsIdenticalStudentsAndSaves() throws Exception {
         List<Person> exportedStudents = List.copyOf(model.getAddressBook().getPersonList());
-        Path file = temporaryFolder.resolve("contacts.csv");
+        Path file = importFolder.resolve("contacts.csv");
         Files.writeString(file, CsvExporter.format(exportedStudents));
 
         Model newModel = new ModelManager();
@@ -64,7 +81,7 @@ public class ImportIntegrationTest {
 
     @Test
     public void execute_sameFileTwice_addsNothingSecondTime() throws Exception {
-        Path file = temporaryFolder.resolve("contacts.csv");
+        Path file = importFolder.resolve("contacts.csv");
         Files.writeString(file, CsvExporter.format(model.getAddressBook().getPersonList()));
         List<Person> before = List.copyOf(model.getAddressBook().getPersonList());
 

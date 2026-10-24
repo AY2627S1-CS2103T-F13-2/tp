@@ -159,8 +159,11 @@ Format: `import FILE_PATH [confirm]`
 
 * Without `confirm`, TuteeDex only checks the file and shows which students would be added. Nothing changes.
 * Add `confirm` at the end to add them. If any row has a problem, nothing is imported, so a file is never half imported.
-* `FILE_PATH` can be a full path or a path relative to the folder TuteeDex runs in, which is where `export` saves
-  its files. Paths with spaces work, with or without double quotes around them. Only `.csv` files are accepted.
+* The file must be inside the folder TuteeDex runs from (the folder with the JAR file), or a folder inside it.
+  This is where `export` saves its files. For safety, TuteeDex does not read files anywhere else, so move or copy
+  the file into that folder first.
+* `FILE_PATH` is relative to that folder, for example `students.csv` or `term 4/students.csv`. Paths with spaces
+  work, with or without double quotes around them. Only `.csv` files are accepted.
 * The first row must be the header that `export` writes. Each following row is one student with the same 9 columns:
   name, phone, address, start date, outstanding amount, subjects, tags, notes and archived (`true` or `false`).
 * Subjects are written as `SUBJECT (DAY HH:mm)` and separated by semicolons, for example
@@ -177,7 +180,8 @@ Format: `import FILE_PATH [confirm]`
 Examples:
 * `import contacts-20261024-175424-176.csv` checks a file that `export` saved earlier.
 * `import contacts-20261024-175424-176.csv confirm` adds the new students from that file.
-* `import "C:\Users\Amy\Desktop\term 4 students.csv" confirm`
+* `import "term 4/students.csv" confirm` adds students from `students.csv` in the `term 4` folder inside the
+  TuteeDex folder.
 
 ### Listing and filtering students: `list`
 
