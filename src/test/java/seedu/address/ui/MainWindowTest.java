@@ -118,6 +118,18 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void list_subjects_showsGroupedEmptyStateForSubjectlessStudents() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("list -subjects");
+            root.applyCss();
+            root.layout();
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertEquals("No subjects found for the active contacts.", ((Label) root.lookup(
+                    ".subject-group-empty")).getText());
+        });
+    }
+
+    @Test
     public void list_emptyAddressBook_showsZeroCounts() throws Exception {
         runOnFxThread(() -> {
             logic.model.deletePerson(logic.getFilteredPersonList().get(0));
