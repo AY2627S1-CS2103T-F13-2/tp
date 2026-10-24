@@ -202,6 +202,19 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Sorting criteria
+
+`SortOrder` is an immutable, ordered list of field/direction pairs. Its first criterion has the highest
+priority. Fields cannot repeat, and an empty order represents the original stored order. The supported
+fields are student name, outstanding amount, start date, and upcoming lesson slot. A lesson slot is a
+combined day/time criterion; a later display increment will associate each lesson row with its subject.
+
+`SortOrderParser` validates criteria arguments such as `o/desc n/asc` or `slot/asc`, preserving their order
+and independent directions. It rejects malformed arguments, unknown fields, repeated fields, and directions
+other than lowercase `asc` or `desc`. The criteria model and parser do not mutate profiles or user preferences.
+This foundation is not yet registered as an executable `sort` command. Display integration will follow the
+grouping work; saving and restoring the sorting state belongs to the separate preference-persistence feature.
+
 ### Weekly subject lessons
 
 `Subject` contains its validated display name and one required `LessonSlot`. `LessonSlot` contains a
