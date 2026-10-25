@@ -21,6 +21,7 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.sort.SortOrder;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -40,6 +41,7 @@ public class MainWindow extends UiPart<Stage> {
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
     private CommandBox commandBox;
+    private boolean subjectGroupsShown;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -215,23 +217,39 @@ public class MainWindow extends UiPart<Stage> {
 
     /** Refreshes the central list using the presentation mode requested by the command. */
     private void refreshPersonList(ListPresentation presentation, boolean updateSummary) {
+        if (presentation == ListPresentation.UNCHANGED) {
+            return;
+        }
         if (presentation == ListPresentation.SUBJECT_GROUPS) {
-            SubjectGroupPanel subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
+            subjectGroupsShown = true;
+        } else if (presentation == ListPresentation.CONTACTS) {
+            subjectGroupsShown = false;
+        }
+        if (subjectGroupsShown) {
+            SubjectGroupPanel subjectGroupPanel = logic.getSortOrder().equals(SortOrder.NONE)
+                    ? new SubjectGroupPanel(logic.getFilteredPersonList())
+                    : new SubjectGroupPanel(logic.getFilteredPersonList(), logic.getLessonRows());
             personListPanelPlaceholder.getChildren().setAll(subjectGroupPanel.getRoot());
-        } else if (presentation == ListPresentation.CONTACTS && logic.getSortOrder().hasLessonSlot()) {
+        } else {
+            refreshUngroupedList();
+        }
+        if (updateSummary) {
+            showListSummary();
+        }
+    }
+
+    private void refreshUngroupedList() {
+        if (logic.getSortOrder().hasLessonSlot()) {
             LessonListPanel lessonListPanel = new LessonListPanel(logic.getFilteredPersonList(), logic.getLessonRows());
             personListPanelPlaceholder.getChildren().setAll(lessonListPanel.getRoot());
             personListPanel = null;
-        } else if (presentation == ListPresentation.CONTACTS) {
+        } else {
             if (personListPanel == null) {
                 personListPanel = new PersonListPanel(logic.getFilteredPersonList());
             }
             if (!personListPanelPlaceholder.getChildren().contains(personListPanel.getRoot())) {
                 personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
             }
-        }
-        if (updateSummary) {
-            showListSummary();
         }
     }
 }

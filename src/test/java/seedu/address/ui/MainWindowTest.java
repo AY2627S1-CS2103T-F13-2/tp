@@ -11,8 +11,11 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +31,8 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -39,7 +44,9 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Subject;
@@ -182,7 +189,9 @@ public class MainWindowTest extends FxTestSupport {
             assertTrue(feedbackText().startsWith("Name: Benson Meier"));
             enterCommand("help");
             assertSame(groups, root.lookup(".subject-group-panel"));
-            for (String command : new String[] {"unknown", "delete 99"}) {
+            enterCommand("sort");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            for (String command : new String[] {"unknown", "delete 99", "sort n/up"}) {
                 enterCommand(command);
                 assertSame(groups, root.lookup(".subject-group-panel"));
                 assertEquals(0.5, groups.getVvalue());
@@ -365,6 +374,143 @@ public class MainWindowTest extends FxTestSupport {
         });
     }
 
+    @Test
+    public void groupedSort_amountAndReset_preserveGroupsAndUseDefaultOrderOnReset() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("list -subjects");
+            enterCommand("sort o/desc n/asc");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Maths"));
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
+            assertEquals(List.of("001", "002"), groupedRows("Maths").stream()
+                    .map(row -> ((Label) row.lookup("#id")).getText()).toList());
+            ScrollPane groups = (ScrollPane) root.lookup(".subject-group-panel");
+            enterCommand("sort");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            enterCommand("sort reset");
+            assertEquals(SortOrder.NONE, logic.getSortOrder());
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), groupedNames("Maths"));
+            enterCommand("list -subjects");
+            assertSummary("2", "1");
+        });
+    }
+
+    @Test
+    public void groupedSort_slotsAndListTransitions_keepTheChosenOrder() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("sort slot/asc");
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            enterCommand("list -subjects");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Maths"));
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), groupedNames("Physics"));
+            assertSummary("2", "1");
+            enterCommand("sort slot/desc");
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), groupedNames("Maths"));
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
+            enterCommand("list");
+            assertNull(root.lookup(".subject-group-panel"));
+            assertEquals(4, root.lookupAll(".lesson-row").size());
+            assertSummary("2", "1");
+            enterCommand("list -subjects");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
+            enterCommand("sort reset");
+            assertNotNull(root.lookup(".subject-group-panel"));
+            enterCommand("list");
+            assertNotNull(window.getPersonListPanel());
+            assertNull(root.lookup(".lesson-list-panel"));
+        });
+    }
+
+    @Test
+    public void groupedSort_viewEditAndDelete_usePrintedStudentIndexes() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("list -subjects");
+            enterCommand("sort slot/asc");
+            assertEquals("002", ((Label) groupedRows("Maths").getFirst().lookup("#id")).getText());
+            ScrollPane groups = (ScrollPane) root.lookup(".subject-group-panel");
+            enterCommand("view 2");
+            assertTrue(feedbackText().startsWith("Name: Benson Meier"));
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            enterCommand("edit 2 notes/Review algebra");
+            assertNull(root.lookup(".subject-group-panel"));
+            assertEquals("Review algebra", logic.getFilteredPersonList().get(1).getNotes().value);
+            enterCommand("list -subjects");
+            enterCommand("delete 2");
+            assertEquals(2, root.lookupAll(".lesson-row").size());
+            enterCommand("list -subjects");
+            assertEquals(List.of("Alice Pauline"), groupedNames("Maths"));
+            assertEquals(List.of("Alice Pauline"), groupedNames("Physics"));
+            assertSummary("1", "1");
+        });
+    }
+
+    @Test
+    public void groupedSort_findAndArchivedFilters_switchPresentationWithoutLosingCriteria() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("archive s/Benson Meier");
+            enterCommand("list -subjects");
+            enterCommand("sort slot/asc n/desc");
+            SortOrder order = logic.getSortOrder();
+            assertEquals(List.of("Alice Pauline"), groupedNames("Maths"));
+            enterCommand("find Alice");
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            assertEquals(1, logic.getFilteredPersonList().size());
+            assertEquals(order, logic.getSortOrder());
+            enterCommand("list -archived");
+            assertSummary("1", "0");
+            assertTrue(logic.getFilteredPersonList().getFirst().isArchived());
+            enterCommand("sort o/desc");
+            assertTrue(logic.getFilteredPersonList().getFirst().isArchived());
+            assertNull(root.lookup(".subject-group-panel"));
+            enterCommand("list -subjects");
+            assertEquals(List.of("Alice Pauline"), groupedNames("Physics"));
+        });
+    }
+
+    @Test
+    public void groupedSort_emptyAndSubjectlessLists_keepTheGroupedEmptyState() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("list -subjects");
+            enterCommand("sort slot/asc");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            enterCommand("list -subjects");
+            assertSummary("2", "1");
+            enterCommand("clear");
+            enterCommand("list -subjects");
+            enterCommand("sort o/desc");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+        });
+    }
+
+    private void addTwoLessonsPerStudent() {
+        Person alice = logic.getFilteredPersonList().get(0);
+        Person benson = logic.getFilteredPersonList().get(1);
+        logic.model.setPerson(alice, new PersonBuilder(alice).withScheduledSubjects(
+                new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0))),
+                new Subject("Physics", new LessonSlot(DayOfWeek.THURSDAY, LocalTime.of(15, 0)))).build());
+        logic.model.setPerson(benson, new PersonBuilder(benson).withScheduledSubjects(
+                new Subject("Maths", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(9, 0))),
+                new Subject("Physics", new LessonSlot(DayOfWeek.TUESDAY, LocalTime.of(10, 0)))).build());
+    }
+
+    private List<HBox> groupedRows(String subject) {
+        ScrollPane panel = (ScrollPane) root.lookup(".subject-group-panel");
+        VBox groups = (VBox) panel.getContent();
+        VBox section = groups.getChildren().stream().map(VBox.class::cast)
+                .filter(group -> ((Label) group.getChildren().get(0)).getText().equals(subject))
+                .findFirst().orElseThrow();
+        VBox entries = (VBox) section.getChildren().get(1);
+        return entries.getChildren().stream().map(HBox.class::cast).toList();
+    }
+
+    private List<String> groupedNames(String subject) {
+        return groupedRows(subject).stream().map(row -> ((Label) row.lookup("#name")).getText()).toList();
+    }
+
     private void assertButtonIcon(String buttonId, String resourcePath) {
         Button button = (Button) root.lookup("#" + buttonId);
         assertNotNull(button);
@@ -395,7 +541,8 @@ public class MainWindowTest extends FxTestSupport {
 
     /** Executes real parsers and commands against an isolated model, with no storage writes. */
     private static class InMemoryLogic implements Logic {
-        private final ModelManager model = new ModelManager();
+        private final ModelManager model = new ModelManager(new AddressBook(), new UserPrefs(),
+                Clock.fixed(Instant.parse("2026-10-22T14:00:00Z"), ZoneOffset.UTC));
         private final AddressBookParser parser = new AddressBookParser();
 
         InMemoryLogic() {

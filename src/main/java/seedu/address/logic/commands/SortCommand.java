@@ -15,7 +15,7 @@ public class SortCommand extends Command {
     public static final String COMMAND_WORD = "sort";
     public static final String MESSAGE_USAGE = "Usage: sort n/asc o/desc d/asc slot/asc (choose any distinct fields), "
             + "sort reset, or sort to show the current order. Each direction must be asc or desc.";
-    public static final String MESSAGE_DEFAULT = "Sorting: original stored order.";
+    public static final String MESSAGE_DEFAULT = "Sorting: default display order.";
 
     private final Optional<SortOrder> requestedOrder;
 
@@ -38,7 +38,8 @@ public class SortCommand extends Command {
                 .map(criterion -> label(criterion.field()) + " "
                         + criterion.direction().name().toLowerCase(Locale.ROOT))
                 .collect(Collectors.joining(", ")) + ".";
-        return new CommandResult(feedback);
+        return new CommandResult(feedback, false, false, requestedOrder.isPresent()
+                ? CommandResult.ListPresentation.REFRESH : CommandResult.ListPresentation.UNCHANGED);
     }
 
     private String label(Field field) {

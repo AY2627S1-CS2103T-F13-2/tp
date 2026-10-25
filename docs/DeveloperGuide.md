@@ -232,7 +232,22 @@ The default clock is the computer's local clock; tests inject a fixed clock thro
 Sort, filter changes, and profile mutations capture a fresh reference time. Query/View do not recalculate
 time-based ordering. No timer reorders rows while a tutor is entering an indexed command. A repeated Sort
 or List refreshes upcoming occurrences, and indexed command targets are resolved before mutation refreshes.
-The grouped view is owned by the separate grouping feature and is not integrated in this increment.
+
+#### Sorting within subject groups
+
+`SubjectGrouping` keeps alphabetical subject headings and the printed index of each unique student.
+When a sort is active, it maps the already ordered `ModelManager#getLessonRows()` to positions and uses
+those positions to order entries within each group. Comparisons therefore use the same reference time,
+priority rules and stable ties as the ungrouped display. Each grouped card shows its own subject and slot.
+Without active criteria, grouping retains its original alphabetical student order. Subjectless students
+remain part of the unique-student list and counts, but do not produce subject groups.
+
+`CommandResult.ListPresentation.REFRESH` requests rebuilding the current presentation without selecting
+contacts or subject groups. Applying/resetting Sort uses this request; a bare Sort query uses `UNCHANGED`.
+`MainWindow` remembers the current grouped presentation and rebuilds the appropriate panel after an apply
+or reset. View, Help, Export and a bare Sort query preserve the existing panel and its scroll position.
+Find, other List options and successful profile mutations select the ungrouped presentation, as before.
+The active sorting criteria remain available through Logic/Model for the separate persistence feature.
 
 ### Weekly subject lessons
 

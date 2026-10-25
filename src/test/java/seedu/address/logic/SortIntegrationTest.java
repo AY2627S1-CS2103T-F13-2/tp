@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.logic.commands.CommandResult.ListPresentation;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
@@ -76,6 +77,13 @@ public class SortIntegrationTest {
 
         assertEquals(SortCommand.MESSAGE_DEFAULT, logic.execute("sort reset").getFeedbackToUser());
         assertEquals(stored, model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_sortRequests_refreshCurrentPresentationWhileQueryLeavesItUntouched() throws Exception {
+        assertEquals(ListPresentation.REFRESH, logic.execute("sort n/asc").getListPresentation());
+        assertEquals(ListPresentation.UNCHANGED, logic.execute("sort").getListPresentation());
+        assertEquals(ListPresentation.REFRESH, logic.execute("sort reset").getListPresentation());
     }
 
     @Test

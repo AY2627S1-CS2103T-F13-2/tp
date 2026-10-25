@@ -194,18 +194,20 @@ Examples:
 `list -subjects` switches the display to active students grouped under their subjects.
 Each subject group shows the students taking that subject and each student's own weekly
 lesson day and start time. Students taking the same subject at different times remain in
-one subject group. Subject groups and students within each group are sorted alphabetically.
+one subject group. Subject headings are sorted alphabetically. Students within each group
+are alphabetical by default; an active `sort` applies within each subject group instead.
 Archived students are excluded. The option is standalone and cannot be combined with
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
 commands also leave the displayed list unchanged. Find and other List options switch
-back to the normal contact list for their results.
+back to the normal contact list for their results. Applying or resetting `sort` keeps the
+current grouped or ungrouped presentation; bare `sort` also preserves scroll position.
 
 #### Listing archived students
 
-`list -archived` displays only archived students in their stored order. It
+`list -archived` displays only archived students, using the active sort or stored order by default. It
 replaces any previous search or filter and does not change saved profiles.
 Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
 exist, the list is empty and feedback is `No archived contacts.`.
@@ -228,16 +230,20 @@ Format: `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`
 Supported fields are `n/` (name), `o/` (outstanding amount), `d/` (start date), and `slot/` (upcoming lesson).
 Each field may appear once and must use lowercase `asc` or `desc`. The first field has highest priority;
 later fields resolve ties. A new Sort replaces the previous criteria. Bare `sort` reports the current order.
-`sort reset` restores original stored order within the current filter.
+`sort reset` clears the criteria without changing the filter or presentation. The ungrouped display
+returns to original stored order; the subject-grouped display returns to alphabetical students within each group.
 
 * Names are compared alphabetically without regard to case; amounts are compared numerically.
 * Start dates are compared by calendar month and day, without a year. Existing invalid dates stay last.
 * `slot/asc` orders each lesson's next weekly start from nearest to furthest relative to the computer's local
   date and time. `slot/desc` reverses that order. A start exactly equal to the reference time is due now;
   once its start has passed, that lesson's next occurrence is next week. Only starts are recorded, not durations.
-* With slot sorting, a student appears once per subject lesson. Each row shows the relevant subject and slot;
-  no `for/SUBJECT` argument is needed. Students with no subjects appear once with `No lesson slot` and stay last
-  at the slot-comparison level in either direction. Other criteria can have higher priority than the slot.
+* In the ungrouped display, slot sorting shows a student once per subject lesson. Each row shows the relevant
+  subject and slot; no `for/SUBJECT` argument is needed. Students with no subjects appear once with `No lesson slot`
+  and stay last at the slot-comparison level in either direction. Other criteria can have higher priority than the slot.
+* After `list -subjects`, Sort orders lessons within each subject group while keeping headings alphabetical.
+  Each lesson uses its own subject's schedule, rather than the student's earliest lesson in any subject.
+  Students without subjects have no grouped rows, as with ordinary grouping, but remain in the unique student counts.
 * **Use the printed student index, rather than counting lesson rows.** The same student has the same index on
   all their rows. View/Edit/Delete act on the whole profile; deleting either row deletes that student and all
   their lessons. Total and paid counts count each student once.
@@ -248,14 +254,19 @@ later fields resolve ties. A new Sort replaces the previous criteria. Bare `sort
 * Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
   time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
 * Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
-  the current order or filter. Sorting is currently session-only and resets on restart; preference persistence
-  and subject-grouped sorting are separate integrations.
+  the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
+  Sorting is currently session-only and resets on restart; preference persistence is a separate feature.
 
 Examples:
 
 * `sort o/desc n/asc` puts the largest balances first, then sorts equal balances by name.
 * `sort slot/asc n/asc` shows upcoming lessons first, breaking equal-slot ties by student name.
 * `find Amy` followed by `sort d/asc` sorts only the current search results.
+* `list -subjects` followed by `sort slot/asc n/asc` orders upcoming lessons within each subject group.
+
+To check the grouped display, try the last example, use `view INDEX` with a printed student index, then run
+`sort reset` and `list`. View keeps the grouped panel; reset restores alphabetical students within groups;
+List returns to the ungrouped display. Applying slot sorting again shows one ungrouped row per lesson.
 
 ### Editing a student profile: `edit`
 
