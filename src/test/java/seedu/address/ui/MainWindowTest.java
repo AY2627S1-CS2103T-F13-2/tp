@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -136,6 +138,119 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void groupedList_plainListFindAndFilters_restoreContactPresentation() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            enterCommand("find Nobody");
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+            assertSummary("2", "1");
+            enterCommand("list");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertSummary("2", "1");
+
+            enterCommand("list -subjects");
+            enterCommand("find Alice");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertEquals(1, logic.getFilteredPersonList().size());
+            enterCommand("list -subjects");
+            enterCommand("list s/Maths");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertSummary("1", "1");
+            enterCommand("list -subjects");
+            enterCommand("list t/Needs revision");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertSummary("1", "0");
+        });
+    }
+
+    @Test
+    public void groupedList_readOnlyAndFailedCommands_preservePanelAndScroll() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            for (int index = 0; index < 20; index++) {
+                logic.model.addPerson(new PersonBuilder(ALICE).withName("Extra Student " + (char) ('A' + index))
+                        .withSubjects("Maths").build());
+            }
+            enterCommand("list -subjects");
+            ScrollPane groups = (ScrollPane) root.lookup(".subject-group-panel");
+            groups.setVvalue(0.5);
+            enterCommand("view 2");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            assertEquals(0.5, groups.getVvalue());
+            assertTrue(feedbackText().startsWith("Name: Benson Meier"));
+            enterCommand("help");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            for (String command : new String[] {"unknown", "delete 99"}) {
+                enterCommand(command);
+                assertSame(groups, root.lookup(".subject-group-panel"));
+                assertEquals(0.5, groups.getVvalue());
+                assertEquals(command, input.getText());
+                assertEquals(22, logic.getFilteredPersonList().size());
+            }
+        });
+    }
+
+    @Test
+    public void contactList_viewAndFailedCommands_preserveSelection() throws Exception {
+        runOnFxThread(() -> {
+            ListView<?> list = (ListView<?>) root.lookup("#personListView");
+            list.getSelectionModel().select(1);
+            enterCommand("view 2");
+            assertSame(list, root.lookup("#personListView"));
+            assertEquals(1, list.getSelectionModel().getSelectedIndex());
+            enterCommand("delete 99");
+            assertSame(list, root.lookup("#personListView"));
+            assertEquals(1, list.getSelectionModel().getSelectedIndex());
+        });
+    }
+
+    @Test
+    public void groupedList_emptyAndAllArchived_showsEmptyPanelAndZeroCounts() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            for (Person person : List.copyOf(logic.getFilteredPersonList())) {
+                logic.model.setPerson(person, person.withArchived(true));
+            }
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertTrue(root.lookup(".subject-group-heading") == null);
+            assertSummary("0", "0");
+            enterCommand("list -archived");
+            assertSummary("2", "1");
+            for (Person person : List.copyOf(logic.getFilteredPersonList())) {
+                logic.model.deletePerson(person);
+            }
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertSummary("0", "0");
+        });
+    }
+
+    @Test
+    public void groupedList_mixedSubjectlessAndArchivedContacts_countsActiveContactsOnly() throws Exception {
+        runOnFxThread(() -> {
+            Person benson = logic.getFilteredPersonList().get(1);
+            logic.model.setPerson(benson, new PersonBuilder(benson).withSubjects("Physics").build());
+            logic.model.addPerson(new PersonBuilder(ALICE).withName("Archived Student")
+                    .withSubjects("English").build().withArchived(true));
+            enterCommand("list -subjects");
+            assertSummary("2", "1");
+            assertEquals(1, root.lookupAll(".subject-group-heading").size());
+            assertEquals("Physics", ((Label) root.lookup(".subject-group-heading")).getText());
+            assertEquals("002", ((Label) root.lookup(".subject-group-panel").lookup("#id")).getText());
+        });
+    }
+
+    private void addScheduledSubjects() {
+        Person alice = logic.getFilteredPersonList().get(0);
+        Person benson = logic.getFilteredPersonList().get(1);
+        logic.model.setPerson(alice, new PersonBuilder(alice).withSubjects("Maths").build());
+        logic.model.setPerson(benson, new PersonBuilder(benson).withSubjects("Physics")
+                .withTags("Needs revision").build());
+    }
+
+    @Test
     public void list_emptyAddressBook_showsZeroCounts() throws Exception {
         runOnFxThread(() -> {
             logic.model.deletePerson(logic.getFilteredPersonList().get(0));
@@ -208,6 +323,8 @@ public class MainWindowTest extends FxTestSupport {
     private void enterCommand(String text) {
         input.setText(text);
         input.fireEvent(new ActionEvent());
+        root.applyCss();
+        root.layout();
     }
 
     private void assertButtonIcon(String buttonId, String resourcePath) {

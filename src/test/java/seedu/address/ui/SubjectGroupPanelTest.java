@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import javafx.collections.FXCollections;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Person;
@@ -41,6 +42,10 @@ public class SubjectGroupPanelTest extends FxTestSupport {
 
             assertEquals("Maths", heading.getText());
             assertEquals(2, entries.getChildren().size());
+            assertEquals("Mon 09:00", ((Label) ((HBox) entries.getChildren().get(0))
+                    .getChildren().get(1)).getText());
+            assertEquals("Tue 15:30", ((Label) ((HBox) entries.getChildren().get(1))
+                    .getChildren().get(1)).getText());
             assertTrue(entries.getChildren().stream().allMatch(node -> node.getStyleClass()
                     .contains("subject-student-row")));
         });
