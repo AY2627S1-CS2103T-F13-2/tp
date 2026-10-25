@@ -251,7 +251,7 @@ public class ListCommandTest {
         CommandResult result = ListCommand.forSubjectGroups().execute(model);
 
         assertEquals(List.of(maths), model.getFilteredPersonList());
-        assertTrue(result.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, result.getListPresentation());
     }
 
     @Test
@@ -265,7 +265,7 @@ public class ListCommandTest {
 
         assertEquals(ListCommand.MESSAGE_NO_SUBJECT_GROUPS, result.getFeedbackToUser());
         assertEquals(List.of(student), model.getFilteredPersonList());
-        assertTrue(result.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, result.getListPresentation());
     }
 
     @Test
@@ -273,12 +273,12 @@ public class ListCommandTest {
         model = new ModelManager();
         CommandResult emptyResult = ListCommand.forSubjectGroups().execute(model);
         assertEquals(ListCommand.MESSAGE_EMPTY, emptyResult.getFeedbackToUser());
-        assertTrue(emptyResult.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, emptyResult.getListPresentation());
 
         model.addPerson(new PersonBuilder(ALICE).withSubjects("Maths").build().withArchived(true));
         CommandResult archivedResult = ListCommand.forSubjectGroups().execute(model);
         assertEquals(ListCommand.MESSAGE_EMPTY, archivedResult.getFeedbackToUser());
-        assertTrue(archivedResult.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, archivedResult.getListPresentation());
         assertEquals(List.of(), model.getFilteredPersonList());
     }
 
@@ -294,7 +294,7 @@ public class ListCommandTest {
         model.updateFilteredPersonList(person -> false);
         CommandResult result = ListCommand.forSubjectGroups().execute(model);
         assertEquals("Listed 2 contacts.", result.getFeedbackToUser());
-        assertTrue(result.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, result.getListPresentation());
         assertEquals(List.of(subjectless, scheduled), model.getFilteredPersonList());
     }
 

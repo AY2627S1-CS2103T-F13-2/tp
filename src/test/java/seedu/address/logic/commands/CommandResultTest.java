@@ -72,8 +72,8 @@ public class CommandResultTest {
         assertNotEquals(contacts, grouped);
         assertNotEquals(contacts, unchanged);
         assertNotEquals(grouped, unchanged);
-        assertTrue(grouped.isSubjectList());
-        assertFalse(unchanged.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, grouped.getListPresentation());
+        assertEquals(CommandResult.ListPresentation.UNCHANGED, unchanged.getListPresentation());
         CommandResult sameGrouped = new CommandResult("feedback", false, false,
                 CommandResult.ListPresentation.SUBJECT_GROUPS);
         assertEquals(grouped, sameGrouped);

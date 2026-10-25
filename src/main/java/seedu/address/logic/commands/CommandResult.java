@@ -61,10 +61,6 @@ public class CommandResult {
         return exit;
     }
 
-    public boolean isSubjectList() {
-        return listPresentation == ListPresentation.SUBJECT_GROUPS;
-    }
-
     public ListPresentation getListPresentation() {
         return listPresentation;
     }
