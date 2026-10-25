@@ -16,6 +16,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.ListPresentation;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -116,7 +117,7 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        refreshPersonList();
+        refreshPersonList(ListPresentation.CONTACTS, false);
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -191,12 +192,10 @@ public class MainWindow extends UiPart<Stage> {
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
         try {
             CommandResult commandResult = logic.execute(commandText);
-            refreshPersonList();
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
-            if (commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD)) {
-                showListSummary();
-            }
+            boolean isListCommand = commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD);
+            refreshPersonList(commandResult.getListPresentation(), isListCommand);
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -214,15 +213,25 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
-    /** Keeps lesson snapshots current after commands without replacing the ordinary observable student list. */
-    private void refreshPersonList() {
-        if (logic.getSortOrder().hasLessonSlot()) {
+    /** Refreshes the central list using the presentation mode requested by the command. */
+    private void refreshPersonList(ListPresentation presentation, boolean updateSummary) {
+        if (presentation == ListPresentation.SUBJECT_GROUPS) {
+            SubjectGroupPanel subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
+            personListPanelPlaceholder.getChildren().setAll(subjectGroupPanel.getRoot());
+        } else if (presentation == ListPresentation.CONTACTS && logic.getSortOrder().hasLessonSlot()) {
             LessonListPanel lessonListPanel = new LessonListPanel(logic.getFilteredPersonList(), logic.getLessonRows());
             personListPanelPlaceholder.getChildren().setAll(lessonListPanel.getRoot());
             personListPanel = null;
-        } else if (personListPanel == null) {
-            personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-            personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
+        } else if (presentation == ListPresentation.CONTACTS) {
+            if (personListPanel == null) {
+                personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+            }
+            if (!personListPanelPlaceholder.getChildren().contains(personListPanel.getRoot())) {
+                personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
+            }
+        }
+        if (updateSummary) {
+            showListSummary();
         }
     }
 }

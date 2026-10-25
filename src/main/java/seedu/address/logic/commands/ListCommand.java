@@ -18,11 +18,13 @@ public class ListCommand extends Command {
     public static final String COMMAND_WORD = "list";
     public static final String SUMMARY_FLAG = "-summary";
     public static final String ARCHIVED_FLAG = "-archived";
+    public static final String SUBJECTS_FLAG = "-subjects";
     public static final String MESSAGE_NO_ARCHIVED_CONTACTS = "No archived contacts.";
     public static final String MESSAGE_EMPTY = "No contacts stored. Use the add command to add one.";
     public static final String MESSAGE_SINGULAR = "Listed 1 contact.";
     public static final String MESSAGE_PLURAL_FORMAT = "Listed %1$d contacts.";
     public static final String MESSAGE_NO_SUBJECT_MATCHES = "No contacts match the specified subjects.";
+    public static final String MESSAGE_NO_SUBJECT_GROUPS = "No subjects found for the active contacts.";
     public static final String MESSAGE_NO_MATCHES = "No contacts match the specified tags.";
     public static final String MESSAGE_SUMMARY_FORMAT = "%-24s%24s";
 
@@ -30,13 +32,14 @@ public class ListCommand extends Command {
     private final Set<String> subjectNames;
     private final boolean isSummary;
     private final boolean isArchivedOnly;
+    private final boolean isSubjectList;
 
     public ListCommand() {
-        this(PREDICATE_SHOW_ALL_PERSONS, Set.of(), false);
+        this(PREDICATE_SHOW_ALL_PERSONS, Set.of(), false, false, false);
     }
 
     public ListCommand(boolean isSummary) {
-        this(PREDICATE_SHOW_ALL_PERSONS, Set.of(), isSummary);
+        this(PREDICATE_SHOW_ALL_PERSONS, Set.of(), isSummary, false, false);
     }
 
     /** Lists contacts with any of the specified subjects. */
@@ -64,17 +67,28 @@ public class ListCommand extends Command {
 
     private ListCommand(Predicate<Person> predicate, Set<String> subjectNames, boolean isSummary,
             boolean isArchivedOnly) {
+        this(predicate, subjectNames, isSummary, isArchivedOnly, false);
+    }
+
+    private ListCommand(Predicate<Person> predicate, Set<String> subjectNames, boolean isSummary,
+            boolean isArchivedOnly, boolean isSubjectList) {
         this.predicate = requireNonNull(predicate);
         this.subjectNames = requireNonNull(subjectNames).stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toUnmodifiableSet());
         this.isSummary = isSummary;
         this.isArchivedOnly = isArchivedOnly;
+        this.isSubjectList = isSubjectList;
     }
 
     /** Lists only archived students, without active filters or summary options. */
     public static ListCommand forArchivedStudents() {
         return new ListCommand(PREDICATE_SHOW_ALL_PERSONS, Set.of(), false, true);
+    }
+
+    /** Lists active students grouped by subject. */
+    public static ListCommand forSubjectGroups() {
+        return new ListCommand(PREDICATE_SHOW_ACTIVE_PERSONS, Set.of(), false, false, true);
     }
 
     @Override
@@ -87,21 +101,34 @@ public class ListCommand extends Command {
         model.updateFilteredPersonList(visibility.and(filter));
         int count = model.getFilteredPersonList().size();
         if (isArchivedOnly && count == 0) {
-            return new CommandResult(MESSAGE_NO_ARCHIVED_CONTACTS);
+            return result(MESSAGE_NO_ARCHIVED_CONTACTS);
         }
         if (isSummary) {
             int paidStudents = (int) model.getFilteredPersonList().stream()
                     .filter(person -> person.getOutstandingAmount().equals(OutstandingAmount.ZERO)).count();
-            return new CommandResult(String.format(MESSAGE_SUMMARY_FORMAT,
+            return result(String.format(MESSAGE_SUMMARY_FORMAT,
                     "Total: " + count, "Paid: " + paidStudents));
         }
+        if (isSubjectList && count == 0) {
+            return result(MESSAGE_EMPTY);
+        }
+        boolean hasSubjects = model.getFilteredPersonList().stream()
+                .anyMatch(person -> !person.getSubjects().isEmpty());
+        if (isSubjectList && !hasSubjects) {
+            return result(MESSAGE_NO_SUBJECT_GROUPS);
+        }
         if (count == 0 && !subjectNames.isEmpty()) {
-            return new CommandResult(MESSAGE_NO_SUBJECT_MATCHES);
+            return result(MESSAGE_NO_SUBJECT_MATCHES);
         }
         if (count == 0 && predicate != PREDICATE_SHOW_ALL_PERSONS) {
-            return new CommandResult(MESSAGE_NO_MATCHES);
+            return result(MESSAGE_NO_MATCHES);
         }
-        return new CommandResult(getMessageForContactCount(count));
+        return result(getMessageForContactCount(count));
+    }
+
+    private CommandResult result(String feedback) {
+        return new CommandResult(feedback, false, false, isSubjectList
+                ? CommandResult.ListPresentation.SUBJECT_GROUPS : CommandResult.ListPresentation.CONTACTS);
     }
 
     public static String getMessageForContactCount(int count) {
@@ -120,6 +147,7 @@ public class ListCommand extends Command {
                 && predicate.equals(otherCommand.predicate)
                 && subjectNames.equals(otherCommand.subjectNames)
                 && isSummary == otherCommand.isSummary
-                && isArchivedOnly == otherCommand.isArchivedOnly;
+                && isArchivedOnly == otherCommand.isArchivedOnly
+                && isSubjectList == otherCommand.isSubjectList;
     }
 }

@@ -7,6 +7,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
@@ -236,6 +237,65 @@ public class ListCommandTest {
         assertEquals(ListCommand.MESSAGE_SINGULAR,
                 new ListCommand(Set.of("maths")).execute(model).getFeedbackToUser());
         assertEquals(List.of(maths), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_subjectGroups_showsActiveStudentsAndMarksResult() {
+        Person maths = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        Person archived = new PersonBuilder(BENSON).withSubjects("Maths").build().withArchived(true);
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(maths);
+        addressBook.addPerson(archived);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        CommandResult result = ListCommand.forSubjectGroups().execute(model);
+
+        assertEquals(List.of(maths), model.getFilteredPersonList());
+        assertTrue(result.isSubjectList());
+    }
+
+    @Test
+    public void execute_subjectGroups_noSubjects() {
+        Person student = new PersonBuilder(ALICE).build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(student);
+        model = new ModelManager(addressBook, new UserPrefs());
+
+        CommandResult result = ListCommand.forSubjectGroups().execute(model);
+
+        assertEquals(ListCommand.MESSAGE_NO_SUBJECT_GROUPS, result.getFeedbackToUser());
+        assertEquals(List.of(student), model.getFilteredPersonList());
+        assertTrue(result.isSubjectList());
+    }
+
+    @Test
+    public void execute_subjectGroupsEmptyAndOnlyArchived_showsNoActiveContacts() {
+        model = new ModelManager();
+        CommandResult emptyResult = ListCommand.forSubjectGroups().execute(model);
+        assertEquals(ListCommand.MESSAGE_EMPTY, emptyResult.getFeedbackToUser());
+        assertTrue(emptyResult.isSubjectList());
+
+        model.addPerson(new PersonBuilder(ALICE).withSubjects("Maths").build().withArchived(true));
+        CommandResult archivedResult = ListCommand.forSubjectGroups().execute(model);
+        assertEquals(ListCommand.MESSAGE_EMPTY, archivedResult.getFeedbackToUser());
+        assertTrue(archivedResult.isSubjectList());
+        assertEquals(List.of(), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_subjectGroupsMixedSubjectlessAndScheduled_countsAllActiveContacts() {
+        model = new ModelManager();
+        Person subjectless = new PersonBuilder(ALICE).build();
+        Person scheduled = new PersonBuilder(BENSON).withSubjects("Maths").build();
+        model.addPerson(subjectless);
+        model.addPerson(scheduled);
+        model.addPerson(new PersonBuilder(ALICE).withName("Archived Student")
+                .withSubjects("English").build().withArchived(true));
+        model.updateFilteredPersonList(person -> false);
+        CommandResult result = ListCommand.forSubjectGroups().execute(model);
+        assertEquals("Listed 2 contacts.", result.getFeedbackToUser());
+        assertTrue(result.isSubjectList());
+        assertEquals(List.of(subjectless, scheduled), model.getFilteredPersonList());
     }
 
     /**

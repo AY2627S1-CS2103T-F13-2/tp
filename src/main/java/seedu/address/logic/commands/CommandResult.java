@@ -11,6 +11,11 @@ import seedu.address.commons.util.ToStringBuilder;
  */
 public class CommandResult {
 
+    /** The list presentation requested by a successful command. */
+    public enum ListPresentation {
+        CONTACTS, SUBJECT_GROUPS, UNCHANGED
+    }
+
     private final String feedbackToUser;
 
     /** Help information should be shown to the user. */
@@ -19,13 +24,21 @@ public class CommandResult {
     /** The application should exit. */
     private final boolean exit;
 
+    private final ListPresentation listPresentation;
+
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
+        this(feedbackToUser, showHelp, exit, ListPresentation.CONTACTS);
+    }
+
+    /** Constructs a result with explicit UI presentation state. */
+    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, ListPresentation listPresentation) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
+        this.listPresentation = requireNonNull(listPresentation);
     }
 
     /**
@@ -48,6 +61,14 @@ public class CommandResult {
         return exit;
     }
 
+    public boolean isSubjectList() {
+        return listPresentation == ListPresentation.SUBJECT_GROUPS;
+    }
+
+    public ListPresentation getListPresentation() {
+        return listPresentation;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -61,12 +82,13 @@ public class CommandResult {
 
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
-                && exit == otherCommandResult.exit;
+                && exit == otherCommandResult.exit
+                && listPresentation == otherCommandResult.listPresentation;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit);
+        return Objects.hash(feedbackToUser, showHelp, exit, listPresentation);
     }
 
     @Override
@@ -75,6 +97,7 @@ public class CommandResult {
                 .add("feedbackToUser", feedbackToUser)
                 .add("showHelp", showHelp)
                 .add("exit", exit)
+                .add("listPresentation", listPresentation)
                 .toString();
     }
 

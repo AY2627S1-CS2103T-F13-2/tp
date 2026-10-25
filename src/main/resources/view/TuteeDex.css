@@ -38,6 +38,46 @@
 .result-display .content { -fx-background-color: #d9d9d9; -fx-padding: 3 24; -fx-background-radius: 0; }
 .result-display .scroll-pane { -fx-background-color: transparent; }
 .student-list-container { -fx-padding: 3 24 0 24; }
+.subject-group-panel {
+    -fx-background-color: #08b57b;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+.subject-group-panel > .viewport {
+    -fx-background-color: #08b57b;
+}
+.subject-group-panel .content {
+    -fx-background-color: #08b57b;
+    -fx-padding: 8 10 12 10;
+}
+.subject-group {
+    -fx-background-color: #08b57b;
+    -fx-padding: 0 0 8 0;
+}
+.subject-group-heading {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+    -fx-font-family: "Pokemon Pixel Font";
+    -fx-font-size: 29.24px;
+    -fx-padding: 5 16 5 16;
+    -fx-max-width: infinity;
+}
+.subject-student-row {
+    -fx-background-color: black;
+    -fx-padding: 0 16 0 0;
+}
+.subject-lesson-slot {
+    -fx-text-fill: white;
+    -fx-font-family: "Pokemon Pixel Font";
+    -fx-font-size: 24.2px;
+    -fx-padding: 0 4 0 0;
+}
+.subject-group-empty {
+    -fx-text-fill: white;
+    -fx-font-family: "Pokemon Pixel Font";
+    -fx-font-size: 24.2px;
+    -fx-padding: 16;
+}
 .list-view { -fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0; }
 .list-cell { -fx-background-color: transparent; -fx-padding: 3 10 3 0; }
 .list-cell:empty { -fx-padding: 0; }
