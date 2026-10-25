@@ -41,6 +41,26 @@ public final class SortComparators {
         return comparison;
     }
 
+    /** Orders unique students by one representative lesson, including the requested slot direction. */
+    public static Comparator<Person> students(SortOrder order, LocalDateTime reference) {
+        Comparator<LessonRow> comparison = lessons(order, reference);
+        return Comparator.comparing(person -> representativeLesson(person, comparison), comparison);
+    }
+
+    /**
+     * Selects the nearest lesson for ascending slots or the furthest for descending slots.
+     * Equal lesson slots keep subject order; students without subjects have a null lesson.
+     */
+    public static LessonRow representativeLesson(Person person, SortOrder order, LocalDateTime reference) {
+        return representativeLesson(person, lessons(order, reference));
+    }
+
+    private static LessonRow representativeLesson(Person person, Comparator<LessonRow> comparison) {
+        requireNonNull(person);
+        return person.getSubjects().stream().map(subject -> new LessonRow(person, subject))
+                .min(comparison).orElseGet(() -> new LessonRow(person, null));
+    }
+
     /** Orders lesson rows using one captured local reference time for the entire comparison. */
     public static Comparator<LessonRow> lessons(SortOrder order, LocalDateTime reference) {
         requireNonNull(order);

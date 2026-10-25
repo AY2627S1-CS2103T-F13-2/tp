@@ -121,6 +121,53 @@ public class SortComparatorsTest {
         assertThrows(IllegalArgumentException.class, () -> new LessonRow(amy, maths));
     }
 
+    @Test
+    public void representativeLesson_ascendingAndDescending_chooseOppositeUpcomingSlots() {
+        Subject monday = new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)));
+        Subject friday = new Subject("Physics", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(10, 0)));
+        Person student = new PersonBuilder().withScheduledSubjects(monday, friday).build();
+        assertEquals(friday, SortComparators.representativeLesson(student,
+                order(new Criterion(Field.LESSON_SLOT, Direction.ASCENDING)), THURSDAY).subject());
+        assertEquals(monday, SortComparators.representativeLesson(student,
+                order(new Criterion(Field.LESSON_SLOT, Direction.DESCENDING)), THURSDAY).subject());
+        assertEquals(List.of(monday, friday), new ArrayList<>(student.getSubjects()));
+    }
+
+    @Test
+    public void representativeLesson_equalSlots_keepTheFirstSubjectAndAllowNoSubjects() {
+        LessonSlot friday = new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(9, 0));
+        Subject physics = new Subject("Physics", friday);
+        Subject maths = new Subject("Maths", friday);
+        Person student = new PersonBuilder().withScheduledSubjects(physics, maths).build();
+        for (Direction direction : Direction.values()) {
+            SortOrder order = order(new Criterion(Field.LESSON_SLOT, direction));
+            assertEquals(physics, SortComparators.representativeLesson(student, order, THURSDAY).subject());
+            Person subjectless = new PersonBuilder().build();
+            assertEquals(new LessonRow(subjectless, null),
+                    SortComparators.representativeLesson(subjectless, order, THURSDAY));
+        }
+    }
+
+    @Test
+    public void students_representativeSlots_respectPriorityTiesAndMissingValues() {
+        Subject monday = new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)));
+        Subject friday = new Subject("Physics", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(10, 0)));
+        Subject thursday = new Subject("English", new LessonSlot(DayOfWeek.THURSDAY, LocalTime.of(15, 0)));
+        Person amy = new PersonBuilder().withName("Amy").withOutstandingAmount("10")
+                .withScheduledSubjects(monday, thursday).build();
+        Person bob = new PersonBuilder().withName("Bob").withOutstandingAmount("20")
+                .withScheduledSubjects(friday).build();
+        Person zed = new PersonBuilder().withName("Zed").withOutstandingAmount("0").build();
+        List<Person> original = List.of(zed, bob, amy);
+        assertEquals(List.of(amy, bob, zed), sorted(original, SortComparators.students(
+                order(new Criterion(Field.LESSON_SLOT, Direction.ASCENDING)), THURSDAY)));
+        assertEquals(List.of(amy, bob, zed), sorted(original, SortComparators.students(
+                order(new Criterion(Field.LESSON_SLOT, Direction.DESCENDING)), THURSDAY)));
+        assertEquals(List.of(bob, amy, zed), sorted(original, SortComparators.students(
+                order(new Criterion(Field.OUTSTANDING_AMOUNT, Direction.DESCENDING),
+                        new Criterion(Field.LESSON_SLOT, Direction.ASCENDING)), THURSDAY)));
+    }
+
     private static Person person(String name, String amount, String date) {
         return new PersonBuilder().withName(name).withOutstandingAmount(amount).withStartDate(date).build();
     }
