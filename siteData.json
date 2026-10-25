@@ -53,6 +53,7 @@
         "implementation": "Implementation",
         "weekly-subject-lessons": "Weekly subject lessons",
         "shared-tag-data": "Shared tag data",
+        "csv-import": "CSV import",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "proposed-data-archiving": "[Proposed] Data archiving",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
@@ -71,6 +72,7 @@
         "editing-student-tags": "Editing student tags",
         "editing-student-subjects": "Editing student subjects",
         "editing-student-notes": "Editing student notes",
+        "importing-students": "Importing students",
         "saving-data": "Saving data"
       },
       "headingKeywords": {}
@@ -122,6 +124,7 @@
         "adding-a-person-add": "Adding a person: add",
         "viewing-a-student-profile-view": "Viewing a student profile: view",
         "exporting-contacts-export": "Exporting contacts: export",
+        "importing-students-import": "Importing students: import",
         "listing-and-filtering-students-list": "Listing and filtering students: list",
         "editing-a-student-profile-edit": "Editing a student profile: edit",
         "locating-persons-by-name-find": "Locating persons by name: find",
