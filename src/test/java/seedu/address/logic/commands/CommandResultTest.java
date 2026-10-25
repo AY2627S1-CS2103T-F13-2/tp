@@ -79,4 +79,16 @@ public class CommandResultTest {
         assertEquals(grouped, sameGrouped);
         assertEquals(grouped.hashCode(), sameGrouped.hashCode());
     }
+
+    @Test
+    public void constructor_presentationOnly_preservesModeWithoutHelpOrExit() {
+        for (CommandResult.ListPresentation presentation : CommandResult.ListPresentation.values()) {
+            CommandResult result = new CommandResult("feedback", presentation);
+            assertEquals("feedback", result.getFeedbackToUser());
+            assertEquals(presentation, result.getListPresentation());
+            assertFalse(result.isShowHelp());
+            assertFalse(result.isExit());
+            assertEquals(new CommandResult("feedback", false, false, presentation), result);
+        }
+    }
 }

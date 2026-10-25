@@ -48,7 +48,7 @@ public class ExportCommand extends Command {
         }
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 model.getAddressBook().getPersonList().size(), outputPath.toAbsolutePath()),
-                false, false, CommandResult.ListPresentation.UNCHANGED);
+                CommandResult.ListPresentation.UNCHANGED);
     }
 
     @Override
