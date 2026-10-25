@@ -1,19 +1,76 @@
-#copyButton, #helpMessage {
+/* Help frame 83:773, at its 726 x 593 design size. */
+.help-window {
+    -fx-background-color: #60a0b0;
+    -fx-font-family: "Pokemon Pixel Font";
+    -fx-focus-color: #4ac2e4;
+    -fx-faint-focus-color: transparent;
+}
+.help-header {
+    -fx-background-color: #181818;
+    -fx-padding: 0 19;
+    -fx-min-height: 63;
+    -fx-pref-height: 63;
+    -fx-max-height: 63;
+}
+.help-accent { -fx-font-family: "Press Start 2P"; -fx-font-size: 32.267px; -fx-text-fill: #4ac2e4; }
+.help-title { -fx-font-size: 48.4px; -fx-text-fill: white; }
+.guide-container {
+    -fx-background-color: #4a4a4a;
+    -fx-padding: 10 20;
+    -fx-min-height: 62.5;
+    -fx-pref-height: 62.5;
+    -fx-max-height: 62.5;
+}
+.guide-message { -fx-background-color: #d9d9d9; -fx-padding: 0 24; }
+.guide-message .label, .guide-message .hyperlink { -fx-font-size: 39.325px; -fx-text-fill: black; }
+#guideLink {
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-text-fill: #0000ee;
+    -fx-underline: false;
+}
+.guide-message .hyperlink:focused { -fx-border-color: #085888; }
+.help-command-container { -fx-padding: 8 24; }
+.command-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.command-scroll > .viewport { -fx-background-color: #60a0b0; }
+.command-formats { -fx-spacing: 6.05; -fx-padding: 0 12 0 0; }
+.command-format {
+    -fx-background-color: black, #a5a5b6, #383850;
+    -fx-background-insets: 0, 1.5, 4.5;
+    -fx-padding: 4.5 13.5;
+    -fx-min-height: 47.9;
+    -fx-pref-height: 47.9;
+    -fx-max-height: 47.9;
+    -fx-font-size: 37.31px;
     -fx-text-fill: white;
 }
-
-#copyButton {
-    -fx-background-color: dimgray;
+.command-scroll .scroll-bar:vertical { -fx-background-color: #085888; -fx-pref-width: 14.117; -fx-padding: 0; }
+.command-scroll .scroll-bar:vertical .track { -fx-background-color: black; -fx-background-insets: 0 3.5; }
+.command-scroll .scroll-bar:vertical .thumb { -fx-background-color: #fffffb; -fx-background-radius: 0; }
+.command-scroll .increment-button, .command-scroll .decrement-button {
+    -fx-padding: 0;
+    -fx-pref-height: 0;
 }
-
-#copyButton:hover {
-    -fx-background-color: gray;
+.command-scroll .increment-arrow, .command-scroll .decrement-arrow { -fx-padding: 0; -fx-shape: ""; }
+.help-bottom-bar {
+    -fx-background-image: url("../images/help-bottom-bar.png");
+    -fx-background-size: 100% 100%;
+    -fx-background-repeat: no-repeat;
+    -fx-padding: 5.5 24.2 5;
+    -fx-min-height: 53.44;
+    -fx-pref-height: 53.44;
+    -fx-max-height: 53.44;
 }
-
-#copyButton:armed {
-    -fx-background-color: darkgray;
+.help-close {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
 }
-
-#helpMessageContainer {
-    -fx-background-color: derive(#1d1d1d, 20%);
-}
+.help-close:focused { -fx-border-color: #4ac2e4; }
+.help-close:hover { -fx-opacity: 0.8; }
