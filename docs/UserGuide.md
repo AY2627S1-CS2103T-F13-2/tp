@@ -237,8 +237,11 @@ Archived students are excluded. The option is standalone and cannot be combined 
 student contact list.
 
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
-commands also leave the displayed list unchanged. Find and other List options switch
-back to the normal contact list for their results.
+commands also leave the displayed list unchanged. Successful `add`, `edit`, `delete`,
+`archive`, `unarchive`, `clear`, `import`, and `find` commands switch back to the normal
+contact list, as do all `list` options except `list -subjects`. This also applies when
+`edit` makes no changes or `import` only previews students or finds nothing new.
+`exit` closes the application.
 
 #### Listing archived students
 
