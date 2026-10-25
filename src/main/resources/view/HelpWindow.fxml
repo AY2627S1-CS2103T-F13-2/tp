@@ -38,7 +38,7 @@
                   accessibleText="Close help window" cancelButton="true">
             <graphic>
               <ImageView fitWidth="39.32" fitHeight="39.32" preserveRatio="true" smooth="false">
-                <image><Image url="@/images/help-close.png" /></image>
+                <image><Image url="@/images/close.png" /></image>
               </ImageView>
             </graphic>
             <tooltip><Tooltip text="Close help window (Esc)" /></tooltip>
