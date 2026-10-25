@@ -338,7 +338,7 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
-    public void sort_lessonRows_shareStudentIndexesAndKeepSummaryCountsUnique() throws Exception {
+    public void sort_studentRows_haveNaturalIndexesAndKeepSummaryCountsUnique() throws Exception {
         runOnFxThread(() -> {
             Person original = logic.getFilteredPersonList().getFirst();
             Person updated = new PersonBuilder(original).withScheduledSubjects(
@@ -349,9 +349,9 @@ public class MainWindowTest extends FxTestSupport {
             root.applyCss();
             root.layout();
             assertNotNull(root.lookup(".lesson-list-panel"));
-            assertEquals(3, root.lookupAll(".lesson-row").size());
-            assertEquals(2, root.lookupAll("#id").stream().map(Label.class::cast)
-                    .filter(label -> label.getText().equals("001")).count());
+            assertEquals(2, root.lookupAll(".lesson-row").size());
+            assertEquals(List.of("001", "002"), root.lookupAll("#id").stream().map(Label.class::cast)
+                    .map(Label::getText).sorted().toList());
             enterCommand("list -summary");
             assertSummary("2", "1");
             assertNotNull(root.lookup(".lesson-list-panel"));
@@ -410,7 +410,7 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
             enterCommand("list");
             assertNull(root.lookup(".subject-group-panel"));
-            assertEquals(4, root.lookupAll(".lesson-row").size());
+            assertEquals(2, root.lookupAll(".lesson-row").size());
             assertSummary("2", "1");
             enterCommand("list -subjects");
             assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
@@ -438,7 +438,7 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals("Review algebra", logic.getFilteredPersonList().get(1).getNotes().value);
             enterCommand("list -subjects");
             enterCommand("delete 2");
-            assertEquals(2, root.lookupAll(".lesson-row").size());
+            assertEquals(1, root.lookupAll(".lesson-row").size());
             enterCommand("list -subjects");
             assertEquals(List.of("Alice Pauline"), groupedNames("Maths"));
             assertEquals(List.of("Alice Pauline"), groupedNames("Physics"));
@@ -483,6 +483,35 @@ public class MainWindowTest extends FxTestSupport {
             enterCommand("sort o/desc");
             assertNotNull(root.lookup(".subject-group-empty"));
             assertTrue(logic.getFilteredPersonList().isEmpty());
+        });
+    }
+
+    @Test
+    public void ungroupedSlotSort_directionChanges_keepOneNumberedRowPerStudent() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("sort slot/asc");
+            ListView<?> students = (ListView<?>) root.lookup(".lesson-list-panel");
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), students.getItems().stream()
+                    .map(LessonRow.class::cast).map(row -> row.person().getName().fullName).toList());
+            enterCommand("sort slot/desc");
+            students = (ListView<?>) root.lookup(".lesson-list-panel");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), students.getItems().stream()
+                    .map(LessonRow.class::cast).map(row -> row.person().getName().fullName).toList());
+            assertEquals(List.of("001", "002"), root.lookupAll("#id").stream().map(Label.class::cast)
+                    .map(Label::getText).sorted().toList());
+            enterCommand("view 1");
+            assertTrue(feedbackText().startsWith("Name: Benson Meier"));
+            enterCommand("edit 1 notes/Check fractions");
+            assertEquals("Check fractions", logic.getFilteredPersonList().getFirst().getNotes().value);
+            enterCommand("list -subjects");
+            assertEquals(4, root.lookupAll(".subject-student-row").size());
+            assertEquals(2, root.lookupAll("#id").stream().map(Label.class::cast)
+                    .filter(label -> label.getText().equals("001")).count());
+            enterCommand("list");
+            enterCommand("delete 1");
+            assertEquals(1, root.lookupAll(".lesson-row").size());
+            assertEquals("Alice Pauline", logic.getFilteredPersonList().getFirst().getName().fullName);
         });
     }
 
@@ -563,6 +592,11 @@ public class MainWindowTest extends FxTestSupport {
         @Override
         public SortOrder getSortOrder() {
             return model.getSortOrder();
+        }
+
+        @Override
+        public List<LessonRow> getStudentRows() {
+            return model.getStudentRows();
         }
 
         @Override

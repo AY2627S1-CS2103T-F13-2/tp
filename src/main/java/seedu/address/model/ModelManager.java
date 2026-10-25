@@ -139,6 +139,12 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public List<LessonRow> getStudentRows() {
+        return sortedPersons.stream()
+                .map(person -> SortComparators.representativeLesson(person, sortOrder, sortReference)).toList();
+    }
+
+    @Override
     public List<LessonRow> getLessonRows() {
         List<LessonRow> rows = new ArrayList<>();
         for (Person person : sortedPersons) {
@@ -148,13 +154,15 @@ public class ModelManager implements Model {
                 person.getSubjects().forEach(subject -> rows.add(new LessonRow(person, subject)));
             }
         }
-        rows.sort(SortComparators.lessons(sortOrder, sortReference));
+        rows.sort(SortComparators.lessons(sortOrder, sortReference)
+                .thenComparingInt(row -> addressBook.getPersonList().indexOf(row.person())));
         return List.copyOf(rows);
     }
 
     private void refreshSorting() {
         sortReference = LocalDateTime.now(clock);
-        sortedPersons.setComparator(sortOrder.equals(SortOrder.NONE) ? null : SortComparators.students(sortOrder)
+        sortedPersons.setComparator(sortOrder.equals(SortOrder.NONE) ? null
+                : SortComparators.students(sortOrder, sortReference)
                 .thenComparingInt(addressBook.getPersonList()::indexOf));
     }
 

@@ -167,4 +167,26 @@ public class SubjectGroupingTest {
                 .stream().map(SubjectGrouping.Entry::person).toList());
         assertThrows(UnsupportedOperationException.class, groups.getFirst().entries()::clear);
     }
+
+    @Test
+    public void group_equalLessonSlots_keepStoredTiesDespiteDifferentRepresentativeLessons() throws Exception {
+        Subject maths = new Subject("Maths", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(9, 0)));
+        Subject english = new Subject("English", new LessonSlot(DayOfWeek.THURSDAY, LocalTime.of(15, 0)));
+        Person amy = new PersonBuilder(ALICE).withScheduledSubjects(maths).build();
+        Person zed = new PersonBuilder(ALICE).withName("Zed Student").withScheduledSubjects(maths, english).build();
+        ModelManager model = new ModelManager(new AddressBook(), new UserPrefs(),
+                Clock.fixed(Instant.parse("2026-10-22T14:00:00Z"), ZoneOffset.UTC));
+        model.addPerson(amy);
+        model.addPerson(zed);
+        new AddressBookParser().parseCommand("sort slot/asc").execute(model);
+
+        assertEquals(List.of(zed, amy), model.getFilteredPersonList());
+        List<SubjectGrouping.Group> groups = SubjectGrouping.group(
+                model.getFilteredPersonList(), model.getLessonRows());
+        assertEquals("Maths", groups.getLast().displayName());
+        assertEquals(List.of(amy, zed), groups.getLast().entries().stream()
+                .map(SubjectGrouping.Entry::person).toList());
+        assertEquals(List.of(2, 1), groups.getLast().entries().stream()
+                .map(SubjectGrouping.Entry::displayedIndex).toList());
+    }
 }

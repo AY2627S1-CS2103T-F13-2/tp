@@ -26,21 +26,6 @@ public final class SortComparators {
 
     private SortComparators() {}
 
-    /**
-     * Orders unique students by the student-level criteria. Lesson slots are compared separately on lesson rows.
-     * This order supplies a single student index even when that student has several displayed lessons.
-     */
-    public static Comparator<Person> students(SortOrder order) {
-        requireNonNull(order);
-        Comparator<Person> comparison = (first, second) -> 0;
-        for (Criterion criterion : order.criteria()) {
-            if (criterion.field() != Field.LESSON_SLOT) {
-                comparison = comparison.thenComparing(studentField(criterion));
-            }
-        }
-        return comparison;
-    }
-
     /** Orders unique students by one representative lesson, including the requested slot direction. */
     public static Comparator<Person> students(SortOrder order, LocalDateTime reference) {
         Comparator<LessonRow> comparison = lessons(order, reference);

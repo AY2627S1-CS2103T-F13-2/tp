@@ -73,7 +73,10 @@ public interface Model {
     /** Applies sorting without changing profile data or the current filter. */
     void setSortOrder(SortOrder order);
 
-    /** Returns sorted lesson rows referring to the unique students in the current filtered list. */
+    /** Returns one representative lesson per student in the current unique-student display order. */
+    List<LessonRow> getStudentRows();
+
+    /** Returns all sorted lesson rows for subject grouping, referring to the current unique students. */
     List<LessonRow> getLessonRows();
 
     /**

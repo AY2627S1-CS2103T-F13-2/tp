@@ -240,7 +240,7 @@ public class MainWindow extends UiPart<Stage> {
 
     private void refreshUngroupedList() {
         if (logic.getSortOrder().hasLessonSlot()) {
-            LessonListPanel lessonListPanel = new LessonListPanel(logic.getFilteredPersonList(), logic.getLessonRows());
+            LessonListPanel lessonListPanel = new LessonListPanel(logic.getStudentRows());
             personListPanelPlaceholder.getChildren().setAll(lessonListPanel.getRoot());
             personListPanel = null;
         } else {

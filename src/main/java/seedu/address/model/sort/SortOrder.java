@@ -27,7 +27,7 @@ public record SortOrder(List<SortOrder.Criterion> criteria) {
         }
     }
 
-    /** Returns whether the display needs one row per lesson rather than one row per student. */
+    /** Returns whether the order includes a lesson-slot comparison. */
     public boolean hasLessonSlot() {
         return criteria.stream().anyMatch(criterion -> criterion.field() == Field.LESSON_SLOT);
     }

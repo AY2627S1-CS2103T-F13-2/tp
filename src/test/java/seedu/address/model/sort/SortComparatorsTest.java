@@ -29,7 +29,8 @@ public class SortComparatorsTest {
         Person cara = person("Cara", "2", "10-Aug");
         SortOrder order = order(new Criterion(Field.OUTSTANDING_AMOUNT, Direction.DESCENDING),
                 new Criterion(Field.NAME, Direction.ASCENDING));
-        assertEquals(List.of(amy, bob, cara), sorted(List.of(cara, bob, amy), SortComparators.students(order)));
+        assertEquals(List.of(amy, bob, cara), sorted(List.of(cara, bob, amy),
+                SortComparators.students(order, THURSDAY)));
     }
 
     @Test
@@ -43,9 +44,9 @@ public class SortComparatorsTest {
         SortOrder ascending = order(new Criterion(Field.START_DATE, Direction.ASCENDING));
         SortOrder descending = order(new Criterion(Field.START_DATE, Direction.DESCENDING));
         assertEquals(List.of(january, leapDay, december, impossible, unknown),
-                sorted(original, SortComparators.students(ascending)));
+                sorted(original, SortComparators.students(ascending, THURSDAY)));
         assertEquals(List.of(december, leapDay, january, impossible, unknown),
-                sorted(original, SortComparators.students(descending)));
+                sorted(original, SortComparators.students(descending, THURSDAY)));
         assertEquals("31-Feb", impossible.getStartDate().value);
     }
 
@@ -55,8 +56,9 @@ public class SortComparatorsTest {
         Person amy = person("Amy", "2.00", "10-Aug");
         List<Person> input = List.of(bob, amy);
         assertEquals(input, sorted(input,
-                SortComparators.students(order(new Criterion(Field.OUTSTANDING_AMOUNT, Direction.ASCENDING)))));
-        assertEquals(input, sorted(input, SortComparators.students(SortOrder.NONE)));
+                SortComparators.students(order(new Criterion(Field.OUTSTANDING_AMOUNT, Direction.ASCENDING)),
+                        THURSDAY)));
+        assertEquals(input, sorted(input, SortComparators.students(SortOrder.NONE, THURSDAY)));
     }
 
     @Test

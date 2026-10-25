@@ -73,6 +73,11 @@ public class LogicManager implements Logic {
     }
 
     @Override
+    public List<LessonRow> getStudentRows() {
+        return model.getStudentRows();
+    }
+
+    @Override
     public List<LessonRow> getLessonRows() {
         return model.getLessonRows();
     }

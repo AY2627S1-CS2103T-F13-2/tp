@@ -235,20 +235,26 @@ returns to original stored order; the subject-grouped display returns to alphabe
 
 * Names are compared alphabetically without regard to case; amounts are compared numerically.
 * Start dates are compared by calendar month and day, without a year. Existing invalid dates stay last.
-* `slot/asc` orders each lesson's next weekly start from nearest to furthest relative to the computer's local
-  date and time. `slot/desc` reverses that order. A start exactly equal to the reference time is due now;
+* Slots are compared by their next weekly start relative to the computer's local date and time.
+  A start exactly equal to the reference time is due now;
   once its start has passed, that lesson's next occurrence is next week. Only starts are recorded, not durations.
-* In the ungrouped display, slot sorting shows a student once per subject lesson. Each row shows the relevant
-  subject and slot; no `for/SUBJECT` argument is needed. Students with no subjects appear once with `No lesson slot`
-  and stay last at the slot-comparison level in either direction. Other criteria can have higher priority than the slot.
+* In the ungrouped display, every student appears **once**, numbered `001`, `002`, `003`, and so on in displayed order.
+  `slot/asc` selects each student's **nearest upcoming lesson**, then orders students from nearest to furthest.
+  `slot/desc` selects each student's **furthest upcoming lesson**, then orders students from furthest to nearest.
+  Each row shows the subject and slot selected for that student; other subjects remain stored in their profile.
+  Equal slots keep the first subject in the profile. No `for/SUBJECT` argument is needed.
+  Students without subjects appear once with `No lesson slot` and stay last at the slot-comparison level in either
+  direction. Other criteria can have higher priority than the slot. Descending need not reverse the ascending
+  student order, because it can select a different subject for each student.
 * After `list -subjects`, Sort orders lessons within each subject group while keeping headings alphabetical.
   Each lesson uses its own subject's schedule, rather than the student's earliest lesson in any subject.
+  A student taking several subjects still appears in each relevant group and shares the same printed student index.
   Students without subjects have no grouped rows, as with ordinary grouping, but remain in the unique student counts.
-* **Use the printed student index, rather than counting lesson rows.** The same student has the same index on
-  all their rows. View/Edit/Delete act on the whole profile; deleting either row deletes that student and all
-  their lessons. Total and paid counts count each student once.
-* Sort preserves the current filter. Filters select students: slot sorting shows all lessons of those selected
-  students, including other subjects they take. Find/List retain the chosen sort; profile changes are reordered as needed.
+* **Use the printed student index.** In the ungrouped display it is the row position. In subject groups it refers
+  to the same current unique-student order, so group indexes may repeat and need not increase from top to bottom.
+  View/Edit/Delete act on the whole profile; deleting a grouped entry removes that student and all their lessons.
+  Total and paid counts count each student once.
+* Sort preserves the current filter. Find/List retain the chosen sort; profile changes are reordered as needed.
   Sort does not rewrite stored profile order, change student details, or change CSV export order. Full ties
   retain original stored order. Valid criteria can be selected on an empty display.
 * Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
@@ -260,13 +266,13 @@ returns to original stored order; the subject-grouped display returns to alphabe
 Examples:
 
 * `sort o/desc n/asc` puts the largest balances first, then sorts equal balances by name.
-* `sort slot/asc n/asc` shows upcoming lessons first, breaking equal-slot ties by student name.
+* `sort slot/asc n/asc` shows students' nearest upcoming lessons first, breaking equal-slot ties by student name.
 * `find Amy` followed by `sort d/asc` sorts only the current search results.
 * `list -subjects` followed by `sort slot/asc n/asc` orders upcoming lessons within each subject group.
 
 To check the grouped display, try the last example, use `view INDEX` with a printed student index, then run
 `sort reset` and `list`. View keeps the grouped panel; reset restores alphabetical students within groups;
-List returns to the ungrouped display. Applying slot sorting again shows one ungrouped row per lesson.
+List returns to the ungrouped display. Applying slot sorting again shows one representative lesson per student.
 
 ### Editing a student profile: `edit`
 

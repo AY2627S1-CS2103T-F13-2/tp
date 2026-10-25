@@ -141,9 +141,46 @@ public class SortIntegrationTest {
         assertEquals(2, model.getFilteredPersonList().size());
         assertEquals(2, storage.readAddressBook().orElseThrow().getPersonList().size());
         assertThrows(UnsupportedOperationException.class, () -> rows.clear());
-        logic.execute("delete 1"); // Amy's shared student index is 1, even though Bob's lesson is the first row.
+        logic.execute("delete 1"); // Bob is first in the unique-student order and has one lesson.
+        assertEquals(List.of("Amy Bee"), names());
+        assertEquals(2, logic.getLessonRows().size());
+    }
+
+    @Test
+    public void execute_studentRows_useOneRepresentativeAndNaturalCommandIndexes() throws Exception {
+        String json = Files.readString(storage.getAddressBookFilePath());
+        logic.execute("sort slot/asc");
+        assertEquals(List.of("Bob Choo", "Amy Bee"), names());
+        assertEquals(List.of("Maths", "Physics"), logic.getStudentRows().stream()
+                .map(row -> row.subject().value).toList());
+        assertEquals(model.getFilteredPersonList(), logic.getStudentRows().stream().map(LessonRow::person).toList());
+        assertTrue(logic.execute("view 1").getFeedbackToUser().startsWith("Name: Bob Choo\n"));
+
+        logic.execute("sort slot/desc");
+        assertEquals(List.of("Amy Bee", "Bob Choo"), names());
+        assertEquals(List.of("Maths", "Maths"), logic.getStudentRows().stream()
+                .map(row -> row.subject().value).toList());
+        assertEquals(2, logic.getStudentRows().size());
+        assertEquals(3, logic.getLessonRows().size(), "Subject grouping still has all lessons");
+        assertThrows(UnsupportedOperationException.class, () -> logic.getStudentRows().clear());
+        assertEquals(json, Files.readString(storage.getAddressBookFilePath()));
+    }
+
+    @Test
+    public void execute_editingASchedule_reordersUniqueStudentsAndKeepsFilters() throws Exception {
+        logic.execute("sort slot/asc");
+        logic.execute("edit 1 s/History day/SAT time/10:00");
+        assertEquals(List.of("Amy Bee", "Bob Choo"), names());
+        assertEquals(List.of("Physics", "History"), logic.getStudentRows().stream()
+                .map(row -> row.subject().value).toList());
+        logic.execute("find Bob");
+        logic.execute("sort slot/desc");
         assertEquals(List.of("Bob Choo"), names());
-        assertEquals(1, logic.getLessonRows().size());
+        assertEquals(1, logic.getStudentRows().size());
+        logic.execute("sort reset");
+        assertEquals(List.of("Bob Choo"), names());
+        assertEquals("History", storage.readAddressBook().orElseThrow().getPersonList().get(1)
+                .getSubjects().iterator().next().value);
     }
 
     @Test
@@ -178,11 +215,14 @@ public class SortIntegrationTest {
         clocked.addPerson(new PersonBuilder().withScheduledSubjects(today, tomorrow).build());
         clocked.setSortOrder(new SortOrder(List.of(new Criterion(Field.LESSON_SLOT, Direction.ASCENDING))));
         assertEquals(today, clocked.getLessonRows().getFirst().subject());
+        assertEquals(today, clocked.getStudentRows().getFirst().subject());
 
         clock.current = Instant.parse("2026-10-22T16:00:00Z");
         assertEquals(today, clocked.getLessonRows().getFirst().subject(), "No background timer changes indexes");
+        assertEquals(today, clocked.getStudentRows().getFirst().subject());
         clocked.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
         assertEquals(tomorrow, clocked.getLessonRows().getFirst().subject(), "A List refresh captures a new time");
+        assertEquals(tomorrow, clocked.getStudentRows().getFirst().subject());
     }
 
     /** Supplies changing time without sleeping or changing the computer's clock. */

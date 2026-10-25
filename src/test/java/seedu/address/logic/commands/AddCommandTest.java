@@ -101,6 +101,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public List<LessonRow> getStudentRows() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public List<LessonRow> getLessonRows() {
             throw new AssertionError("This method should not be called.");
         }

@@ -219,14 +219,18 @@ criteria to the session's `ModelManager`. Saving and restoring state belongs to 
 month/day values. Invalid existing dates and absent lessons stay last in both directions. `LessonRow`
 references a profile and one of its subjects without duplicating stored data. Upcoming lesson comparisons
 use one captured local date/time: a start equal to that time is due now, while a start that has already
-passed is compared using its next weekly occurrence. Complete ties retain input order.
+passed is compared using its next weekly occurrence. `representativeLesson()` selects the minimum row under
+the requested comparison: nearest for ascending slots and furthest for descending slots. Student-level
+criteria are constant within one profile, so the slot direction selects its representative even in a mixed
+order. Equal slots retain subject insertion order; subjectless profiles use a null subject.
 
 `ModelManager` exposes a `SortedList` over the existing filtered students. The stored address-book list is
 not reordered. Original stored positions explicitly resolve complete ties, including after an earlier sort.
-The unique-student order compares the student attributes only; it supplies the printed index used by
-View/Edit/Delete. When slot sorting is active, `LessonListPanel` displays separately sorted `LessonRow`
-references, so one student can have multiple rows sharing that index. Counts continue to use unique students.
-Deleting a printed student index removes the profile and therefore all its lesson rows.
+The unique-student order compares representative lessons using all supplied criteria; it supplies the
+printed index used by View/Edit/Delete and by both displays. `getStudentRows()` exposes one representative
+per student in that same order. With slot sorting, `LessonListPanel` numbers these rows by their displayed
+position, so every student appears once with the subject/slot actually used for sorting. Counts remain
+unique. Indexed commands continue to target this unique-student list without a separate lesson-index map.
 
 The default clock is the computer's local clock; tests inject a fixed clock through the model constructor.
 Sort, filter changes, and profile mutations capture a fresh reference time. Query/View do not recalculate
@@ -237,8 +241,11 @@ or List refreshes upcoming occurrences, and indexed command targets are resolved
 
 `SubjectGrouping` keeps alphabetical subject headings and the printed index of each unique student.
 When a sort is active, it maps the already ordered `ModelManager#getLessonRows()` to positions and uses
-those positions to order entries within each group. Comparisons therefore use the same reference time,
-priority rules and stable ties as the ungrouped display. Each grouped card shows its own subject and slot.
+those positions to order entries within each group. This API still includes every lesson; it does not
+collapse to representatives. Comparisons use the same reference time and criterion rules as the ungrouped
+display, but each grouped card retains its own subject and slot. Complete lesson ties explicitly fall back
+to stored student positions, independently of representative ordering. A student can appear under several
+subjects with the same printed student index; deleting that index removes their whole profile and all lessons.
 Without active criteria, grouping retains its original alphabetical student order. Subjectless students
 remain part of the unique-student list and counts, but do not produce subject groups.
 

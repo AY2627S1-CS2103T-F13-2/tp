@@ -30,7 +30,10 @@ public interface Logic {
     /** Returns the current session's ordered sorting criteria. */
     SortOrder getSortOrder();
 
-    /** Returns the sorted lesson rows and their shared student profiles. */
+    /** Returns one representative lesson per student in the current display order. */
+    List<LessonRow> getStudentRows();
+
+    /** Returns all sorted lessons for the grouped display and their shared student profiles. */
     List<LessonRow> getLessonRows();
 
     /**
