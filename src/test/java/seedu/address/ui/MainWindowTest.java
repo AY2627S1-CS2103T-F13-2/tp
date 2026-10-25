@@ -70,7 +70,13 @@ public class MainWindowTest extends FxTestSupport {
             root.applyCss();
             root.layout();
             assertButtonIcon("findButton", "/images/Search.png");
-            assertButtonIcon("exitButton", "/images/close.png");
+            assertButtonIcon("exitButton", "/images/help-close.png");
+            Button exitButton = (Button) root.lookup("#exitButton");
+            ImageView icon = (ImageView) exitButton.getGraphic();
+            assertEquals(39.32, icon.getFitWidth());
+            assertEquals(39.32, icon.getFitHeight());
+            assertFalse(icon.isSmooth());
+            assertEquals(Color.TRANSPARENT, exitButton.getBackground().getFills().get(0).getFill());
         });
     }
 

@@ -139,8 +139,15 @@
 }
 .find-icon { -fx-background-color: white; -fx-min-width: 30; -fx-pref-width: 30;
     -fx-min-height: 30; -fx-pref-height: 30; }
-.exit-button { -fx-background-color: #d9d9d9; -fx-min-width: 39; -fx-pref-width: 39;
-    -fx-min-height: 39; -fx-pref-height: 39; }
+.exit-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.exit-button:focused { -fx-border-color: #94ef18; -fx-border-width: 1; }
+.exit-button:hover { -fx-opacity: 0.8; }
 
 .result-display > .viewport { -fx-background-color: #d9d9d9; }
 .feedback-text { -fx-font-size: 39.3px; -fx-text-fill: black; -fx-padding: 0 24; }
