@@ -11,6 +11,11 @@ import seedu.address.commons.util.ToStringBuilder;
  */
 public class CommandResult {
 
+    /** The list presentation requested by a successful command. */
+    public enum ListPresentation {
+        CONTACTS, SUBJECT_GROUPS, UNCHANGED
+    }
+
     private final String feedbackToUser;
 
     /** Help information should be shown to the user. */
@@ -19,22 +24,21 @@ public class CommandResult {
     /** The application should exit. */
     private final boolean exit;
 
-    /** Whether the UI should display students grouped by subject. */
-    private final boolean subjectList;
+    private final ListPresentation listPresentation;
 
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
-        this(feedbackToUser, showHelp, exit, false);
+        this(feedbackToUser, showHelp, exit, ListPresentation.CONTACTS);
     }
 
     /** Constructs a result with explicit UI presentation state. */
-    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, boolean subjectList) {
+    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, ListPresentation listPresentation) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
-        this.subjectList = subjectList;
+        this.listPresentation = requireNonNull(listPresentation);
     }
 
     /**
@@ -58,7 +62,11 @@ public class CommandResult {
     }
 
     public boolean isSubjectList() {
-        return subjectList;
+        return listPresentation == ListPresentation.SUBJECT_GROUPS;
+    }
+
+    public ListPresentation getListPresentation() {
+        return listPresentation;
     }
 
     @Override
@@ -75,12 +83,12 @@ public class CommandResult {
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
                 && exit == otherCommandResult.exit
-                && subjectList == otherCommandResult.subjectList;
+                && listPresentation == otherCommandResult.listPresentation;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, subjectList);
+        return Objects.hash(feedbackToUser, showHelp, exit, listPresentation);
     }
 
     @Override
@@ -89,6 +97,7 @@ public class CommandResult {
                 .add("feedbackToUser", feedbackToUser)
                 .add("showHelp", showHelp)
                 .add("exit", exit)
+                .add("listPresentation", listPresentation)
                 .toString();
     }
 

@@ -57,7 +57,26 @@ public class CommandResultTest {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName() + "{feedbackToUser="
                 + commandResult.getFeedbackToUser() + ", showHelp=" + commandResult.isShowHelp()
-                + ", exit=" + commandResult.isExit() + "}";
+                + ", exit=" + commandResult.isExit()
+                + ", listPresentation=" + commandResult.getListPresentation() + "}";
         assertEquals(expected, commandResult.toString());
+    }
+
+    @Test
+    public void equals_differentListPresentations_distinguishesKeepAndSwitchRequests() {
+        CommandResult contacts = new CommandResult("feedback");
+        CommandResult grouped = new CommandResult("feedback", false, false,
+                CommandResult.ListPresentation.SUBJECT_GROUPS);
+        CommandResult unchanged = new CommandResult("feedback", false, false,
+                CommandResult.ListPresentation.UNCHANGED);
+        assertNotEquals(contacts, grouped);
+        assertNotEquals(contacts, unchanged);
+        assertNotEquals(grouped, unchanged);
+        assertTrue(grouped.isSubjectList());
+        assertFalse(unchanged.isSubjectList());
+        CommandResult sameGrouped = new CommandResult("feedback", false, false,
+                CommandResult.ListPresentation.SUBJECT_GROUPS);
+        assertEquals(grouped, sameGrouped);
+        assertEquals(grouped.hashCode(), sameGrouped.hashCode());
     }
 }
