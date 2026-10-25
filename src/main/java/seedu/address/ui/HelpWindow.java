@@ -28,6 +28,7 @@ public class HelpWindow extends UiPart<Stage> {
                     + " [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]",
             "view INDEX",
             "export",
+            "import FILE_PATH [confirm]",
             "list [-summary] [s/SUBJECT]...",
             "list [-summary] [t/TAG]...",
             "list -archived",
