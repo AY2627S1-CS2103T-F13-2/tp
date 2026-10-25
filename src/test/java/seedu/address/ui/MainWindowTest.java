@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.TypicalPersons.ALICE;
@@ -20,6 +21,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -155,6 +157,53 @@ public class MainWindowTest extends FxTestSupport {
             enterCommand("list t/Needs revision");
             assertTrue(root.lookup(".subject-group-panel") == null);
             assertSummary("1", "0");
+        });
+    }
+
+    @Test
+    public void groupedList_successfulEdit_reusesContactPanelWithUpdatedCards() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            Person alice = logic.getFilteredPersonList().get(0);
+            Person benson = logic.getFilteredPersonList().get(1);
+            Person updated = new PersonBuilder(alice).withName("Alice Updated").withPhone("87654321")
+                    .withSubjects("Chemistry").withNotes("Updated note").build();
+            PersonListPanel contactPanel = window.getPersonListPanel();
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+
+            enterCommand("edit 1 n/Alice Updated p/87654321 s/Chemistry day/MON time/09:00 notes/Updated note");
+
+            assertNull(root.lookup(".subject-group-panel"));
+            assertSame(contactPanel, window.getPersonListPanel());
+            assertContactCards(List.of(updated, benson));
+            enterCommand("view 1");
+            assertTrue(feedbackText().startsWith("Name: Alice Updated | Phone: 87654321"));
+            assertTrue(feedbackText().contains("Subjects: Chemistry (Mon 09:00)"));
+            assertTrue(feedbackText().endsWith("Notes: Updated note"));
+        });
+    }
+
+    @Test
+    public void groupedList_successfulDelete_reindexesRemainingCardsAndCommandTargets() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            Person alice = logic.getFilteredPersonList().get(0);
+            Person cara = new PersonBuilder(ALICE).withName("Cara Student").withSubjects("English").build();
+            logic.model.addPerson(cara);
+            PersonListPanel contactPanel = window.getPersonListPanel();
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+
+            enterCommand("delete 2");
+
+            assertNull(root.lookup(".subject-group-panel"));
+            assertSame(contactPanel, window.getPersonListPanel());
+            assertContactCards(List.of(alice, cara));
+            enterCommand("view 2");
+            assertTrue(feedbackText().startsWith("Name: Cara Student | Phone:"));
+            enterCommand("delete 2");
+            assertContactCards(List.of(alice));
         });
     }
 
@@ -319,6 +368,25 @@ public class MainWindowTest extends FxTestSupport {
         input.fireEvent(new ActionEvent());
         root.applyCss();
         root.layout();
+    }
+
+    private void assertContactCards(List<Person> expected) {
+        ListView<?> view = (ListView<?>) root.lookup("#personListView");
+        assertEquals(expected, view.getItems());
+        for (int index = 0; index < expected.size(); index++) {
+            int cellIndex = index;
+            Person person = expected.get(index);
+            ListCell<?> cell = view.lookupAll(".list-cell").stream()
+                    .filter(ListCell.class::isInstance).map(node -> (ListCell<?>) node)
+                    .filter(candidate -> !candidate.isEmpty() && candidate.getIndex() == cellIndex)
+                    .findFirst().orElseThrow();
+            assertEquals(String.format("%03d", index + 1), ((Label) cell.getGraphic().lookup("#id")).getText());
+            assertEquals(person.getName().fullName, ((Label) cell.getGraphic().lookup("#name")).getText());
+            Label subjects = (Label) cell.getGraphic().lookup("#subjects");
+            assertEquals("Subjects: " + Messages.formatSubjects(person), subjects.getTooltip().getText());
+            assertEquals((index + 1) + ". " + Messages.format(person) + "; Tags: " + Messages.formatTags(person)
+                    + "; Notes: " + person.getNotes(), cell.getAccessibleText());
+        }
     }
 
     private void assertButtonIcon(String buttonId, String resourcePath) {
