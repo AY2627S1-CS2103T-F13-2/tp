@@ -539,6 +539,10 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Student profile**: A record for one student. It can contain the student's name, address, phone number, subjects, tuition start date, outstanding balance, guardian contact, education level, and notes.
 * **Guardian contact**: The phone number of a student's parent or guardian, recorded separately from the student's own phone number.
 * **Outstanding balance**: The amount, in Singapore dollars (SGD), that remains owed for a student's tuition. The amount cannot be negative. It represents the current balance, not a history of individual payments.
+
+### Balance commands
+
+The `paid` and `charge` commands use the index from the currently displayed person list. Their parsers validate the index and amount before creating a command. `paid INDEX` replaces the balance with zero, while `paid INDEX AMOUNT` subtracts a positive amount. `charge INDEX AMOUNT` adds a positive amount. Amount arithmetic is performed by the immutable `OutstandingAmount` value object, so balances remain nonnegative and limited to two decimal places. Payments greater than the current balance are rejected with a command error before the profile is modified.
 * **Displayed index**: The one-based number shown beside a student in the current displayed list. After a search, the index refers to that search result list.
 * **Duplicate profile**: A new profile whose stored details are identical to an existing profile. TuteeDex rejects an exact duplicate; two profiles may have the same student name if their other details differ.
 

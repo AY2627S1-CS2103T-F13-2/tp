@@ -43,6 +43,25 @@ public class OutstandingAmount {
         return "SGD " + value.setScale(2).toPlainString();
     }
 
+    /** Returns the sum of this amount and {@code other}. */
+    public OutstandingAmount add(OutstandingAmount other) {
+        requireNonNull(other);
+        return new OutstandingAmount(value.add(other.value).toPlainString());
+    }
+
+    /** Returns this amount less {@code other}; the result must not be negative. */
+    public OutstandingAmount subtract(OutstandingAmount other) {
+        requireNonNull(other);
+        checkArgument(value.compareTo(other.value) >= 0, MESSAGE_CONSTRAINTS);
+        return new OutstandingAmount(value.subtract(other.value).toPlainString());
+    }
+
+    /** Returns true if this amount is greater than {@code other}. */
+    public boolean isGreaterThan(OutstandingAmount other) {
+        requireNonNull(other);
+        return value.compareTo(other.value) > 0;
+    }
+
     private static BigDecimal normalize(BigDecimal amount) {
         BigDecimal normalized = amount.stripTrailingZeros();
         return normalized.scale() < 0 ? normalized.setScale(0) : normalized;

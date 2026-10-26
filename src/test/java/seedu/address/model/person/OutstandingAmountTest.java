@@ -22,7 +22,6 @@ public class OutstandingAmountTest {
     @Test
     public void isValidOutstandingAmount() {
         assertThrows(NullPointerException.class, () -> OutstandingAmount.isValidOutstandingAmount(null));
-
         assertFalse(OutstandingAmount.isValidOutstandingAmount(""));
         assertFalse(OutstandingAmount.isValidOutstandingAmount("-1"));
         assertFalse(OutstandingAmount.isValidOutstandingAmount("+1"));
@@ -32,7 +31,6 @@ public class OutstandingAmountTest {
         assertFalse(OutstandingAmount.isValidOutstandingAmount("1e2"));
         assertFalse(OutstandingAmount.isValidOutstandingAmount("1,000"));
         assertFalse(OutstandingAmount.isValidOutstandingAmount("one"));
-
         assertTrue(OutstandingAmount.isValidOutstandingAmount("0"));
         assertTrue(OutstandingAmount.isValidOutstandingAmount("0.00"));
         assertTrue(OutstandingAmount.isValidOutstandingAmount("20"));
@@ -45,7 +43,6 @@ public class OutstandingAmountTest {
     public void equivalentAmounts_areEqualAndHaveSameHashCode() {
         OutstandingAmount integerZero = new OutstandingAmount("0");
         OutstandingAmount decimalZero = new OutstandingAmount("0.00");
-
         assertEquals(integerZero, decimalZero);
         assertEquals(integerZero.hashCode(), decimalZero.hashCode());
     }
@@ -53,9 +50,13 @@ public class OutstandingAmountTest {
     @Test
     public void formatting() {
         OutstandingAmount amount = new OutstandingAmount("020.50");
-
         assertEquals("20.5", amount.toPlainString());
         assertEquals("SGD 20.50", amount.toCurrencyString());
     }
-
+    @Test
+    public void addAndSubtract_returnsNormalizedAmounts() {
+        OutstandingAmount amount = new OutstandingAmount("20.50");
+        assertEquals("30.5", amount.add(new OutstandingAmount("10")).toPlainString());
+        assertEquals("10.5", amount.subtract(new OutstandingAmount("10")).toPlainString());
+    }
 }
