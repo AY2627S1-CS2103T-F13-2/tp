@@ -59,4 +59,23 @@ public class OutstandingAmountTest {
         assertEquals("30.5", amount.add(new OutstandingAmount("10")).toPlainString());
         assertEquals("10.5", amount.subtract(new OutstandingAmount("10")).toPlainString());
     }
+
+    @Test
+    public void arithmetic_invalidArgumentsAndNegativeResult_throws() {
+        OutstandingAmount amount = new OutstandingAmount("10");
+        assertThrows(NullPointerException.class, () -> amount.add(null));
+        assertThrows(NullPointerException.class, () -> amount.subtract(null));
+        assertThrows(NullPointerException.class, () -> amount.isGreaterThan(null));
+        assertThrows(IllegalArgumentException.class, () -> amount.subtract(new OutstandingAmount("10.01")));
+    }
+
+    @Test
+    public void comparisonAndRepresentation_coverOtherTypes() {
+        OutstandingAmount amount = new OutstandingAmount("10");
+        assertTrue(amount.equals(amount));
+        assertFalse(amount.equals(new OutstandingAmount("11")));
+        assertFalse(amount.equals("10"));
+        assertFalse(amount.equals(null));
+        assertEquals("10", amount.toString());
+    }
 }

@@ -39,5 +39,9 @@ public class BalanceCommandParserTest {
         assertParseFailure(chargeParser, "1 0", "Amount must be greater than 0.");
         assertParseFailure(chargeParser, "1 -1", OutstandingAmount.MESSAGE_CONSTRAINTS);
         assertParseFailure(paidParser, "0", ParserUtil.MESSAGE_INVALID_INDEX);
+        assertParseFailure(paidParser, "1 1 1",
+                String.format(BalanceCommand.MESSAGE_INVALID_FORMAT, PaidCommand.MESSAGE_USAGE));
+        assertParseFailure(chargeParser, "1 1 1",
+                String.format(BalanceCommand.MESSAGE_INVALID_FORMAT, ChargeCommand.MESSAGE_USAGE));
     }
 }

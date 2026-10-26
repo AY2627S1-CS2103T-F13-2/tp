@@ -1,6 +1,8 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,42 @@ public class BalanceCommandTest {
         new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("12.50"))
                 .execute(model);
         assertEquals("62.5", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+    }
+
+    @Test
+    public void paid_invalidIndex_throwsCommandException() {
+        Model model = modelWithStudent();
+        PaidCommand command = new PaidCommand(seedu.address.commons.core.index.Index.fromOneBased(2), null);
+        Assert.assertThrows(CommandException.class, PaidCommand.MESSAGE_CONTACT_NOT_FOUND, () ->
+                command.execute(model));
+    }
+
+    @Test
+    public void charge_invalidIndex_throwsCommandException() {
+        Model model = modelWithStudent();
+        ChargeCommand command = new ChargeCommand(seedu.address.commons.core.index.Index.fromOneBased(2),
+                new OutstandingAmount("1"));
+        Assert.assertThrows(CommandException.class, ChargeCommand.MESSAGE_CONTACT_NOT_FOUND, () ->
+                command.execute(model));
+    }
+
+    @Test
+    public void commandEqualityAndString_areSupported() {
+        OutstandingAmount amount = new OutstandingAmount("5");
+        PaidCommand paid = new PaidCommand(INDEX_FIRST_PERSON, amount);
+        ChargeCommand charge = new ChargeCommand(INDEX_FIRST_PERSON, amount);
+        assertTrue(paid.equals(new PaidCommand(INDEX_FIRST_PERSON, amount)));
+        assertFalse(paid.equals(new PaidCommand(seedu.address.commons.core.index.Index.fromOneBased(2), amount)));
+        assertFalse(paid.equals(new PaidCommand(INDEX_FIRST_PERSON, null)));
+        assertFalse(paid.equals(charge));
+        assertTrue(charge.equals(new ChargeCommand(INDEX_FIRST_PERSON, amount)));
+        assertFalse(charge.equals(new ChargeCommand(seedu.address.commons.core.index.Index.fromOneBased(2), amount)));
+        assertFalse(charge.equals(new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("6"))));
+        assertFalse(charge.equals(paid));
+        assertFalse(paid.equals(null));
+        assertFalse(charge.equals(null));
+        assertTrue(paid.toString().contains("index"));
+        assertTrue(charge.toString().contains("amount"));
     }
 
     private Model modelWithStudent() {

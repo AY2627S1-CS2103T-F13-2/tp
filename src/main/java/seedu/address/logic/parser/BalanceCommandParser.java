@@ -14,8 +14,7 @@ public class BalanceCommandParser {
     public static ParsedBalanceArguments parse(String args, String usage, boolean amountRequired)
             throws ParseException {
         List<String> tokens = List.of(args.trim().split("\\s+"));
-        if (args.trim().isEmpty() || tokens.size() < 1
-                || tokens.size() > (amountRequired ? 2 : 2)) {
+        if (args.trim().isEmpty()) {
             throw new ParseException(String.format(BalanceCommand.MESSAGE_INVALID_FORMAT, usage));
         }
         if (amountRequired && tokens.size() != 2) {
