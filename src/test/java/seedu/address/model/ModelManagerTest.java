@@ -28,6 +28,16 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void constructor_withArchivedPerson_showsActivePersonsOnly() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON.withArchived(true))
+                .build();
+
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
     public void constructor_validUserPrefs_copiesUserPrefs() {
         UserPrefs userPrefs = new UserPrefs();
         userPrefs.setGuiSettings(new GuiSettings(1, 2, 3, 4));
