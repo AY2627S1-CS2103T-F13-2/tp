@@ -44,15 +44,41 @@ public class CommandBoxTest extends FxTestSupport {
     }
 
     @Test
-    public void prepareFind_unfinishedInput_preservesTextAndMovesCaretToEnd() throws Exception {
+    public void prepareFind_singleWordQuery_prefixesFind() throws Exception {
         runOnFxThread(() -> {
             CommandBox box = new CommandBox(command -> new CommandResult("Success"));
             TextField input = inputOf(box);
-            input.setText("edit 1 n/Alice");
+            input.setText("  Amy  ");
             input.positionCaret(0);
             box.prepareFind();
-            assertEquals("edit 1 n/Alice", input.getText());
+            assertEquals("find Amy", input.getText());
             assertEquals(input.getLength(), input.getCaretPosition());
+        });
+    }
+
+    @Test
+    public void prepareFind_multipleWordQuery_prefixesFind() throws Exception {
+        runOnFxThread(() -> {
+            CommandBox box = new CommandBox(command -> new CommandResult("Success"));
+            TextField input = inputOf(box);
+            input.setText("Amy Bob");
+
+            box.prepareFind();
+
+            assertEquals("find Amy Bob", input.getText());
+        });
+    }
+
+    @Test
+    public void prepareFind_existingFindCommand_preservesCommand() throws Exception {
+        runOnFxThread(() -> {
+            CommandBox box = new CommandBox(command -> new CommandResult("Success"));
+            TextField input = inputOf(box);
+            input.setText("  find Amy Bob  ");
+
+            box.prepareFind();
+
+            assertEquals("find Amy Bob", input.getText());
         });
     }
 
