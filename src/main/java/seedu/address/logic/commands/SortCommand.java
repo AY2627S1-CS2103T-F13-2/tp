@@ -58,6 +58,11 @@ public class SortCommand extends Command {
     }
 
     @Override
+    public boolean requiresAddressBookSave() {
+        return false;
+    }
+
+    @Override
     public boolean equals(Object other) {
         return other == this || other instanceof SortCommand command && requestedOrder.equals(command.requestedOrder);
     }

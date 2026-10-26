@@ -214,6 +214,9 @@ and independent directions. It rejects malformed arguments, unknown fields, repe
 other than lowercase `asc` or `desc`. The criteria model and parser do not mutate profiles or user preferences.
 `SortCommandParser` handles the current-order query and reset, and the registered `SortCommand` applies
 criteria to the session's `ModelManager`. Saving and restoring state belongs to the separate persistence feature.
+`SortCommand` overrides `Command#requiresAddressBookSave()` so `LogicManager` does not write profile JSON
+for apply, reset or query. A storage permission error therefore cannot make session-only sorting fail.
+Other commands keep their existing save behaviour; preference persistence remains separate.
 
 `SortComparators` compares names without regard to case, amounts numerically, and start dates as annual
 month/day values. Invalid existing dates and absent lessons stay last in both directions. `LessonRow`

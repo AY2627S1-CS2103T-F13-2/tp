@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -14,6 +16,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,10 +24,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.CommandResult.ListPresentation;
 import seedu.address.logic.commands.SortCommand;
+import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Person;
@@ -84,6 +89,29 @@ public class SortIntegrationTest {
         assertEquals(ListPresentation.REFRESH, logic.execute("sort n/asc").getListPresentation());
         assertEquals(ListPresentation.UNCHANGED, logic.execute("sort").getListPresentation());
         assertEquals(ListPresentation.REFRESH, logic.execute("sort reset").getListPresentation());
+    }
+
+    @Test
+    public void execute_sortWithUnwritableStorage_succeedsWhileEditStillAttemptsSaving() throws Exception {
+        AtomicInteger writes = new AtomicInteger();
+        JsonAddressBookStorage unwritable = new JsonAddressBookStorage(folder.resolve("read-only.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                writes.incrementAndGet();
+                throw new AccessDeniedException("read-only.json");
+            }
+        };
+        Logic readOnlyLogic = new LogicManager(model, new StorageManager(unwritable,
+                new JsonUserPrefsStorage(folder.resolve("preferences.json"))));
+        for (String command : List.of("sort slot/asc", "sort", "sort reset")) {
+            readOnlyLogic.execute(command);
+        }
+        assertThrows(ParseException.class, () -> readOnlyLogic.execute("sort n/up"));
+        assertEquals(0, writes.get(), "Sort never attempts an address-book write");
+        CommandException error = assertThrows(CommandException.class, () ->
+                readOnlyLogic.execute("edit 1 notes/Still saved"));
+        assertTrue(error.getMessage().contains("insufficient permissions"));
+        assertEquals(1, writes.get(), "Profile mutations keep the existing persistence behaviour");
     }
 
     @Test
