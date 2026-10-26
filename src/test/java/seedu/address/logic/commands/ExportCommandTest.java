@@ -74,6 +74,23 @@ public class ExportCommandTest {
         Files.deleteIfExists(directory);
     }
 
+    @Test
+    public void execute_collisionWithoutExtension_retriesWithSuffixedPath() throws Exception {
+        Path directory = Files.createTempDirectory("export-command-test");
+        Path existing = directory.resolve("contacts");
+        Files.createFile(existing);
+        Model model = new ModelManager(addressBookWithContacts(), new UserPrefs());
+
+        CommandResult result = new ExportCommand(() -> existing).execute(model);
+        Path output = directory.resolve("contacts-1");
+
+        assertEquals("Exported 2 contact(s) to " + output.toAbsolutePath() + ".", result.getFeedbackToUser());
+        assertEquals(3, Files.readString(output).lines().count());
+        Files.deleteIfExists(existing);
+        Files.deleteIfExists(output);
+        Files.deleteIfExists(directory);
+    }
+
     private static AddressBook addressBookWithContacts() {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(new PersonBuilder().withName("Alice Pauline").build());
