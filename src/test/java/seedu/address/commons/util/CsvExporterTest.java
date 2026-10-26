@@ -1,6 +1,7 @@
 package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -31,5 +32,18 @@ public class CsvExporterTest {
     public void format_emptyList_returnsHeaderOnly() {
         assertEquals("Name,Phone,Address,Start Date,Outstanding Amount,Subjects,Tags,Notes,Archived\n",
                 CsvExporter.format(List.of()));
+    }
+
+    @Test
+    public void format_formulaPrefixesInAddressAndNotes_exportsAsPlainText() {
+        for (String prefix : List.of("=", "+", "-", "@")) {
+            Person person = new PersonBuilder().withAddress(prefix + "address")
+                    .withNotes(prefix + "note").build();
+
+            String exportedRow = CsvExporter.format(List.of(person)).lines().skip(1).findFirst().orElseThrow();
+
+            assertTrue(exportedRow.contains("'" + prefix + "address"));
+            assertTrue(exportedRow.contains("'" + prefix + "note"));
+        }
     }
 }
