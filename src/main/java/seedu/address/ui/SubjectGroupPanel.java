@@ -10,6 +10,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import seedu.address.model.person.Person;
+import seedu.address.model.sort.LessonRow;
 
 /** Displays active students grouped under the subjects they take. */
 public class SubjectGroupPanel {
@@ -17,13 +18,21 @@ public class SubjectGroupPanel {
 
     /** Creates a grouped subject view from the currently displayed students. */
     public SubjectGroupPanel(ObservableList<Person> persons) {
+        this(SubjectGrouping.group(persons));
+    }
+
+    /** Creates subject groups using the model's sorted lessons and shared student indexes. */
+    public SubjectGroupPanel(List<Person> persons, List<LessonRow> orderedLessons) {
+        this(SubjectGrouping.group(persons, orderedLessons));
+    }
+
+    private SubjectGroupPanel(List<SubjectGrouping.Group> groupedSubjects) {
         VBox groups = new VBox(12);
         groups.setFillWidth(true);
-        List<SubjectGrouping.Group> groupedSubjects = SubjectGrouping.group(persons);
         for (SubjectGrouping.Group group : groupedSubjects) {
             VBox entries = new VBox(4);
             for (SubjectGrouping.Entry entry : group.entries()) {
-                PersonCard card = new PersonCard(entry.person(), entry.displayedIndex());
+                PersonCard card = new PersonCard(entry.person(), entry.displayedIndex(), entry.subject());
                 Label lessonSlot = new Label(entry.subject().getLessonSlot().toString());
                 lessonSlot.getStyleClass().add("subject-lesson-slot");
                 HBox row = new HBox(8, card.getRoot(), lessonSlot);

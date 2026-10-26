@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -14,6 +15,8 @@ import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
+import seedu.address.model.sort.LessonRow;
+import seedu.address.model.sort.SortOrder;
 import seedu.address.storage.Storage;
 
 /**
@@ -46,8 +49,20 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
-        commandResult = command.execute(model);
+        model.beginCommand();
+        try {
+            commandResult = command.execute(model);
+        } finally {
+            model.endCommand();
+        }
 
+        if (command.requiresAddressBookSave()) {
+            saveAddressBook();
+        }
+        return commandResult;
+    }
+
+    private void saveAddressBook() throws CommandException {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (AccessDeniedException e) {
@@ -55,13 +70,26 @@ public class LogicManager implements Logic {
         } catch (IOException ioe) {
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
-
-        return commandResult;
     }
 
     @Override
     public ObservableList<Person> getFilteredPersonList() {
         return model.getFilteredPersonList();
+    }
+
+    @Override
+    public SortOrder getSortOrder() {
+        return model.getSortOrder();
+    }
+
+    @Override
+    public List<LessonRow> getStudentRows() {
+        return model.getStudentRows();
+    }
+
+    @Override
+    public List<LessonRow> getLessonRows() {
+        return model.getLessonRows();
     }
 
     @Override
