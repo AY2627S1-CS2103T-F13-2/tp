@@ -84,6 +84,78 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_listAndFindCommands_savedAsLastView() throws Exception {
+        logic.execute("list -archived");
+        assertEquals("list -archived", model.getLastViewCommand());
+
+        logic.execute("  find Alice  ");
+        assertEquals("find Alice", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_commandThatChangesList_clearsLastView() throws Exception {
+        logic.execute("list -subjects");
+        logic.execute("add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct s/Maths day/MON time/09:00");
+        assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_helpExitAndFailedCommands_keepLastView() throws Exception {
+        logic.execute("list -subjects");
+        logic.execute("help");
+        logic.execute("exit");
+        assertThrows(CommandException.class, () -> logic.execute("delete 9"));
+        assertThrows(ParseException.class, () -> logic.execute("list -unknown"));
+        assertEquals("list -subjects", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_sortCommands_saveLastSortAndKeepView() throws Exception {
+        logic.execute("list -subjects");
+        logic.execute(" sort o/desc n/asc ");
+        assertEquals("sort o/desc n/asc", model.getLastSortCommand());
+        assertEquals("list -subjects", model.getLastViewCommand());
+
+        logic.execute("sort");
+        assertEquals("sort o/desc n/asc", model.getLastSortCommand());
+
+        assertThrows(ParseException.class, () -> logic.execute("sort n/up"));
+        assertEquals("sort o/desc n/asc", model.getLastSortCommand());
+
+        logic.execute("sort reset");
+        assertEquals("", model.getLastSortCommand());
+        assertEquals("list -subjects", model.getLastViewCommand());
+    }
+
+    @Test
+    public void getLastSortCommand_savedSortOrOther_onlySortReturned() {
+        assertEquals("", logic.getLastSortCommand());
+        model.setLastSortCommand("sort slot/asc n/asc");
+        assertEquals("sort slot/asc n/asc", logic.getLastSortCommand());
+        for (String savedCommand : new String[] {"list", "clear", "sort n/up", "not a command"}) {
+            model.setLastSortCommand(savedCommand);
+            assertEquals("", logic.getLastSortCommand());
+        }
+    }
+
+    @Test
+    public void getLastViewCommand_savedListOrFind_returned() {
+        assertEquals("", logic.getLastViewCommand());
+        model.setLastViewCommand("list t/Sec 4");
+        assertEquals("list t/Sec 4", logic.getLastViewCommand());
+        model.setLastViewCommand("find Alice");
+        assertEquals("find Alice", logic.getLastViewCommand());
+    }
+
+    @Test
+    public void getLastViewCommand_otherOrInvalidCommand_ignored() {
+        for (String savedCommand : new String[] {"clear", "delete 1", "sort n/asc", "list -unknown", "not a command"}) {
+            model.setLastViewCommand(savedCommand);
+            assertEquals("", logic.getLastViewCommand());
+        }
+    }
+
+    @Test
     public void execute_addWithZeroOutstandingAmount_success() throws Exception {
         Person expectedPerson = new PersonBuilder().withName("Zero Balance").withPhone("81234567")
                 .withAddress("1 Test Street").withStartDate("14-Oct").withOutstandingAmount("0")

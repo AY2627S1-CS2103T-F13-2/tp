@@ -45,4 +45,16 @@ public interface Logic {
      * Set the user prefs' GUI settings.
      */
     void setGuiSettings(GuiSettings guiSettings);
+
+    /**
+     * Returns the list or find command that set the displayed list when the app was last closed,
+     * or an empty string if the normal list should be shown.
+     */
+    String getLastViewCommand();
+
+    /**
+     * Returns the sort command that set the display order when the app was last closed,
+     * or an empty string if the default order should be used.
+     */
+    String getLastSortCommand();
 }

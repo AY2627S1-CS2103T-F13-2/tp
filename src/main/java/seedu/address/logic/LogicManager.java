@@ -10,6 +10,10 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.ListPresentation;
+import seedu.address.logic.commands.FindCommand;
+import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -55,6 +59,7 @@ public class LogicManager implements Logic {
         } finally {
             model.endCommand();
         }
+        saveLastView(command, commandText, commandResult);
 
         if (command.requiresAddressBookSave()) {
             saveAddressBook();
@@ -100,5 +105,57 @@ public class LogicManager implements Logic {
     @Override
     public void setGuiSettings(GuiSettings guiSettings) {
         model.setGuiSettings(guiSettings);
+    }
+
+    @Override
+    public String getLastViewCommand() {
+        String lastViewCommand = model.getLastViewCommand();
+        // The preferences file can be edited by hand, so only list and find are run again on startup.
+        if (!lastViewCommand.isEmpty() && !isViewCommand(parseSavedCommand(lastViewCommand))) {
+            logger.warning("Ignoring saved view that is not a list or find command: " + lastViewCommand);
+            return "";
+        }
+        return lastViewCommand;
+    }
+
+    @Override
+    public String getLastSortCommand() {
+        String lastSortCommand = model.getLastSortCommand();
+        if (!lastSortCommand.isEmpty() && !(parseSavedCommand(lastSortCommand) instanceof SortCommand)) {
+            logger.warning("Ignoring saved sort order that is not a sort command: " + lastSortCommand);
+            return "";
+        }
+        return lastSortCommand;
+    }
+
+    /**
+     * Saves the commands that decide which students are listed and in what order, so the same view is shown
+     * the next time the app opens. Any other command that changes the displayed list goes back to the normal list.
+     */
+    private void saveLastView(Command command, String commandText, CommandResult commandResult) {
+        if (command instanceof SortCommand) {
+            // A bare sort only reports the order (UNCHANGED); sort reset leaves no order to save.
+            if (commandResult.getListPresentation() == ListPresentation.REFRESH) {
+                model.setLastSortCommand(model.getSortOrder().equals(SortOrder.NONE) ? "" : commandText.strip());
+            }
+        } else if (isViewCommand(command)) {
+            model.setLastViewCommand(commandText.strip());
+        } else if (!commandResult.isExit()
+                && commandResult.getListPresentation() != ListPresentation.UNCHANGED) {
+            model.setLastViewCommand("");
+        }
+    }
+
+    private boolean isViewCommand(Command command) {
+        return command instanceof ListCommand || command instanceof FindCommand;
+    }
+
+    /** Returns the command in {@code commandText}, or null if it cannot be parsed. */
+    private Command parseSavedCommand(String commandText) {
+        try {
+            return addressBookParser.parseCommand(commandText);
+        } catch (ParseException e) {
+            return null;
+        }
     }
 }

@@ -127,6 +127,27 @@ public class MainWindow extends UiPart<Stage> {
         commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         showListSummary();
+        restoreLastView();
+    }
+
+    /** Shows the sort order and the list or find view that were on screen when the app was last closed. */
+    private void restoreLastView() {
+        // Sort first, so the list or find view that follows is shown in the saved order.
+        restoreCommand(logic.getLastSortCommand());
+        restoreCommand(logic.getLastViewCommand());
+    }
+
+    private void restoreCommand(String savedCommand) {
+        if (savedCommand.isEmpty()) {
+            return;
+        }
+        logger.info("Restoring last view: " + savedCommand);
+        try {
+            executeCommand(savedCommand);
+        } catch (CommandException | ParseException e) {
+            // executeCommand has already shown the error, and the current list stays on screen.
+            logger.warning("Could not restore last view: " + e.getMessage());
+        }
     }
 
     /** Displays the current list's total and number of students with no balance due. */

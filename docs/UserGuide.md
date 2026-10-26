@@ -293,7 +293,7 @@ returns to original stored order; the subject-grouped display returns to alphabe
   time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
 * Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
   the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
-  Sorting is currently session-only and resets on restart; preference persistence is a separate feature.
+  TuteeDex remembers the last applied sort when you close it (see [Reopening where you left off](#reopening-where-you-left-off)).
 
 Examples:
 
@@ -447,6 +447,20 @@ Format: `exit`
 ### Saving the data
 
 TuteeDex automatically saves data after every command. You do not need to save manually.
+
+### Reopening where you left off
+
+TuteeDex remembers which students you were looking at and in what order. When you open it again, it runs the
+last `sort` you applied and then the last `list` or `find` you entered, so the same view comes back. For example,
+if you close TuteeDex after `sort o/desc` and `list -subjects`, it opens with the subject groups, largest balances
+first.
+
+* `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
+* `sort reset` clears the remembered order, so TuteeDex opens in the default order.
+* Other commands that change the displayed list, such as `add`, `edit`, `delete`, `archive` or `import`, switch back
+  to the normal list, so TuteeDex also opens on the normal list next time. The sort order is kept.
+* The view and order are saved in `preferences.json`, next to the JAR file, when you close TuteeDex. If that file
+  is edited so that a saved command is not a valid `list`, `find` or `sort` command, TuteeDex ignores it.
 
 ### Editing the data file
 

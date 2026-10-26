@@ -33,6 +33,26 @@ public interface Model {
     void setGuiSettings(GuiSettings guiSettings);
 
     /**
+     * Returns the saved list or find command that sets the displayed list, or an empty string for the normal list.
+     */
+    String getLastViewCommand();
+
+    /**
+     * Saves {@code lastViewCommand} so the same list can be shown the next time the app opens.
+     * An empty string means the normal list.
+     */
+    void setLastViewCommand(String lastViewCommand);
+
+    /** Returns the saved sort command that sets the display order, or an empty string for the default order. */
+    String getLastSortCommand();
+
+    /**
+     * Saves {@code lastSortCommand} so the same order can be used the next time the app opens.
+     * An empty string means the default order.
+     */
+    void setLastSortCommand(String lastSortCommand);
+
+    /**
      * Replaces address book data with the data in {@code addressBook}.
      */
     void setAddressBook(ReadOnlyAddressBook addressBook);

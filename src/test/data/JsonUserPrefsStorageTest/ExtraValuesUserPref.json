@@ -9,5 +9,7 @@
       "z" : 99
     }
   },
-  "addressBookFilePath" : "addressbook.json"
+  "addressBookFilePath" : "addressbook.json",
+  "lastViewCommand" : "list -subjects",
+  "lastSortCommand" : "sort o/desc n/asc"
 }
