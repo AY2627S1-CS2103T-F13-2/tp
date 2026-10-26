@@ -83,6 +83,19 @@ public class CommandBoxTest extends FxTestSupport {
     }
 
     @Test
+    public void prepareFind_commandWordOnly_addsTrailingSpace() throws Exception {
+        runOnFxThread(() -> {
+            CommandBox box = new CommandBox(command -> new CommandResult("Success"));
+            TextField input = inputOf(box);
+            input.setText("find");
+
+            box.prepareFind();
+
+            assertEquals("find ", input.getText());
+        });
+    }
+
+    @Test
     public void submit_emptyInput_doesNotExecute() throws Exception {
         runOnFxThread(() -> {
             AtomicReference<String> executed = new AtomicReference<>();
