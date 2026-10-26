@@ -127,7 +127,7 @@ public class EditCommand extends Command {
         return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount,
                 editPersonDescriptor.getTags().orElse(personToEdit.getTags()),
                 editPersonDescriptor.getNotes().orElse(personToEdit.getNotes()),
-                editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()));
+                editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()), personToEdit.isArchived());
     }
 
     @Override
