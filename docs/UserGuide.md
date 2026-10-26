@@ -136,10 +136,10 @@ note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
-Subjects, tags, and notes also appear on each contact card without running `view`.
-Subjects keep their stored order; tags appear alphabetically using their stored
-lowercase labels. Missing subjects or tags show `Not specified`; missing notes
-show an empty `Notes:` value. Long subjects, tags, and notes wrap within the card.
+Each contact card displays the student's index, name, and subjects. Long names and
+subjects are shortened to fit the compact card. Hover over a card to see the
+remaining profile details, or use `view INDEX` to display the complete profile.
+
 ### Exporting contacts: `export`
 
 Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
