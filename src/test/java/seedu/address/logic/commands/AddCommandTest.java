@@ -91,6 +91,16 @@ public class AddCommandTest {
      */
     private class ModelStub implements Model {
         @Override
+        public void beginCommand() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void endCommand() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public SortOrder getSortOrder() {
             throw new AssertionError("This method should not be called.");
         }

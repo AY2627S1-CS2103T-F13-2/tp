@@ -49,7 +49,12 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
-        commandResult = command.execute(model);
+        model.beginCommand();
+        try {
+            commandResult = command.execute(model);
+        } finally {
+            model.endCommand();
+        }
 
         if (command.requiresAddressBookSave()) {
             saveAddressBook();

@@ -112,6 +112,8 @@ public class SortIntegrationTest {
                 readOnlyLogic.execute("edit 1 notes/Still saved"));
         assertTrue(error.getMessage().contains("insufficient permissions"));
         assertEquals(1, writes.get(), "Profile mutations keep the existing persistence behaviour");
+        readOnlyLogic.execute("sort n/asc");
+        assertEquals(1, writes.get(), "The failed save must not leave a command scope active");
     }
 
     @Test
@@ -253,9 +255,40 @@ public class SortIntegrationTest {
         assertEquals(tomorrow, clocked.getStudentRows().getFirst().subject());
     }
 
+    @Test
+    public void execute_editCrossingLessonBoundary_capturesOneTimeForTheWholeCommand() throws Exception {
+        AdjustableClock clock = new AdjustableClock();
+        Model clocked = new ModelManager(new AddressBook(), new UserPrefs(), clock);
+        Subject today = new Subject("Maths", new LessonSlot(DayOfWeek.THURSDAY, LocalTime.of(15, 0)));
+        Subject tomorrow = new Subject("Physics", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(9, 0)));
+        clocked.addPerson(new PersonBuilder().withScheduledSubjects(today, tomorrow).build());
+        Logic clockedLogic = new LogicManager(clocked, new StorageManager(storage,
+                new JsonUserPrefsStorage(folder.resolve("clock-prefs.json"))));
+        clockedLogic.execute("sort slot/asc");
+        clock.current = Instant.parse("2026-10-22T14:59:59Z");
+        clock.advancesOnRead = true;
+        int reads = clock.reads;
+
+        clockedLogic.execute("edit 1 notes/Before the lesson");
+        assertEquals(reads + 1, clock.reads, "The profile update and filter reset share one clock reading");
+        assertEquals(today, clocked.getStudentRows().getFirst().subject());
+        List<LessonRow> rows = clocked.getLessonRows();
+        clockedLogic.execute("sort");
+        clockedLogic.execute("view 1");
+        assertThrows(CommandException.class, () -> clockedLogic.execute("delete 99"));
+        assertEquals(reads + 1, clock.reads, "Queries and failed commands do not refresh lesson time");
+        assertSame(rows, clocked.getLessonRows());
+
+        clockedLogic.execute("sort slot/asc");
+        assertEquals(reads + 2, clock.reads);
+        assertEquals(tomorrow, clocked.getStudentRows().getFirst().subject(), "The next command sees the passed start");
+    }
+
     /** Supplies changing time without sleeping or changing the computer's clock. */
     private static class AdjustableClock extends Clock {
         private Instant current = Instant.parse("2026-10-22T14:00:00Z");
+        private int reads;
+        private boolean advancesOnRead;
 
         @Override
         public ZoneId getZone() {
@@ -269,7 +302,12 @@ public class SortIntegrationTest {
 
         @Override
         public Instant instant() {
-            return current;
+            Instant result = current;
+            reads++;
+            if (advancesOnRead) {
+                current = current.plusSeconds(2);
+            }
+            return result;
         }
     }
 }

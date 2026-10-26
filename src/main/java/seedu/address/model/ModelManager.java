@@ -6,10 +6,13 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -31,8 +34,13 @@ public class ModelManager implements Model {
     private final FilteredList<Person> filteredPersons;
     private final SortedList<Person> sortedPersons;
     private final Clock clock;
+    private final Map<Person, Integer> storedPositions = new HashMap<>();
     private SortOrder sortOrder = SortOrder.NONE;
     private LocalDateTime sortReference;
+    private boolean commandInProgress;
+    private LocalDateTime commandReference;
+    private List<LessonRow> studentRows;
+    private List<LessonRow> lessonRows;
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs.
@@ -41,7 +49,10 @@ public class ModelManager implements Model {
         this(addressBook, userPrefs, Clock.systemDefaultZone());
     }
 
-    /** Creates a model using a supplied clock for deterministic weekly lesson ordering. */
+    /**
+     * Creates a model whose local lesson time is defined by the supplied clock's zone.
+     * Production uses the system-default zone; tests can deliberately supply another zone.
+     */
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs, Clock clock) {
         requireAllNonNull(addressBook, userPrefs, clock);
 
@@ -50,6 +61,12 @@ public class ModelManager implements Model {
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
         this.clock = clock;
+        updateStoredPositions();
+        // Update positions before transformation listeners compare a new or edited profile.
+        this.addressBook.getPersonList().addListener((ListChangeListener<Person>) change -> {
+            updateStoredPositions();
+            invalidateRows();
+        });
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
         sortedPersons = new SortedList<>(filteredPersons);
         sortReference = LocalDateTime.now(clock);
@@ -116,6 +133,20 @@ public class ModelManager implements Model {
         refreshSorting();
     }
 
+    @Override
+    public void beginCommand() {
+        assert !commandInProgress : "Command scopes must not be nested.";
+        commandInProgress = true;
+        commandReference = null;
+    }
+
+    @Override
+    public void endCommand() {
+        assert commandInProgress : "A command scope must be started before it ends.";
+        commandInProgress = false;
+        commandReference = null;
+    }
+
     //=========== Filtered Person List Accessors =============================================================
 
     /**
@@ -140,12 +171,18 @@ public class ModelManager implements Model {
 
     @Override
     public List<LessonRow> getStudentRows() {
-        return sortedPersons.stream()
-                .map(person -> SortComparators.representativeLesson(person, sortOrder, sortReference)).toList();
+        if (studentRows == null) {
+            studentRows = sortedPersons.stream()
+                    .map(person -> SortComparators.representativeLesson(person, sortOrder, sortReference)).toList();
+        }
+        return studentRows;
     }
 
     @Override
     public List<LessonRow> getLessonRows() {
+        if (lessonRows != null) {
+            return lessonRows;
+        }
         List<LessonRow> rows = new ArrayList<>();
         for (Person person : sortedPersons) {
             if (person.getSubjects().isEmpty()) {
@@ -155,15 +192,40 @@ public class ModelManager implements Model {
             }
         }
         rows.sort(SortComparators.lessons(sortOrder, sortReference)
-                .thenComparingInt(row -> addressBook.getPersonList().indexOf(row.person())));
-        return List.copyOf(rows);
+                .thenComparingInt(row -> storedPositions.get(row.person())));
+        lessonRows = List.copyOf(rows);
+        return lessonRows;
     }
 
     private void refreshSorting() {
-        sortReference = LocalDateTime.now(clock);
+        sortReference = captureSortReference();
+        invalidateRows();
         sortedPersons.setComparator(sortOrder.equals(SortOrder.NONE) ? null
                 : SortComparators.students(sortOrder, sortReference)
-                .thenComparingInt(addressBook.getPersonList()::indexOf));
+                .thenComparingInt(storedPositions::get));
+    }
+
+    private LocalDateTime captureSortReference() {
+        if (!commandInProgress) {
+            return LocalDateTime.now(clock);
+        }
+        if (commandReference == null) {
+            commandReference = LocalDateTime.now(clock);
+        }
+        return commandReference;
+    }
+
+    private void invalidateRows() {
+        studentRows = null;
+        lessonRows = null;
+    }
+
+    private void updateStoredPositions() {
+        storedPositions.clear();
+        List<Person> storedStudents = addressBook.getPersonList();
+        for (int index = 0; index < storedStudents.size(); index++) {
+            storedPositions.put(storedStudents.get(index), index);
+        }
     }
 
     @Override

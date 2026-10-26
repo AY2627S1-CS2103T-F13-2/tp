@@ -39,6 +39,7 @@ import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Logic;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -581,7 +582,13 @@ public class MainWindowTest extends FxTestSupport {
 
         @Override
         public CommandResult execute(String commandText) throws CommandException, ParseException {
-            return parser.parseCommand(commandText).execute(model);
+            Command command = parser.parseCommand(commandText);
+            model.beginCommand();
+            try {
+                return command.execute(model);
+            } finally {
+                model.endCommand();
+            }
         }
 
         @Override

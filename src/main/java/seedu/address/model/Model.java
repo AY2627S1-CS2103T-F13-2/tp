@@ -64,6 +64,12 @@ public interface Model {
      */
     void setPerson(Person target, Person editedPerson);
 
+    /** Starts one command's lazy sorting-reference scope; queries need not capture a new time. */
+    void beginCommand();
+
+    /** Ends the command scope, including when command execution fails. */
+    void endCommand();
+
     /** Returns an unmodifiable view of the filtered person list */
     ObservableList<Person> getFilteredPersonList();
 
