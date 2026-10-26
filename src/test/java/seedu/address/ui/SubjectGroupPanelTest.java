@@ -6,6 +6,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,7 @@ import javafx.scene.layout.VBox;
 import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Subject;
+import seedu.address.model.sort.LessonRow;
 import seedu.address.testutil.PersonBuilder;
 
 /** Tests the grouped subject presentation and its empty state. */
@@ -61,6 +63,26 @@ public class SubjectGroupPanelTest extends FxTestSupport {
             VBox groups = (VBox) root.getContent();
             Label message = (Label) groups.getChildren().get(0);
             assertEquals("No subjects found for the active contacts.", message.getText());
+        });
+    }
+
+    @Test
+    public void constructor_orderedLessons_keepsStudentIndexAndFocusesEachSubjectsCard() throws Exception {
+        Subject maths = new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)));
+        Subject physics = new Subject("Physics", new LessonSlot(DayOfWeek.TUESDAY, LocalTime.of(10, 0)));
+        Person person = new PersonBuilder(ALICE).withScheduledSubjects(maths, physics).build();
+        runOnFxThread(() -> {
+            SubjectGroupPanel panel = new SubjectGroupPanel(List.of(person),
+                    List.of(new LessonRow(person, physics), new LessonRow(person, maths)));
+            VBox sections = (VBox) ((ScrollPane) panel.getRoot()).getContent();
+            for (int index = 0; index < sections.getChildren().size(); index++) {
+                VBox section = (VBox) sections.getChildren().get(index);
+                VBox entries = (VBox) section.getChildren().get(1);
+                HBox row = (HBox) entries.getChildren().getFirst();
+                HBox card = (HBox) row.getChildren().getFirst();
+                assertEquals("001", ((Label) card.getChildren().get(1)).getText());
+                assertEquals(index == 0 ? "Maths" : "Physics", ((Label) card.getChildren().get(3)).getText());
+            }
         });
     }
 }

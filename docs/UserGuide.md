@@ -233,18 +233,20 @@ Examples:
 `list -subjects` switches the display to active students grouped under their subjects.
 Each subject group shows the students taking that subject and each student's own weekly
 lesson day and start time. Students taking the same subject at different times remain in
-one subject group. Subject groups and students within each group are sorted alphabetically.
+one subject group. Subject headings are sorted alphabetically. Students within each group
+are alphabetical by default; an active `sort` applies within each subject group instead.
 Archived students are excluded. The option is standalone and cannot be combined with
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
 commands also leave the displayed list unchanged. Find and other List options switch
-back to the normal contact list for their results.
+back to the normal contact list for their results. Applying or resetting `sort` keeps the
+current grouped or ungrouped presentation; bare `sort` also preserves scroll position.
 
 #### Listing archived students
 
-`list -archived` displays only archived students in their stored order. It
+`list -archived` displays only archived students, using the active sort or stored order by default. It
 replaces any previous search or filter and does not change saved profiles.
 Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
 exist, the list is empty and feedback is `No archived contacts.`.
@@ -259,6 +261,48 @@ continue to exclude archived students. For example:
 * `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
 * `view 1` shows the first student in that displayed archived list.
 * `list` returns to the active list without restoring archived students.
+
+### Sorting the current display: `sort`
+
+Format: `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`
+
+Supported fields are `n/` (name), `o/` (outstanding amount), `d/` (start date), and `slot/` (upcoming lesson).
+Supply 1 to 4 distinct fields, separated by spaces, with lowercase prefixes and `asc` or `desc` directions.
+The first field has highest priority; later fields resolve ties. A new Sort replaces the previous criteria.
+Bare `sort` reports the current order. Commands and the `reset` keyword are lowercase; `sort RESET` is rejected.
+`sort reset` clears the criteria without changing the filter or presentation. The ungrouped display
+returns to original stored order; the subject-grouped display returns to alphabetical students within each group.
+
+* Names are compared alphabetically without regard to case; amounts are compared numerically.
+* Start dates are compared by calendar month and day, without a year. Existing invalid dates stay last.
+* Slots use the next weekly start relative to the computer's local time. A start exactly now is due now;
+  a start that has passed occurs next week. Lessons have start times, not durations.
+* In the ungrouped display, every student appears **once**, numbered `001`, `002`, `003`, and so on in displayed order.
+  `slot/asc` selects each student's **nearest upcoming lesson**, then orders students from nearest to furthest.
+  `slot/desc` selects each student's **furthest upcoming lesson**, then orders students from furthest to nearest.
+  Each row shows the selected subject and slot; all subjects remain stored. Equal slots use the first subject.
+  Students without subjects show `No lesson slot` and stay last when compared by slot, in either direction.
+* After `list -subjects`, Sort orders lessons within each subject group while keeping headings alphabetical.
+  Each lesson uses its own subject's schedule. Students can appear in several groups with the same student index.
+  Students without subjects have no grouped rows, but remain in the unique student counts.
+* **Use the printed student index.** In the ungrouped display it is the row position. In subject groups it refers
+  to the same current unique-student order, so group indexes may repeat and need not increase from top to bottom.
+  View/Edit/Delete act on the whole profile; deleting a grouped entry removes that student and all their lessons.
+  Total and paid counts count each student once.
+* Sort preserves the filter and student data. Find/List retain the sort; edits reorder students as needed.
+  Full ties retain stored student order. Valid criteria work on an empty display.
+* Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
+  time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
+* Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
+  the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
+  Sorting is currently session-only and resets on restart; preference persistence is a separate feature.
+
+Examples:
+
+* `sort o/desc n/asc` puts the largest balances first, then sorts equal balances by name.
+* `sort slot/asc n/asc` shows students' nearest upcoming lessons first, breaking equal-slot ties by student name.
+* `find Amy` followed by `sort d/asc` sorts only the current search results.
+* `list -subjects` followed by `sort slot/asc n/asc` orders upcoming lessons within each subject group.
 
 ### Editing a student profile: `edit`
 
@@ -438,6 +482,7 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`

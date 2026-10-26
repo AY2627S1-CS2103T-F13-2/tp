@@ -7,6 +7,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.logic.Messages;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Subject;
 
 /**
  * A UI component that displays information of a {@code Person}.
@@ -38,18 +39,24 @@ public class PersonCard extends UiPart<Region> {
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
      */
     public PersonCard(Person person, int displayedIndex) {
+        this(person, displayedIndex, null);
+    }
+
+    /** Creates a card focused on one lesson, or the whole profile when subject is null. */
+    public PersonCard(Person person, int displayedIndex, Subject subject) {
         super(FXML);
         this.person = person;
         id.setText(String.format(java.util.Locale.ROOT, "%03d", displayedIndex));
         name.setText(abbreviate(person.getName().fullName, 31));
-        subjects.setText(abbreviate(Messages.formatSubjects(person), 14));
+        subjects.setText(abbreviate(subject == null ? Messages.formatSubjects(person) : subject.value, 14));
         String profileDetails = Messages.format(person) + "; Tags: " + Messages.formatTags(person)
                 + "; Notes: " + person.getNotes();
         Tooltip profileTooltip = new Tooltip(profileDetails);
         profileTooltip.setWrapText(true);
         profileTooltip.setMaxWidth(420);
         name.setTooltip(profileTooltip);
-        subjects.setTooltip(new Tooltip("Subjects: " + Messages.formatSubjects(person)));
+        subjects.setTooltip(new Tooltip("Subjects: " + (subject == null
+                ? Messages.formatSubjects(person) : subject.toString())));
         Tooltip.install(cardPane, profileTooltip);
         cardPane.setAccessibleText(displayedIndex + ". " + profileDetails);
     }
