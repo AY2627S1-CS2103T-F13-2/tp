@@ -9,6 +9,14 @@ import seedu.address.model.Model;
 public abstract class Command {
 
     /**
+     * Returns whether successful execution requires saving the address book.
+     * Session-only commands can opt out of the existing save-after-success behaviour.
+     */
+    public boolean requiresAddressBookSave() {
+        return true;
+    }
+
+    /**
      * Executes the command and returns the result message.
      *
      * @param model {@code Model} which the command should operate on.

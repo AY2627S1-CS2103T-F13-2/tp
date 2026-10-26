@@ -21,6 +21,8 @@ import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.model.sort.LessonRow;
+import seedu.address.model.sort.SortOrder;
 import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandTest {
@@ -88,6 +90,36 @@ public class AddCommandTest {
      * A default model stub that has all of the methods failing.
      */
     private class ModelStub implements Model {
+        @Override
+        public void beginCommand() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void endCommand() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public SortOrder getSortOrder() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void setSortOrder(SortOrder order) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public List<LessonRow> getStudentRows() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public List<LessonRow> getLessonRows() {
+            throw new AssertionError("This method should not be called.");
+        }
+
         @Override
         public ReadOnlyUserPrefs getUserPrefs() {
             throw new AssertionError("This method should not be called.");
