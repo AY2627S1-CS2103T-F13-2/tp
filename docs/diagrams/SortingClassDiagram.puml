@@ -1,0 +1,56 @@
+@startuml
+!include style.puml
+top to bottom direction
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontColor #FFFFFF
+
+package Logic {
+class SortCommand LOGIC_COLOR
+}
+
+package Model {
+interface "Model" as ModelApi MODEL_COLOR {
+    + setSortOrder(order: SortOrder)
+}
+class ModelManager MODEL_COLOR {
+    + getStudentRows(): List<LessonRow>
+    + getLessonRows(): List<LessonRow>
+}
+class SortOrder <<record>> MODEL_COLOR
+class Criterion <<record>> MODEL_COLOR {
+    + field: Field
+    + direction: Direction
+}
+class SortComparators MODEL_COLOR {
+    {static} + students(...): Comparator<Person>
+    {static} + lessons(...): Comparator<LessonRow>
+    {static} + representativeLesson(...): LessonRow
+}
+class LessonRow <<record>> MODEL_COLOR {
+    + person: Person
+    + subject: Subject
+}
+}
+
+show ModelApi methods
+show ModelManager methods
+show Criterion fields
+show SortComparators methods
+show LessonRow fields
+
+SortCommand ..> ModelApi : applies criteria
+SortCommand --> "0..1" SortOrder : requestedOrder
+ModelManager ..|> ModelApi
+ModelManager --> "1" SortOrder : sortOrder
+ModelManager ..> SortComparators : builds display order
+ModelManager ..> LessonRow : caches row snapshots
+SortOrder --> "0..4" Criterion : criteria {ordered}
+SortComparators ..> SortOrder
+SortComparators ..> LessonRow
+
+note bottom of LessonRow
+  References one stored student and its subject.
+  A null subject represents a missing lesson.
+end note
+@enduml

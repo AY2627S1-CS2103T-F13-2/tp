@@ -204,6 +204,11 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Sorting criteria
 
+<puml src="diagrams/SortingClassDiagram.puml" width="1000" alt="Sorting criteria, comparisons and display rows" />
+
+The diagram shows the sorting types and their main dependencies; UI, storage and comparator parameter
+lists are omitted for readability.
+
 `SortOrder` is an immutable, ordered list of field/direction pairs. Its first criterion has the highest
 priority. Fields cannot repeat, and an empty order represents the original stored order. The supported
 fields are student name, outstanding amount, start date, and upcoming lesson slot. A lesson slot is a
@@ -235,10 +240,29 @@ per student in that same order. With slot sorting, `LessonListPanel` numbers the
 position, so every student appears once with the subject/slot actually used for sorting. Counts remain
 unique. Indexed commands continue to target this unique-student list without a separate lesson-index map.
 
-The default clock is the computer's local clock; tests inject a fixed clock through the model constructor.
-Sort, filter changes, and profile mutations capture a fresh reference time. Query/View do not recalculate
-time-based ordering. No timer reorders rows while a tutor is entering an indexed command. A repeated Sort
-or List refreshes upcoming occurrences, and indexed command targets are resolved before mutation refreshes.
+The default clock uses the computer's local zone. An injected clock deliberately defines the local zone
+for that model; tests compare Singapore and UTC at the same instant to verify this contract. Lesson slots
+remain weekly local times rather than timezone-bearing events.
+
+`LogicManager` brackets command execution with `Model#beginCommand()` and `endCommand()` in a `finally`
+block. The first sorting refresh captures a reference; further refreshes in that command reuse it. Thus
+Edit's profile update and filter reset cannot straddle a lesson boundary with different references.
+Query/View capture no new time. No timer reorders rows while a tutor is entering an indexed command.
+A repeated Sort or List refreshes upcoming occurrences; indexed targets are resolved before mutation refreshes.
+
+Student and grouped-lesson row snapshots are built lazily and reused until profile data, the filter,
+criteria or reference time changes. An address-book listener updates the stored-position map before
+transformation listeners compare added/edited profiles. Tie breaks therefore use constant-time lookups
+rather than scanning the stored list during every comparison. Profile changes also invalidate cached rows.
+
+#### Design considerations
+
+| Decision | Reason |
+| --- | --- |
+| `SortedList` over the filtered students | Changes display order while retaining stored/CSV order and the existing unique-student command indexes. Reordering the address book would mix presentation with data changes. |
+| One captured local reference per command | Keeps comparisons consistent at lesson boundaries. Reading the clock inside each comparison could change keys while sorting. |
+| One representative row per ungrouped student | Keeps natural indexes and whole-profile commands simple. Subject groups retain every lesson because each subject has its own schedule. |
+| Lazy snapshots and a stored-position map | Avoid repeated snapshot sorting and linear tie-break scans. Invalidation is explicit when profiles or sorting inputs change. |
 
 #### Sorting within subject groups
 

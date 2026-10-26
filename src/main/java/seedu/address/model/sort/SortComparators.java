@@ -64,6 +64,7 @@ public final class SortComparators {
     /**
      * Returns the next weekly start at or after the reference time. A start that has passed occurs next week.
      * Uses local wall-clock time, consistent with the lesson model, which stores no time zone or duration.
+     * The caller supplies the reference in its clock's zone; this method performs no zone conversion.
      */
     public static LocalDateTime nextOccurrence(LessonSlot slot, LocalDateTime reference) {
         requireNonNull(slot);
