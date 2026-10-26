@@ -10,7 +10,8 @@ import java.math.BigDecimal;
  */
 public class OutstandingAmount {
 
-    public static final String MESSAGE_CONSTRAINTS = "Outstanding amount must be more than or equal to 0.";
+    public static final String MESSAGE_CONSTRAINTS =
+            "Outstanding amount must be a nonnegative number with at most two decimal places.";
     public static final String VALIDATION_REGEX = "\\d+(?:\\.\\d{1,2})?";
     public static final OutstandingAmount ZERO = new OutstandingAmount("0");
 
