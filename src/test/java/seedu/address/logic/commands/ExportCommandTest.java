@@ -22,19 +22,21 @@ public class ExportCommandTest {
 
     @Test
     public void execute_exportsActiveAndArchivedContacts() throws Exception {
-        Path output = Files.createTempFile("export-command-test", ".csv");
-        Files.delete(output);
+        Path directory = Files.createTempDirectory("export-command-test");
+        Path output = directory.resolve(".").resolve("contacts.csv");
         Model model = new ModelManager(addressBookWithContacts(), new UserPrefs());
 
         CommandResult result = new ExportCommand(() -> output).execute(model);
 
-        assertEquals("Exported 2 contact(s) to " + output.toAbsolutePath() + ".", result.getFeedbackToUser());
+        assertEquals("Exported 2 contact(s) to " + output.toAbsolutePath().normalize() + ".",
+                result.getFeedbackToUser());
         assertEquals(CommandResult.ListPresentation.UNCHANGED, result.getListPresentation());
         String csv = Files.readString(output);
         assertEquals(3, csv.lines().count());
         assertEquals(true, csv.contains("Alice Pauline"));
         assertEquals(true, csv.contains("Bob Choo"));
         Files.deleteIfExists(output);
+        Files.deleteIfExists(directory);
     }
 
     @Test
