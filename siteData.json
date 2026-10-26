@@ -51,6 +51,7 @@
         "storage-component": "Storage component",
         "common-classes": "Common classes",
         "implementation": "Implementation",
+        "sorting-criteria": "Sorting criteria",
         "weekly-subject-lessons": "Weekly subject lessons",
         "shared-tag-data": "Shared tag data",
         "csv-import": "CSV import",
@@ -72,6 +73,7 @@
         "editing-student-tags": "Editing student tags",
         "editing-student-subjects": "Editing student subjects",
         "editing-student-notes": "Editing student notes",
+        "sorting-students": "Sorting students",
         "importing-students": "Importing students",
         "saving-data": "Saving data"
       },
@@ -126,6 +128,7 @@
         "exporting-contacts-export": "Exporting contacts: export",
         "importing-students-import": "Importing students: import",
         "listing-and-filtering-students-list": "Listing and filtering students: list",
+        "sorting-the-current-display-sort": "Sorting the current display: sort",
         "editing-a-student-profile-edit": "Editing a student profile: edit",
         "locating-persons-by-name-find": "Locating persons by name: find",
         "deleting-a-contact-delete": "Deleting a contact: delete",
