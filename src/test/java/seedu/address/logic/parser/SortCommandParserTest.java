@@ -32,7 +32,8 @@ public class SortCommandParserTest {
 
     @Test
     public void parse_invalidRequests_doNotCreateCommands() {
-        for (String args : List.of("reset n/asc", "n/asc reset", "RESET", "n/asc n/desc", "for/Maths", "n/")) {
+        for (String args : List.of("reset n/asc", "n/asc reset", "RESET", "Reset", "ReSeT",
+                "n/asc n/desc", "for/Maths", "n/")) {
             assertThrows(ParseException.class, () -> parser.parse(args), args);
         }
     }

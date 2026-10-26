@@ -67,6 +67,9 @@ public class SortOrderParser {
     }
 
     private Direction parseDirection(String value) throws ParseException {
+        if (value.contains("/") || value.contains(",") || value.contains(";")) {
+            throw new ParseException(MESSAGE_INVALID_FORMAT);
+        }
         return switch (value) {
             case "asc" -> Direction.ASCENDING;
             case "desc" -> Direction.DESCENDING;

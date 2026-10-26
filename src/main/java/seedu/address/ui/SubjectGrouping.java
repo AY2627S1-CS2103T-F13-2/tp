@@ -27,8 +27,11 @@ final class SubjectGrouping {
         for (int index = 0; index < orderedLessons.size(); index++) {
             positions.put(orderedLessons.get(index), index);
         }
-        return group(persons, Comparator.comparingInt(entry -> positions.get(
-                new LessonRow(entry.person(), entry.subject()))));
+        return group(persons, Comparator.comparingInt(entry -> {
+            Integer position = positions.get(new LessonRow(entry.person(), entry.subject()));
+            assert position != null : "Grouped entries must belong to the ordered lesson snapshot.";
+            return position;
+        }));
     }
 
     private static List<Group> group(List<Person> persons, Comparator<Entry> order) {

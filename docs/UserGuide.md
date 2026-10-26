@@ -265,35 +265,30 @@ continue to exclude archived students. For example:
 Format: `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`
 
 Supported fields are `n/` (name), `o/` (outstanding amount), `d/` (start date), and `slot/` (upcoming lesson).
-Each field may appear once and must use lowercase `asc` or `desc`. The first field has highest priority;
-later fields resolve ties. A new Sort replaces the previous criteria. Bare `sort` reports the current order.
+Supply 1 to 4 distinct fields, separated by spaces, with lowercase prefixes and `asc` or `desc` directions.
+The first field has highest priority; later fields resolve ties. A new Sort replaces the previous criteria.
+Bare `sort` reports the current order. Commands and the `reset` keyword are lowercase; `sort RESET` is rejected.
 `sort reset` clears the criteria without changing the filter or presentation. The ungrouped display
 returns to original stored order; the subject-grouped display returns to alphabetical students within each group.
 
 * Names are compared alphabetically without regard to case; amounts are compared numerically.
 * Start dates are compared by calendar month and day, without a year. Existing invalid dates stay last.
-* Slots are compared by their next weekly start relative to the computer's local date and time.
-  A start exactly equal to the reference time is due now;
-  once its start has passed, that lesson's next occurrence is next week. Only starts are recorded, not durations.
+* Slots use the next weekly start relative to the computer's local time. A start exactly now is due now;
+  a start that has passed occurs next week. Lessons have start times, not durations.
 * In the ungrouped display, every student appears **once**, numbered `001`, `002`, `003`, and so on in displayed order.
   `slot/asc` selects each student's **nearest upcoming lesson**, then orders students from nearest to furthest.
   `slot/desc` selects each student's **furthest upcoming lesson**, then orders students from furthest to nearest.
-  Each row shows the subject and slot selected for that student; other subjects remain stored in their profile.
-  Equal slots keep the first subject in the profile. No `for/SUBJECT` argument is needed.
-  Students without subjects appear once with `No lesson slot` and stay last at the slot-comparison level in either
-  direction. Other criteria can have higher priority than the slot. Descending need not reverse the ascending
-  student order, because it can select a different subject for each student.
+  Each row shows the selected subject and slot; all subjects remain stored. Equal slots use the first subject.
+  Students without subjects show `No lesson slot` and stay last when compared by slot, in either direction.
 * After `list -subjects`, Sort orders lessons within each subject group while keeping headings alphabetical.
-  Each lesson uses its own subject's schedule, rather than the student's earliest lesson in any subject.
-  A student taking several subjects still appears in each relevant group and shares the same printed student index.
-  Students without subjects have no grouped rows, as with ordinary grouping, but remain in the unique student counts.
+  Each lesson uses its own subject's schedule. Students can appear in several groups with the same student index.
+  Students without subjects have no grouped rows, but remain in the unique student counts.
 * **Use the printed student index.** In the ungrouped display it is the row position. In subject groups it refers
   to the same current unique-student order, so group indexes may repeat and need not increase from top to bottom.
   View/Edit/Delete act on the whole profile; deleting a grouped entry removes that student and all their lessons.
   Total and paid counts count each student once.
-* Sort preserves the current filter. Find/List retain the chosen sort; profile changes are reordered as needed.
-  Sort does not rewrite stored profile order, change student details, or change CSV export order. Full ties
-  retain original stored order. Valid criteria can be selected on an empty display.
+* Sort preserves the filter and student data. Find/List retain the sort; edits reorder students as needed.
+  Full ties retain stored student order. Valid criteria work on an empty display.
 * Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
   time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
 * Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
@@ -306,10 +301,6 @@ Examples:
 * `sort slot/asc n/asc` shows students' nearest upcoming lessons first, breaking equal-slot ties by student name.
 * `find Amy` followed by `sort d/asc` sorts only the current search results.
 * `list -subjects` followed by `sort slot/asc n/asc` orders upcoming lessons within each subject group.
-
-To check the grouped display, try the last example, use `view INDEX` with a printed student index, then run
-`sort reset` and `list`. View keeps the grouped panel; reset restores alphabetical students within groups;
-List returns to the ungrouped display. Applying slot sorting again shows one representative lesson per student.
 
 ### Editing a student profile: `edit`
 
@@ -489,7 +480,7 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Sort**   | `sort [n/asc\|desc] [o/asc\|desc] [d/asc\|desc] [slot/asc\|desc]`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
+**Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`

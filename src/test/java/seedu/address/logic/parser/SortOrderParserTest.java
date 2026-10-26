@@ -60,9 +60,17 @@ public class SortOrderParserTest {
 
     @Test
     public void parse_invalidOrUppercaseDirection_throwsUsefulError() {
-        for (String args : List.of("n/up", "n/ASC", "o/descending", "d/ascending", "slot/1", "n/asco/desc")) {
+        for (String args : List.of("n/up", "n/ASC", "o/descending", "d/ascending", "slot/1")) {
             ParseException error = assertThrows(ParseException.class, () -> parser.parse(args), args);
             assertEquals(SortOrderParser.MESSAGE_INVALID_DIRECTION, error.getMessage(), args);
+        }
+    }
+
+    @Test
+    public void parse_missingOrInvalidSeparator_explainsTheCriteriaFormat() {
+        for (String args : List.of("o/desc,n/asc", "n/asco/desc", "n/asc;slot/desc", "n/asc,")) {
+            ParseException error = assertThrows(ParseException.class, () -> parser.parse(args), args);
+            assertEquals(SortOrderParser.MESSAGE_INVALID_FORMAT, error.getMessage(), args);
         }
     }
 

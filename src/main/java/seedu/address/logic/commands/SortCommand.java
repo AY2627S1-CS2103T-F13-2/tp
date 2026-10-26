@@ -4,8 +4,10 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.Model;
 import seedu.address.model.sort.SortOrder;
 import seedu.address.model.sort.SortOrder.Field;
@@ -17,6 +19,7 @@ public class SortCommand extends Command {
             + "sort reset, or sort to show the current order. Each direction must be asc or desc.";
     public static final String MESSAGE_DEFAULT = "Sorting: default display order.";
 
+    private static final Logger logger = LogsCenter.getLogger(SortCommand.class);
     private final Optional<SortOrder> requestedOrder;
 
     /** Creates a read-only query of the current order. */
@@ -38,6 +41,9 @@ public class SortCommand extends Command {
                 .map(criterion -> label(criterion.field()) + " "
                         + criterion.direction().name().toLowerCase(Locale.ROOT))
                 .collect(Collectors.joining(", ")) + ".";
+        if (requestedOrder.isPresent()) {
+            logger.info("Applied sort order: " + order);
+        }
         return new CommandResult(feedback, false, false, requestedOrder.isPresent()
                 ? CommandResult.ListPresentation.REFRESH : CommandResult.ListPresentation.UNCHANGED);
     }

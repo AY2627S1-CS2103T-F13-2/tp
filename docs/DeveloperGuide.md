@@ -772,6 +772,29 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 7. Exit and restart from the same folder.<br>
    Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
 
+### Sorting students
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/2 s/Maths day/MON time/09:00 s/Physics day/FRI time/10:00`
+   and `add n/Bob Choo p/22222222 a/Block 2 d/01-Jan o/10 s/Maths day/TUE time/11:00`.
+2. Run `sort o/desc n/asc`.<br>
+   Expected: Bob is row `001` and Amy is row `002`. `view 1` shows Bob's full profile.
+3. Run `sort slot/asc`, then `sort slot/desc`.<br>
+   Expected: Two student rows remain. Each row shows the student's nearest upcoming subject for ascending,
+   or furthest upcoming subject for descending, relative to the computer's current local time. Compare the
+   selected subject with that student's full schedule in View. All subjects remain stored in the profile.
+4. Run `list -subjects`, then `sort slot/asc n/asc`.<br>
+   Expected: Maths and Physics headings stay alphabetical; each group uses its own lessons' schedules.
+   Amy appears in both groups with the same printed index. View preserves the panel and scroll position.
+5. Run `sort reset`, then `list`.<br>
+   Expected: Reset keeps grouping and restores alphabetical students within groups. List returns to one
+   ungrouped row per student in stored order. Applying slot sorting again keeps two ungrouped student rows.
+6. Try `sort o/desc,n/asc`, `sort n/up`, `sort n/asc n/desc`, and `sort RESET`.<br>
+   Expected: Each command fails without changing the selected order, filter or displayed panel. The comma
+   error explains the criteria format, while an unsupported direction explains the allowed directions.
+
 ### Importing students
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.

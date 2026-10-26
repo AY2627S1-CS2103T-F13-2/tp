@@ -66,6 +66,13 @@ public class SubjectGroupingTest {
     }
 
     @Test
+    public void group_incompleteOrderedSnapshot_reportsTheInternalInvariant() {
+        Person amy = new PersonBuilder(ALICE).withSubjects("Maths").build();
+        Person zed = new PersonBuilder(ALICE).withName("Zed Student").withSubjects("Maths").build();
+        assertThrows(AssertionError.class, () -> SubjectGrouping.group(List.of(amy, zed), List.of()));
+    }
+
+    @Test
     public void group_multipleSubjects_keepsCommandIndexesAfterSortingAndSubjectlessContacts() throws Exception {
         Person zed = new PersonBuilder(ALICE).withName("Zed Student").withSubjects("Physics", "Maths").build();
         Person alice = new PersonBuilder(ALICE).withSubjects("Maths").build();
