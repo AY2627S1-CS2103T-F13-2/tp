@@ -23,6 +23,7 @@ public class ExportCommandTest {
     @Test
     public void execute_exportsActiveAndArchivedContacts() throws Exception {
         Path output = Files.createTempFile("export-command-test", ".csv");
+        Files.delete(output);
         Model model = new ModelManager(addressBookWithContacts(), new UserPrefs());
 
         CommandResult result = new ExportCommand(() -> output).execute(model);
@@ -39,9 +40,10 @@ public class ExportCommandTest {
     @Test
     public void execute_writeFailure_throwsCommandException() throws IOException {
         Path directory = Files.createTempDirectory("export-command-test");
+        Path output = directory.resolve("missing").resolve("contacts.csv");
         Model model = new ModelManager(addressBookWithContacts(), new UserPrefs());
 
-        assertThrows(CommandException.class, () -> new ExportCommand(() -> directory).execute(model));
+        assertThrows(CommandException.class, () -> new ExportCommand(() -> output).execute(model));
         Files.deleteIfExists(directory);
     }
 
@@ -56,16 +58,19 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void generateOutputPath_collision_returnsSuffixedPath() throws IOException {
+    public void execute_collision_retriesWithSuffixedPath() throws Exception {
         Path directory = Files.createTempDirectory("export-command-test");
         Path existing = directory.resolve("contacts-20261021-143012-123.csv");
         Files.createFile(existing);
+        Model model = new ModelManager(addressBookWithContacts(), new UserPrefs());
 
-        Path output = ExportCommand.generateOutputPath(LocalDateTime.of(2026, 10, 21, 14, 30, 12, 123_000_000),
-                directory);
+        CommandResult result = new ExportCommand(() -> existing).execute(model);
+        Path output = directory.resolve("contacts-20261021-143012-123-1.csv");
 
-        assertEquals(directory.resolve("contacts-20261021-143012-123-1.csv"), output);
+        assertEquals("Exported 2 contact(s) to " + output.toAbsolutePath() + ".", result.getFeedbackToUser());
+        assertEquals(3, Files.readString(output).lines().count());
         Files.deleteIfExists(existing);
+        Files.deleteIfExists(output);
         Files.deleteIfExists(directory);
     }
 
