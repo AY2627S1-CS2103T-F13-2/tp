@@ -10,7 +10,7 @@ import seedu.address.model.tag.Tag;
 /** Formats address-book contacts as CSV text. */
 public final class CsvExporter {
 
-    private static final String HEADER = "Name,Phone,Address,Start Date,Outstanding Amount,Subjects,Tags,Notes,"
+    public static final String HEADER = "Name,Phone,Address,Start Date,Outstanding Amount,Subjects,Tags,Notes,"
             + "Archived";
 
     private CsvExporter() {
