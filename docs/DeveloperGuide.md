@@ -99,6 +99,14 @@ The following sequence diagram shows submission of a successful `list` command a
 
 The sequence diagram omits error handling, help/exit flag handling, and the observable list's JavaFX cell updates for clarity.
 
+For List commands, text such as `Listed N contacts.`, `No contacts match the specified subjects.`,
+`No contacts match the specified tags.`, and `No archived contacts.` remains in the `CommandResult`
+and is logged by `MainWindow`, but the visible result is the TOTAL/PAID banner. The optional `-summary`
+changes the command's returned feedback; it does not opt into a different GUI display.
+This applies to plain, filtered, archived and subject-grouped List modes. Empty results show both counts
+as zero. Grouped counts use unique students, including subjectless students, rather than grouped rows.
+Invalid List input follows the exception path instead: error feedback is shown and the current list remains.
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
@@ -679,19 +687,22 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 t/Needs revision`, and
    `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths day/WED time/11:00`.
 2. Run `find Nobody`, then `list t/A-Level t/Needs revision`.<br>
-   Expected: Amy and Bob are displayed in that order, with `Listed 2 contacts.`.
+   Expected: Amy and Bob are displayed in that order, with TOTAL 2 / PAID 2.
    This checks OR matching across the full address book, including students hidden by Find.
 3. Run `list t/NEEDS REVISION t/needs revision`, then `view 1`.<br>
-   Expected: Only Bob is displayed, with `Listed 1 contact.`. View shows Bob's details.
+   Expected: List displays only Bob, with TOTAL 1 / PAID 1. View then replaces the banner with Bob's details.
    The repeated case variants do not duplicate Bob in the results, and the displayed index is used.
 4. Run `list t/revision`.<br>
-   Expected: An empty list with `No contacts match the specified tags.`. A substring is not a complete tag match.
+   Expected: An empty list with TOTAL 0 / PAID 0. A substring is not a complete tag match.
 5. Run `list`.<br>
-   Expected: Amy, Bob, and untagged Cara return, with `Listed 3 contacts.`.
+   Expected: Amy, Bob, and untagged Cara return, with TOTAL 3 / PAID 3.
 6. Run `find Bob`, then try `list t/`, `list t/A-Level t/`, `list t/A-Level x/value`, and `list T/A-Level`.<br>
    Expected: Each command reports an error. Only Bob remains displayed, and no profile fields change.
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
+8. Compare `list`, `list -summary`, `list t/A-Level`, and `list -summary t/A-Level`.<br>
+   Expected: The first two show the same three students and TOTAL 3 / PAID 3. The last two show only
+   Amy and TOTAL 1 / PAID 1. Adding the optional flag does not change the visible result.
 
 ### Listing archived students
 
@@ -699,7 +710,8 @@ Use a fresh test copy of the JAR in an empty writable folder.
 
 1. Add two students with different names, then archive the second by its full name.
 2. Run `find Nobody`, then `list -archived`.<br>
-   Expected: only the archived student appears, with `Listed 1 contact.`.
+   Expected: only the archived student appears, with TOTAL 1. PAID is 1 if that student's outstanding
+   amount is zero, otherwise 0.
 3. Run `view 1`.<br>
    Expected: the archived student's details, not the first stored active student.
 4. Run `list`, `list s/Maths`, or `list t/A-Level` with suitable test data.<br>
@@ -708,7 +720,7 @@ Use a fresh test copy of the JAR in an empty writable folder.
    Expected: both invalid combinations fail without changing the archived list or saved profiles.
 6. Restart the app, then run `list -archived`.<br>
    Expected: the same archived student remains available. Unarchive the student and repeat
-   `list -archived`; expect an empty list with `No archived contacts.`.
+   `list -archived`; expect an empty list with TOTAL 0 / PAID 0.
 
 ### Editing a student profile
 
