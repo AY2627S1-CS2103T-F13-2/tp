@@ -93,8 +93,9 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 `FRI`, `SAT`, or `SUN` (letter case is ignored), and `TIME` is a 24-hour start time in strict
 `HH:mm` format, such as `09:00` or `15:30`. Each subject has exactly one weekly lesson.
 Repeat the complete triplet for multiple subjects. Subject names must be 1–50 characters after
-trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including
-at least one letter or digit. A student cannot have two subjects with the same name, ignoring case.
+trimming surrounding spaces and may contain English letters, digits, spaces, and the symbols
+`+ & ( ) . ' -`, including at least one letter or digit, for example `C++`, `Maths & Science` or
+`Maths (H2)`. Semicolons, commas and slashes are not allowed. A student cannot have two subjects with the same name, ignoring case.
 Comma-separated subjects are not supported.
 
 **Note:** `notes/NOTE` is optional and stores one free-text note per student.
