@@ -22,7 +22,6 @@ src/test/data/sandbox/
 docs/_site/
 
 # AI Agents
-/.agents/
 AGENTS.md
 CLAUDE.md
 /.claude/
