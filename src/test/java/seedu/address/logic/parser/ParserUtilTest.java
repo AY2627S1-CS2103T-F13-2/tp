@@ -41,8 +41,24 @@ public class ParserUtilTest {
     private static final String WHITESPACE = " \t\r\n";
 
     @Test
-    public void parseSubjectName_trimsSurroundingWhitespaceAndPreservesInternalSpaces() throws Exception {
-        assertEquals("H2  Maths", ParserUtil.parseSubjectName("  H2  Maths  "));
+    public void parseSubjectName_trimsAndCollapsesOrdinarySpaces() throws Exception {
+        assertEquals("H2 Maths", ParserUtil.parseSubjectName("  H2  Maths  "));
+        assertThrows(ParseException.class, Subject.MESSAGE_CONSTRAINTS, () ->
+                ParserUtil.parseSubjectName("H2\tMaths"));
+    }
+
+    @Test
+    public void parseSubjectNames_spaceAndCaseVariants_combinesEquivalentFilters() throws Exception {
+        assertEquals(Set.of("H2 Maths"), ParserUtil.parseSubjectNames(List.of(" H2  Maths ", "h2 Maths")));
+    }
+
+    @Test
+    public void parseScheduledSubjects_normalizedDuplicateNames_rejectsEvenForDifferentSlots() {
+        for (String day : List.of("MON", "TUE")) {
+            assertThrows(ParseException.class, ParserUtil.MESSAGE_DUPLICATE_SUBJECT, () ->
+                    ParserUtil.parseScheduledSubjects(List.of("H2 Maths", "h2  Maths"),
+                            List.of("MON", day), List.of("09:00", "09:00")));
+        }
     }
 
     @Test

@@ -9,13 +9,16 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Person;
@@ -96,6 +99,42 @@ public class JsonAddressBookStorageTest {
         JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("tagged.json"));
         storage.saveAddressBook(addressBook);
         assertEquals(addressBook, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void readAndSaveAddressBook_legacySubjectSpaces_normalizesWithoutRewritingOnRead() throws Exception {
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder(ALICE).withSubjects("H2 Maths").build());
+        Path file = testFolder.resolve("spaced-subject.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(original);
+        String legacyJson = Files.readString(file).replace("H2 Maths", "  H2   Maths  ");
+        Files.writeString(file, legacyJson);
+
+        ReadOnlyAddressBook loaded = storage.readAddressBook().orElseThrow();
+        assertEquals(original, new AddressBook(loaded));
+        assertEquals(legacyJson, Files.readString(file));
+        storage.saveAddressBook(loaded);
+        assertEquals("H2 Maths", storage.readAddressBook().orElseThrow().getPersonList().get(0)
+                .getSubjects().iterator().next().value);
+        assertFalse(Files.readString(file).contains("H2   Maths"));
+    }
+
+    @Test
+    public void readAddressBook_normalizedSubjectCollisions_rejectsWithoutDroppingLessons() throws Exception {
+        Path file = testFolder.resolve("colliding-subjects.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        for (String secondDay : List.of("MONDAY", "TUESDAY")) {
+            List<JsonAdaptedSubject> subjects = List.of(new JsonAdaptedSubject("H2 Maths", "MONDAY", "09:00"),
+                    new JsonAdaptedSubject("h2  Maths", secondDay, "09:00"));
+            JsonAdaptedPerson person = new JsonAdaptedPerson("Amy Bee", "11111111", "Block 1", "10-Aug", "0",
+                    List.of(), "Keep note", subjects);
+            String json = JsonUtil.toJsonString(new JsonSerializableAddressBook(List.of(person)));
+            Files.writeString(file, json);
+
+            assertThrows(DataLoadingException.class, () -> storage.readAddressBook());
+            assertEquals(json, Files.readString(file));
+        }
     }
 
     @Test

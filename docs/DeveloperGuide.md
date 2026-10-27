@@ -292,6 +292,19 @@ order, accepts the documented three-letter day names, requires strict 24-hour `H
 duplicate subject names case-insensitively. List filters continue to compare only the subject name so that
 `list s/Maths` works regardless of when each student's Maths lesson begins.
 
+`Subject.normalizeName()` trims boundary whitespace and collapses runs of ordinary ASCII spaces before
+validation and construction; the 1–50 character limit applies to the normalized name. It preserves case
+and the lesson slot, and does not permit internal tabs or line breaks. `ParserUtil.parseSubjectName()`
+reuses this rule for Add, Edit, List and CSV import. Equality, hashing, name matching and UI grouping
+therefore use consistent names. Each student's subject names remain unique, ignoring case, even when
+their lesson slots differ. Different students can share a subject heading while retaining their own slots.
+
+JSON adapters construct the same normalized `Subject` model. Reading legacy spaced names does not
+rewrite the file; subsequent saves serialize canonical names. If legacy entries for one student collide
+after normalization, `JsonAdaptedPerson` rejects the record with `IllegalValueException`, translated by
+storage into `DataLoadingException`. Loading fails rather than silently losing a lesson. This is an
+upgrade constraint: back up and resolve colliding entries before using the file.
+
 ### Shared tag data
 
 Tags are optional descriptive labels, separate from subjects. Add accepts repeated `t/TAG` values
@@ -775,6 +788,22 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: `This contact already exists in TuteeDex.` Different subjects, tags, and notes do not bypass duplicate checks.
 6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
    Expected: `view 2` shows Bob's updated phone and still lists both scheduled subjects, with his original notes.
+
+### Normalizing subject spaces
+
+Use a fresh copy of the app in an empty folder.
+
+1. Add `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/H2   Maths day/MON time/09:00`.<br>
+   Expected: `view 1` shows `H2 Maths (Mon 09:00)`. Both `list s/H2 Maths` and
+   `list s/h2   maths` find Amy.
+2. Run `edit 1 s/h2  maths day/MON time/09:00`.<br>
+   Expected: No changes are made, and the original capitalization is retained.
+3. Run `edit 1 s/H2 Maths day/MON time/09:00 s/h2   Maths day/TUE time/10:00`.<br>
+   Expected: Duplicate-subject error; Amy's original lesson remains intact.
+4. Add `add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/h2  maths day/TUE time/10:00`,
+   then run `list -subjects`.<br>
+   Expected: One subject heading contains both students with their different slots. Restart and check
+   their profiles; names have single spaces and both schedules are preserved.
 
 ### Editing student notes
 
