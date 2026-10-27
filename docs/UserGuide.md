@@ -69,9 +69,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
-
-![help message](images/helpMessage.png)
+Opens a help window listing the command formats. Scroll to see every format,
+and hover over a row to read its full text in a tooltip.
+Select the blue `here` link to open the full user guide in your default browser.
+Close the help window with its pixel close button or press Escape.
+You can also open help through **Help > Help** or **F1**.
 
 Format: `help`
 
