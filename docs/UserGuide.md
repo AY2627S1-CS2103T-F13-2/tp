@@ -67,6 +67,13 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
 
+<box type="tip" seamless>
+
+**Tip:** Press <kbd>Up</kbd> in the command box to bring back the commands you entered earlier, newest first, and
+<kbd>Down</kbd> to move forward again. This is handy for fixing a typo in a long `add` or `edit` command. Going down
+past the newest command gives back whatever you were typing. The history is kept until you close TuteeDex.
+</box>
+
 ### Viewing help: `help`
 
 Opens a help window listing the command formats. Scroll to see every format,
