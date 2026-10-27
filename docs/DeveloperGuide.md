@@ -292,6 +292,15 @@ order, accepts the documented three-letter day names, requires strict 24-hour `H
 duplicate subject names case-insensitively. List filters continue to compare only the subject name so that
 `list s/Maths` works regardless of when each student's Maths lesson begins.
 
+### Combining subject and tag filters
+
+`ListCommandParser` tokenizes both `s/` and `t/` prefixes together, accepting either category order
+and interleaved repeated values. It reuses `ParserUtil` validation and `PersonHasAnyTagPredicate`.
+`ListCommand` combines its subject-name match with the supplied tag predicate using AND, then applies
+active-student visibility. Each category uses OR internally; an omitted category adds no restriction.
+The command updates the existing filtered list, so students appear once and the current sort order
+and displayed indexes still apply. Archived-only and subject-grouped modes remain standalone.
+
 ### Shared tag data
 
 Tags are optional descriptive labels, separate from subjects. Add accepts repeated `t/TAG` values
@@ -692,6 +701,23 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: Each command reports an error. Only Bob remains displayed, and no profile fields change.
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
+
+### Combining subject and tag filters
+
+Use the three profiles from the preceding tag-list test in a disposable test copy.
+
+1. Run `find Nobody`, then `list s/Maths s/Physics t/A-Level t/Needs revision`.<br>
+   Expected: Amy and Bob appear once each; the GUI banner shows TOTAL 2 / PAID 2.
+   Untagged Cara does not match both categories.
+2. Run `list t/Needs revision s/Maths s/Physics`.<br>
+   Expected: Only Bob appears. Prefix order does not change the matching rule.
+3. Run `list -summary s/Maths t/Needs revision`.<br>
+   Expected: An empty list with TOTAL 0 / PAID 0. Cara and Amy have Maths but neither has the required tag.
+4. Run `sort n/desc`, then `list s/Maths s/Physics t/A-Level t/Needs revision`, and `view 1`.<br>
+   Expected: Bob appears before Amy, and View shows Bob. Listing retains the current sort order.
+5. Try `list s/Maths t/`, `list t/A-Level s/`, `list -archived s/Maths t/A-Level`, and
+   `list -subjects t/A-Level s/Maths`.<br>
+   Expected: Each fails without changing the displayed students, sort order, or stored profiles.
 
 ### Listing archived students
 
