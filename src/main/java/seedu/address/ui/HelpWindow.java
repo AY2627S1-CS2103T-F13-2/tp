@@ -1,8 +1,13 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -10,7 +15,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import seedu.address.MainApp;
 import seedu.address.commons.core.LogsCenter;
 
 /**
@@ -22,25 +26,6 @@ public class HelpWindow extends UiPart<Stage> {
             "https://ay2627s1-cs2103t-f13-2.github.io/tp/UserGuide.html";
     private static final Logger logger = LogsCenter.getLogger(HelpWindow.class);
     private static final String FXML = "HelpWindow.fxml";
-    private static final List<String> COMMAND_FORMATS = List.of(
-            "help",
-            "add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME"
-                    + " [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]",
-            "view INDEX",
-            "export",
-            "import FILE_PATH [confirm]",
-            "list [-summary] [s/SUBJECT]...",
-            "list [-summary] [t/TAG]...",
-            "list -archived",
-            "list -subjects",
-            "edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT]"
-                    + " [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]",
-            "find KEYWORD [MORE_KEYWORDS]",
-            "delete INDEX",
-            "archive s/STUDENT_NAME",
-            "unarchive s/STUDENT_NAME",
-            "clear",
-            "exit");
 
     private final Consumer<String> openBrowser;
 
@@ -51,18 +36,14 @@ public class HelpWindow extends UiPart<Stage> {
      * Creates a new HelpWindow.
      *
      * @param root Stage to use as the root of the HelpWindow.
+     * @param openBrowser Browser action supplied by the running application.
      */
-    public HelpWindow(Stage root) {
-        this(root, new MainApp().getHostServices()::showDocument);
-    }
-
-    /** Creates the help window with the browser action used by its guide link. */
-    HelpWindow(Stage root, Consumer<String> openBrowser) {
+    public HelpWindow(Stage root, Consumer<String> openBrowser) {
         super(FXML, root);
-        this.openBrowser = openBrowser;
+        this.openBrowser = requireNonNull(openBrowser);
         Font.loadFont(HelpWindow.class.getResource("/fonts/pokemon_pixel_font.ttf").toExternalForm(), 24);
         Font.loadFont(HelpWindow.class.getResource("/fonts/PressStart2P-Regular.ttf").toExternalForm(), 24);
-        for (String format : COMMAND_FORMATS) {
+        for (String format : readCommandFormats()) {
             Label row = new Label(format);
             row.getStyleClass().add("command-format");
             row.setMinWidth(0);
@@ -75,11 +56,26 @@ public class HelpWindow extends UiPart<Stage> {
         }
     }
 
-    /**
-     * Creates a new HelpWindow.
-     */
-    public HelpWindow() {
-        this(new Stage());
+    private static List<String> readCommandFormats() {
+        try (var guide = requireNonNull(HelpWindow.class.getResourceAsStream("/docs/UserGuide.md"),
+                "Bundled User Guide is missing")) {
+            return parseCommandFormats(new String(guide.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to read the bundled User Guide", e);
+        }
+    }
+
+    /** Reads the inline-code formats from each Format line in the User Guide. */
+    static List<String> parseCommandFormats(String guide) {
+        Pattern code = Pattern.compile("`([^`]+)`");
+        List<String> formats = guide.lines()
+                .filter(line -> line.startsWith("Format: "))
+                .flatMap(line -> code.matcher(line).results().map(match -> match.group(1)))
+                .toList();
+        if (formats.isEmpty()) {
+            throw new IllegalStateException("The User Guide contains no command formats");
+        }
+        return formats;
     }
 
     /**

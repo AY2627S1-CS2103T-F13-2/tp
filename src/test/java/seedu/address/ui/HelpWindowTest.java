@@ -2,13 +2,11 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,19 +21,35 @@ import javafx.stage.Stage;
 /** Verifies the native help screen and its guide and close actions. */
 public class HelpWindowTest extends FxTestSupport {
     @Test
-    public void commandFormats_matchUserGuideAndHaveFullTooltips() throws Exception {
-        Pattern code = Pattern.compile("`([^`]+)`");
-        List<String> formats = Files.readAllLines(Path.of("docs/UserGuide.md")).stream()
-                .filter(line -> line.startsWith("Format: "))
-                .flatMap(line -> code.matcher(line).results().map(match -> match.group(1)))
-                .toList();
+    public void parseCommandFormats_readsAlternativesAndUpdatedSyntax() {
+        String guide = String.join("\r\n",
+                "# Guide with a `code example` outside a format line",
+                "Format: `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`",
+                "Format: `clear confirm`",
+                "Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`",
+                "Format: `archive INDEX`");
+        assertEquals(List.of("sort FIELD/DIRECTION [FIELD/DIRECTION]...", "sort", "sort reset",
+                "clear confirm", "list [-summary] [s/SUBJECT]... [t/TAG]...", "archive INDEX"),
+                HelpWindow.parseCommandFormats(guide));
+    }
+
+    @Test
+    public void parseCommandFormats_withoutFormats_rejectsEmptyHelp() {
+        assertThrows(IllegalStateException.class, () -> HelpWindow.parseCommandFormats("# Guide"));
+    }
+
+    @Test
+    public void commandFormats_loadFromBundledGuideAndHaveFullTooltips() throws Exception {
         runOnFxThread(() -> {
             HelpWindow window = new HelpWindow(new Stage(), url -> { });
             ScrollPane scroll = (ScrollPane) window.getRoot().getScene().lookup("#commandScroll");
             VBox rows = (VBox) scroll.getContent();
-            assertEquals(formats, rows.getChildren().stream().map(node -> ((Label) node).getText()).toList());
+            assertFalse(rows.getChildren().isEmpty());
+            assertTrue(rows.getChildren().stream().map(Label.class::cast)
+                    .anyMatch(row -> row.getText().startsWith("sort")));
             rows.getChildren().forEach(node -> {
                 Label row = (Label) node;
+                assertFalse(row.getText().isBlank());
                 assertFalse(row.isWrapText());
                 assertEquals(row.getText(), row.getTooltip().getText());
             });
@@ -56,7 +70,7 @@ public class HelpWindowTest extends FxTestSupport {
     @Test
     public void closeButton_closesStageAndHelpCanBeOpenedAgain() throws Exception {
         runOnFxThread(() -> {
-            HelpWindow window = new HelpWindow();
+            HelpWindow window = new HelpWindow(new Stage(), url -> { });
             window.show();
             window.getRoot().getScene().getRoot().applyCss();
             window.getRoot().getScene().getRoot().layout();

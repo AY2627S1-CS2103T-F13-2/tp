@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
@@ -36,6 +38,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Logic;
 import seedu.address.logic.Messages;
@@ -60,16 +63,31 @@ public class MainWindowTest extends FxTestSupport {
     private InMemoryLogic logic;
     private Parent root;
     private TextField input;
+    private AtomicReference<String> openedUrl;
 
     @BeforeEach
     void setUp() throws Exception {
         runOnFxThread(() -> {
             logic = new InMemoryLogic();
-            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"));
+            openedUrl = new AtomicReference<>();
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
             window.show();
             window.fillInnerParts();
             root = window.getPrimaryStage().getScene().getRoot();
             input = (TextField) root.lookup("#commandTextField");
+        });
+    }
+
+    @Test
+    public void helpGuideLink_usesSuppliedBrowserAction() throws Exception {
+        runOnFxThread(() -> {
+            window.handleHelp();
+            Stage helpStage = Window.getWindows().stream()
+                    .filter(Stage.class::isInstance).map(Stage.class::cast)
+                    .filter(stage -> stage.getTitle().equals("Help")).findFirst().orElseThrow();
+            Hyperlink guideLink = (Hyperlink) helpStage.getScene().lookup("#guideLink");
+            guideLink.fire();
+            assertEquals(HelpWindow.USERGUIDE_URL, openedUrl.get());
         });
     }
 
