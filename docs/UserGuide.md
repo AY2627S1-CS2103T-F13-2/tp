@@ -375,7 +375,8 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search is case-insensitive; for example, `hans` matches `Hans`.
 * Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
+* A keyword matches the start of any word in the name; for example, `Han` matches `Hans Gruber` and `Gru`
+  matches it too, but `ans` does not.
 * Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
 * Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
 * No matches produce an empty list with `No contacts match the specified name keywords.`.
