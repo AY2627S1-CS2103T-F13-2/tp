@@ -81,7 +81,7 @@ public class ListArchivedIntegrationTest {
         assertEquals(ListCommand.MESSAGE_NO_ARCHIVED_CONTACTS,
                 logic.execute("list -archived").getFeedbackToUser());
         assertTrue(model.getFilteredPersonList().isEmpty());
-        logic.execute("clear");
+        logic.execute("clear confirm");
         assertEquals(ListCommand.MESSAGE_NO_ARCHIVED_CONTACTS,
                 logic.execute("list -archived").getFeedbackToUser());
         assertTrue(model.getFilteredPersonList().isEmpty());

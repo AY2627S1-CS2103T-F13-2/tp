@@ -35,7 +35,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
-   * `clear` : Deletes all contacts.
+   * `clear confirm` : Deletes all contacts.
 
    * `exit` : Exits the app.
 
@@ -61,7 +61,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for `help` and `clear` are ignored.<br>
+* Extraneous parameters for `help` are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -436,9 +436,15 @@ Example:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Deletes every student, including archived students. There is no undo, so TuteeDex asks you to confirm first.
 
-Format: `clear`
+Format: `clear` or `clear confirm`
+
+* `clear` only shows how many students would be deleted, for example `This will permanently delete all 6
+  student(s), including archived students. There is no undo. Type 'clear confirm' to continue.` Nothing changes.
+* `clear confirm` deletes them and shows `Deleted all 6 student(s) from TuteeDex.`
+* Anything else after `clear`, such as `clear 3` or `clear Confirm`, is rejected without deleting anything.
+* Consider running `export` first, so you keep a copy of your students.
 
 ### Exiting the program: `exit`
 
@@ -485,7 +491,7 @@ Action     | Format, Examples
 **Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
-**Clear**  | `clear`
+**Clear**  | `clear`, then `clear confirm`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
 **Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`

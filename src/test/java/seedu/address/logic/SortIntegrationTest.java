@@ -215,7 +215,7 @@ public class SortIntegrationTest {
 
     @Test
     public void execute_newStudentsFollowActiveSortAndEmptyListsAcceptCriteria() throws Exception {
-        logic.execute("clear");
+        logic.execute("clear confirm");
         logic.execute("sort n/desc");
         logic.execute("add n/Amy Bee p/91234567 a/Block 1 d/10-Aug s/Maths day/MON time/08:00");
         logic.execute("add n/Zara Doe p/81234567 a/Block 2 d/01-Jan s/Maths day/FRI time/09:00");

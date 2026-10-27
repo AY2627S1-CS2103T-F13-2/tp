@@ -479,7 +479,7 @@ public class MainWindowTest extends FxTestSupport {
             assertNotNull(root.lookup(".subject-group-empty"));
             enterCommand("list -subjects");
             assertSummary("2", "1");
-            enterCommand("clear");
+            enterCommand("clear confirm");
             enterCommand("list -subjects");
             enterCommand("sort o/desc");
             assertNotNull(root.lookup(".subject-group-empty"));
