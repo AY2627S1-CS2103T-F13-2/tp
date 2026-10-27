@@ -87,11 +87,15 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) defines the main layout and loads `TuteeDex.css`, while `PersonListCard.fxml` defines the layout for `PersonCard`. The main window also loads the bundled pixel fonts. `HelpWindow` has its own FXML layout and stylesheet.
 
 `HelpWindow` renders command formats as single-line JavaFX labels in a scroll pane,
-with full text in tooltips. Its hyperlink opens the online user guide through
-JavaFX `HostServices`; it does not embed a browser. The close button and Escape
-call `Stage.close()`. MainWindow uses the same pixel close icon but retains its
-application exit handler. `HelpWindowTest` checks the formats against the User
-Guide and verifies the hyperlink, scrolling, and close/reopen behavior.
+with full text in tooltips. Gradle bundles `docs/UserGuide.md` as a classpath resource;
+the help window reads the inline-code entries on its `Format:` lines, so the guide
+is the single source for the displayed formats, including sorting. Its browser
+callback comes from the running `MainApp`'s `HostServices`, through `UiManager`
+and `MainWindow`; it does not embed a browser. The close button and Escape call
+`Stage.close()`. MainWindow uses the same pixel close icon but retains its application
+exit handler. `HelpWindowTest` tests format extraction with small fixtures and verifies
+the rendered tooltips, hyperlink, scrolling, and close/reopen behavior without
+comparing a second hard-coded list against the guide.
 
 The UI depends on `Model` classes to display `Person` data and to identify students whose outstanding amount is zero for the PAID count. Commands and access to the filtered list and GUI settings go through `Logic`.
 
