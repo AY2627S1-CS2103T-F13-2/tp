@@ -92,14 +92,15 @@ public class ViewCommandTest {
         assertFalse(command.equals(new DeleteCommand(INDEX_FIRST_PERSON)));
     }
 
-    private String expectedDetails(Person person) {
-        return "Name: " + person.getName() + "\nPhone: " + person.getPhone() + "\nAddress: " + person.getAddress()
+    private CommandResult expectedDetails(Person person) {
+        return new CommandResult("Name: " + person.getName() + "\nPhone: " + person.getPhone()
+                + "\nAddress: " + person.getAddress()
                 + "\nStart date: " + person.getStartDate()
                 + "\nOutstanding amount: " + person.getOutstandingAmount().toCurrencyString()
                 + "\nSubjects: " + (person.getSubjects().isEmpty() ? "Not specified" : person.getSubjects().stream()
                         .map(Object::toString).collect(Collectors.joining(", ")))
                 + "\nTags: " + (person.getTags().isEmpty() ? "Not specified" : person.getTags().stream()
                         .map(tag -> tag.tagName).sorted().collect(Collectors.joining(", ")))
-                + "\nNotes: " + person.getNotes();
+                + "\nNotes: " + person.getNotes(), false, false, CommandResult.ListPresentation.UNCHANGED);
     }
 }

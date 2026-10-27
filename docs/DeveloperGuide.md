@@ -202,6 +202,87 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Sorting criteria
+
+<puml src="diagrams/SortingClassDiagram.puml" width="1000" alt="Sorting criteria, comparisons and display rows" />
+
+The diagram shows the sorting types and their main dependencies; UI, storage and comparator parameter
+lists are omitted for readability.
+
+`SortOrder` is an immutable, ordered list of field/direction pairs. Its first criterion has the highest
+priority. Fields cannot repeat, and an empty order represents the original stored order. The supported
+fields are student name, outstanding amount, start date, and upcoming lesson slot. A lesson slot is a
+combined day/time criterion; each lesson row associates that schedule with its subject.
+
+`SortOrderParser` validates criteria arguments such as `o/desc n/asc` or `slot/asc`, preserving their order
+and independent directions. It rejects malformed arguments, unknown fields, repeated fields, and directions
+other than lowercase `asc` or `desc`. The criteria model and parser do not mutate profiles or user preferences.
+`SortCommandParser` handles the current-order query and reset, and the registered `SortCommand` applies
+criteria to the session's `ModelManager`. Saving and restoring state belongs to the separate persistence feature.
+`SortCommand` overrides `Command#requiresAddressBookSave()` so `LogicManager` does not write profile JSON
+for apply, reset or query. A storage permission error therefore cannot make session-only sorting fail.
+Other commands keep their existing save behaviour; preference persistence remains separate.
+
+`SortComparators` compares names without regard to case, amounts numerically, and start dates as annual
+month/day values. Invalid existing dates and absent lessons stay last in both directions. `LessonRow`
+references a profile and one of its subjects without duplicating stored data. Upcoming lesson comparisons
+use one captured local date/time: a start equal to that time is due now, while a start that has already
+passed is compared using its next weekly occurrence. `representativeLesson()` selects the minimum row under
+the requested comparison: nearest for ascending slots and furthest for descending slots. Student-level
+criteria are constant within one profile, so the slot direction selects its representative even in a mixed
+order. Equal slots retain subject insertion order; subjectless profiles use a null subject.
+
+`ModelManager` exposes a `SortedList` over the existing filtered students. The stored address-book list is
+not reordered. Original stored positions explicitly resolve complete ties, including after an earlier sort.
+The unique-student order compares representative lessons using all supplied criteria; it supplies the
+printed index used by View/Edit/Delete and by both displays. `getStudentRows()` exposes one representative
+per student in that same order. With slot sorting, `LessonListPanel` numbers these rows by their displayed
+position, so every student appears once with the subject/slot actually used for sorting. Counts remain
+unique. Indexed commands continue to target this unique-student list without a separate lesson-index map.
+
+The default clock uses the computer's local zone. An injected clock deliberately defines the local zone
+for that model; tests compare Singapore and UTC at the same instant to verify this contract. Lesson slots
+remain weekly local times rather than timezone-bearing events.
+
+`LogicManager` brackets command execution with `Model#beginCommand()` and `endCommand()` in a `finally`
+block. The first sorting refresh captures a reference; further refreshes in that command reuse it. Thus
+Edit's profile update and filter reset cannot straddle a lesson boundary with different references.
+Query/View capture no new time. No timer reorders rows while a tutor is entering an indexed command.
+A repeated Sort or List refreshes upcoming occurrences; indexed targets are resolved before mutation refreshes.
+
+Student and grouped-lesson row snapshots are built lazily and reused until profile data, the filter,
+criteria or reference time changes. An address-book listener updates the stored-position map before
+transformation listeners compare added/edited profiles. Tie breaks therefore use constant-time lookups
+rather than scanning the stored list during every comparison. Profile changes also invalidate cached rows.
+
+#### Design considerations
+
+| Decision | Reason |
+| --- | --- |
+| `SortedList` over the filtered students | Changes display order while retaining stored/CSV order and the existing unique-student command indexes. Reordering the address book would mix presentation with data changes. |
+| One captured local reference per command | Keeps comparisons consistent at lesson boundaries. Reading the clock inside each comparison could change keys while sorting. |
+| One representative row per ungrouped student | Keeps natural indexes and whole-profile commands simple. Subject groups retain every lesson because each subject has its own schedule. |
+| Lazy snapshots and a stored-position map | Avoid repeated snapshot sorting and linear tie-break scans. Invalidation is explicit when profiles or sorting inputs change. |
+
+#### Sorting within subject groups
+
+`SubjectGrouping` keeps alphabetical subject headings and the printed index of each unique student.
+When a sort is active, it maps the already ordered `ModelManager#getLessonRows()` to positions and uses
+those positions to order entries within each group. This API still includes every lesson; it does not
+collapse to representatives. Comparisons use the same reference time and criterion rules as the ungrouped
+display, but each grouped card retains its own subject and slot. Complete lesson ties explicitly fall back
+to stored student positions, independently of representative ordering. A student can appear under several
+subjects with the same printed student index; deleting that index removes their whole profile and all lessons.
+Without active criteria, grouping retains its original alphabetical student order. Subjectless students
+remain part of the unique-student list and counts, but do not produce subject groups.
+
+`CommandResult.ListPresentation.REFRESH` requests rebuilding the current presentation without selecting
+contacts or subject groups. Applying/resetting Sort uses this request; a bare Sort query uses `UNCHANGED`.
+`MainWindow` remembers the current grouped presentation and rebuilds the appropriate panel after an apply
+or reset. View, Help, Export and a bare Sort query preserve the existing panel and its scroll position.
+Find, other List options and successful profile mutations select the ungrouped presentation, as before.
+The active sorting criteria remain available through Logic/Model for the separate persistence feature.
+
 ### Weekly subject lessons
 
 `Subject` contains its validated display name and one required `LessonSlot`. `LessonSlot` contains a
@@ -241,6 +322,40 @@ introduced by this contract.
 
 `LogicManagerTest` verifies Add with real temporary JSON storage: normalized tags survive loading into
 a new model, and invalid tags or duplicate profiles leave saved data and search results unchanged.
+
+### CSV import
+
+`import FILE_PATH [confirm]` reads the CSV format written by `export`, so a file exported from one copy of
+TuteeDex can be imported into another. The work is split into three small classes:
+
+* `CsvReader` (in `commons.util`) turns the text into rows of fields. It follows `CsvExporter`'s quoting rules,
+  ignores the byte order mark that Excel adds, accepts LF and CRLF, and keeps line breaks inside quoted fields.
+  Blank lines are kept as blank rows so that row numbers in error messages match what a spreadsheet shows.
+* `CsvPersonParser` (in `logic.parser`) turns one row into a `Person`. It reuses the `ParserUtil` methods used by
+  `add`, so imported values follow exactly the same rules and produce the same error messages. Because `Subject`
+  holds a `LessonSlot`, a subject cell such as `Maths (Mon 09:00); Physics (Tue 10:00)` is split on semicolons and
+  each part is parsed into a name, a day and a start time, matching `Subject#toString()`, which the export uses.
+* `ImportCommand` checks the header against `CsvExporter.HEADER`, parses every row, and collects all problems
+  before changing anything.
+
+**Duplicates.** The model already rejects two students with the same identity (`Person#isSamePerson()`). A row
+that is equal in every field to a stored student, or to an earlier row, is skipped, which makes importing the same
+file twice harmless. A row with the same identity but different details is an error, because adding it would break
+the uniqueness rule and silently keeping either version could lose data.
+
+**All or nothing.** Without `confirm`, the command only returns a preview. With `confirm`, it copies the current
+`AddressBook`, adds every new student to the copy and then calls `Model#setAddressBook()` once. Existing students
+are kept, and if any row is invalid the command throws before the copy is made, so the stored data never ends up
+half imported. The filter is then reset to active students so the new students are visible.
+
+**Data sandbox.** The course constraints do not allow the app to read files outside its home folder.
+`ImportCommand` resolves the path against the folder TuteeDex runs from, the same folder `export` writes to,
+and rejects any path that ends up outside it, including `..` steps and links that lead out of the folder.
+Tests pass in a temporary folder as the home folder through a package-private constructor.
+
+**Alternatives considered.** Keeping the preview in memory and confirming it with a separate command would avoid
+reading the file twice, but it adds state that can go stale if the file or the address book changes in between.
+Reading and checking the file again on `confirm` is simpler and always uses the current data.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -383,6 +498,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                                                                       |
 | `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me                                                                                      |
 | `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
+
+| `* *`    | private tutor                              | import students from a file exported by TuteeDex | move my students to another computer without typing them in again                                                       |
 
 *{More to be added}*
 
@@ -681,6 +798,50 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    and preserves the search results. View shows an empty `Notes:` value.
 7. Exit and restart from the same folder.<br>
    Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
+
+### Sorting students
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/2 s/Maths day/MON time/09:00 s/Physics day/FRI time/10:00`
+   and `add n/Bob Choo p/22222222 a/Block 2 d/01-Jan o/10 s/Maths day/TUE time/11:00`.
+2. Run `sort o/desc n/asc`.<br>
+   Expected: Bob is row `001` and Amy is row `002`. `view 1` shows Bob's full profile.
+3. Run `sort slot/asc`, then `sort slot/desc`.<br>
+   Expected: Two student rows remain. Each row shows the student's nearest upcoming subject for ascending,
+   or furthest upcoming subject for descending, relative to the computer's current local time. Compare the
+   selected subject with that student's full schedule in View. All subjects remain stored in the profile.
+4. Run `list -subjects`, then `sort slot/asc n/asc`.<br>
+   Expected: Maths and Physics headings stay alphabetical; each group uses its own lessons' schedules.
+   Amy appears in both groups with the same printed index. View preserves the panel and scroll position.
+5. Run `sort reset`, then `list`.<br>
+   Expected: Reset keeps grouping and restores alphabetical students within groups. List returns to one
+   ungrouped row per student in stored order. Applying slot sorting again keeps two ungrouped student rows.
+6. Try `sort o/desc,n/asc`, `sort n/up`, `sort n/asc n/desc`, and `sort RESET`.<br>
+   Expected: Each command fails without changing the selected order, filter or displayed panel. The comma
+   error explains the criteria format, while an unsupported direction explains the allowed directions.
+
+### Importing students
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee a/Block 1, #01-01 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Revise "fractions"`
+   and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive s/Bob Choo`.
+2. Run `export` and note the file name in the result, for example `contacts-20261024-175424-176.csv`.
+3. Run `clear`, then `import contacts-20261024-175424-176.csv`.<br>
+   Expected: A preview names Amy Bee and Bob Choo, and the list is still empty.
+4. Run `import contacts-20261024-175424-176.csv confirm`.<br>
+   Expected: `Imported 2 student(s) ...`. Amy is listed; `list -archived` shows Bob. `view 1` shows Amy's
+   subject `Maths (Mon 09:00)`, tag and note exactly as before.
+5. Run the same confirm command again.<br>
+   Expected: `No new students to import...`, and the list does not change.
+6. Open the file in a text editor, change Amy's phone to `123` and Bob's subjects to `Physics`, and save it as a
+   new `.csv` file. Import it with `confirm`.<br>
+   Expected: Two numbered row errors, and no student is added.
+7. Try `import missing.csv`, `import notes.txt` and `import` with no path.<br>
+   Expected: Each command fails with a specific message.
 
 ### Saving data
 

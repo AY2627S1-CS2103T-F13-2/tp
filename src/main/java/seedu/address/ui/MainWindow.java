@@ -16,10 +16,12 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.ListPresentation;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.sort.SortOrder;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -36,10 +38,10 @@ public class MainWindow extends UiPart<Stage> {
 
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
-    private SubjectGroupPanel subjectGroupPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
     private CommandBox commandBox;
+    private boolean subjectGroupsShown;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -117,8 +119,7 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-        personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        refreshPersonList(ListPresentation.CONTACTS, false);
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -196,7 +197,7 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
             boolean isListCommand = commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD);
-            refreshPersonList(commandResult.isSubjectList(), isListCommand);
+            refreshPersonList(commandResult.getListPresentation(), isListCommand);
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -215,17 +216,40 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /** Refreshes the central list using the presentation mode requested by the command. */
-    private void refreshPersonList(boolean showSubjectGroups, boolean updateSummary) {
-        personListPanelPlaceholder.getChildren().clear();
-        if (showSubjectGroups) {
-            subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
-            personListPanelPlaceholder.getChildren().add(subjectGroupPanel.getRoot());
+    private void refreshPersonList(ListPresentation presentation, boolean updateSummary) {
+        if (presentation == ListPresentation.UNCHANGED) {
+            return;
+        }
+        if (presentation == ListPresentation.SUBJECT_GROUPS) {
+            subjectGroupsShown = true;
+        } else if (presentation == ListPresentation.CONTACTS) {
+            subjectGroupsShown = false;
+        }
+        if (subjectGroupsShown) {
+            SubjectGroupPanel subjectGroupPanel = logic.getSortOrder().equals(SortOrder.NONE)
+                    ? new SubjectGroupPanel(logic.getFilteredPersonList())
+                    : new SubjectGroupPanel(logic.getFilteredPersonList(), logic.getLessonRows());
+            personListPanelPlaceholder.getChildren().setAll(subjectGroupPanel.getRoot());
         } else {
-            personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-            personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+            refreshUngroupedList();
         }
         if (updateSummary) {
             showListSummary();
+        }
+    }
+
+    private void refreshUngroupedList() {
+        if (logic.getSortOrder().hasLessonSlot()) {
+            LessonListPanel lessonListPanel = new LessonListPanel(logic.getStudentRows());
+            personListPanelPlaceholder.getChildren().setAll(lessonListPanel.getRoot());
+            personListPanel = null;
+        } else {
+            if (personListPanel == null) {
+                personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+            }
+            if (!personListPanelPlaceholder.getChildren().contains(personListPanel.getRoot())) {
+                personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
+            }
         }
     }
 }

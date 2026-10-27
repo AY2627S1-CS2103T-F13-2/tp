@@ -4,12 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,23 +26,33 @@ import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Logic;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
+import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Subject;
+import seedu.address.model.sort.LessonRow;
+import seedu.address.model.sort.SortOrder;
 import seedu.address.testutil.PersonBuilder;
 
 public class MainWindowTest extends FxTestSupport {
@@ -130,6 +147,121 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void groupedList_plainListFindAndFilters_restoreContactPresentation() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            enterCommand("find Nobody");
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+            assertSummary("2", "1");
+            enterCommand("list");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertSummary("2", "1");
+
+            enterCommand("list -subjects");
+            enterCommand("find Alice");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertEquals(1, logic.getFilteredPersonList().size());
+            enterCommand("list -subjects");
+            enterCommand("list s/Maths");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertSummary("1", "1");
+            enterCommand("list -subjects");
+            enterCommand("list t/Needs revision");
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertSummary("1", "0");
+        });
+    }
+
+    @Test
+    public void groupedList_readOnlyAndFailedCommands_preservePanelAndScroll() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            for (int index = 0; index < 20; index++) {
+                logic.model.addPerson(new PersonBuilder(ALICE).withName("Extra Student " + (char) ('A' + index))
+                        .withSubjects("Maths").build());
+            }
+            enterCommand("list -subjects");
+            ScrollPane groups = (ScrollPane) root.lookup(".subject-group-panel");
+            groups.setVvalue(0.5);
+            enterCommand("view 2");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            assertEquals(0.5, groups.getVvalue());
+            assertTrue(feedbackText().startsWith("Name: Benson Meier"));
+            enterCommand("help");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            enterCommand("sort");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            for (String command : new String[] {"unknown", "delete 99", "sort n/up"}) {
+                enterCommand(command);
+                assertSame(groups, root.lookup(".subject-group-panel"));
+                assertEquals(0.5, groups.getVvalue());
+                assertEquals(command, input.getText());
+                assertEquals(22, logic.getFilteredPersonList().size());
+            }
+        });
+    }
+
+    @Test
+    public void contactList_viewAndFailedCommands_preserveSelection() throws Exception {
+        runOnFxThread(() -> {
+            ListView<?> list = (ListView<?>) root.lookup("#personListView");
+            list.getSelectionModel().select(1);
+            enterCommand("view 2");
+            assertSame(list, root.lookup("#personListView"));
+            assertEquals(1, list.getSelectionModel().getSelectedIndex());
+            enterCommand("delete 99");
+            assertSame(list, root.lookup("#personListView"));
+            assertEquals(1, list.getSelectionModel().getSelectedIndex());
+        });
+    }
+
+    @Test
+    public void groupedList_emptyAndAllArchived_showsEmptyPanelAndZeroCounts() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            for (Person person : List.copyOf(logic.getFilteredPersonList())) {
+                logic.model.setPerson(person, person.withArchived(true));
+            }
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertTrue(root.lookup(".subject-group-heading") == null);
+            assertSummary("0", "0");
+            enterCommand("list -archived");
+            assertSummary("2", "1");
+            for (Person person : List.copyOf(logic.getFilteredPersonList())) {
+                logic.model.deletePerson(person);
+            }
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertSummary("0", "0");
+        });
+    }
+
+    @Test
+    public void groupedList_mixedSubjectlessAndArchivedContacts_countsActiveContactsOnly() throws Exception {
+        runOnFxThread(() -> {
+            Person benson = logic.getFilteredPersonList().get(1);
+            logic.model.setPerson(benson, new PersonBuilder(benson).withSubjects("Physics").build());
+            logic.model.addPerson(new PersonBuilder(ALICE).withName("Archived Student")
+                    .withSubjects("English").build().withArchived(true));
+            enterCommand("list -subjects");
+            assertSummary("2", "1");
+            assertEquals(1, root.lookupAll(".subject-group-heading").size());
+            assertEquals("Physics", ((Label) root.lookup(".subject-group-heading")).getText());
+            assertEquals("002", ((Label) root.lookup(".subject-group-panel").lookup("#id")).getText());
+        });
+    }
+
+    private void addScheduledSubjects() {
+        Person alice = logic.getFilteredPersonList().get(0);
+        Person benson = logic.getFilteredPersonList().get(1);
+        logic.model.setPerson(alice, new PersonBuilder(alice).withSubjects("Maths").build());
+        logic.model.setPerson(benson, new PersonBuilder(benson).withSubjects("Physics")
+                .withTags("Needs revision").build());
+    }
+
+    @Test
     public void list_emptyAddressBook_showsZeroCounts() throws Exception {
         runOnFxThread(() -> {
             logic.model.deletePerson(logic.getFilteredPersonList().get(0));
@@ -202,6 +334,211 @@ public class MainWindowTest extends FxTestSupport {
     private void enterCommand(String text) {
         input.setText(text);
         input.fireEvent(new ActionEvent());
+        root.applyCss();
+        root.layout();
+    }
+
+    @Test
+    public void sort_studentRows_haveNaturalIndexesAndKeepSummaryCountsUnique() throws Exception {
+        runOnFxThread(() -> {
+            Person original = logic.getFilteredPersonList().getFirst();
+            Person updated = new PersonBuilder(original).withScheduledSubjects(
+                    new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0))),
+                    new Subject("Physics", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(15, 0)))).build();
+            logic.model.setPerson(original, updated);
+            enterCommand("sort slot/asc");
+            root.applyCss();
+            root.layout();
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            assertEquals(2, root.lookupAll(".lesson-row").size());
+            assertEquals(List.of("001", "002"), root.lookupAll("#id").stream().map(Label.class::cast)
+                    .map(Label::getText).sorted().toList());
+            enterCommand("list -summary");
+            assertSummary("2", "1");
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            enterCommand("sort reset");
+            assertNotNull(window.getPersonListPanel());
+            assertNull(root.lookup(".lesson-list-panel"));
+        });
+    }
+
+    @Test
+    public void sort_queryAndInvalidInput_preserveTheSelectedSort() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("sort n/desc");
+            SortOrder order = logic.getSortOrder();
+            enterCommand("sort");
+            assertEquals(order, logic.getSortOrder());
+            enterCommand("sort n/up");
+            assertEquals(order, logic.getSortOrder());
+            assertTrue(feedbackText().contains("Sorting direction must be asc or desc."));
+        });
+    }
+
+    @Test
+    public void groupedSort_amountAndReset_preserveGroupsAndUseDefaultOrderOnReset() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("list -subjects");
+            enterCommand("sort o/desc n/asc");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Maths"));
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
+            assertEquals(List.of("001", "002"), groupedRows("Maths").stream()
+                    .map(row -> ((Label) row.lookup("#id")).getText()).toList());
+            ScrollPane groups = (ScrollPane) root.lookup(".subject-group-panel");
+            enterCommand("sort");
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            enterCommand("sort reset");
+            assertEquals(SortOrder.NONE, logic.getSortOrder());
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), groupedNames("Maths"));
+            enterCommand("list -subjects");
+            assertSummary("2", "1");
+        });
+    }
+
+    @Test
+    public void groupedSort_slotsAndListTransitions_keepTheChosenOrder() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("sort slot/asc");
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            enterCommand("list -subjects");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Maths"));
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), groupedNames("Physics"));
+            assertSummary("2", "1");
+            enterCommand("sort slot/desc");
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), groupedNames("Maths"));
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
+            enterCommand("list");
+            assertNull(root.lookup(".subject-group-panel"));
+            assertEquals(2, root.lookupAll(".lesson-row").size());
+            assertSummary("2", "1");
+            enterCommand("list -subjects");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), groupedNames("Physics"));
+            enterCommand("sort reset");
+            assertNotNull(root.lookup(".subject-group-panel"));
+            enterCommand("list");
+            assertNotNull(window.getPersonListPanel());
+            assertNull(root.lookup(".lesson-list-panel"));
+        });
+    }
+
+    @Test
+    public void groupedSort_viewEditAndDelete_usePrintedStudentIndexes() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("list -subjects");
+            enterCommand("sort slot/asc");
+            assertEquals("002", ((Label) groupedRows("Maths").getFirst().lookup("#id")).getText());
+            ScrollPane groups = (ScrollPane) root.lookup(".subject-group-panel");
+            enterCommand("view 2");
+            assertTrue(feedbackText().startsWith("Name: Benson Meier"));
+            assertSame(groups, root.lookup(".subject-group-panel"));
+            enterCommand("edit 2 notes/Review algebra");
+            assertNull(root.lookup(".subject-group-panel"));
+            assertEquals("Review algebra", logic.getFilteredPersonList().get(1).getNotes().value);
+            enterCommand("list -subjects");
+            enterCommand("delete 2");
+            assertEquals(1, root.lookupAll(".lesson-row").size());
+            enterCommand("list -subjects");
+            assertEquals(List.of("Alice Pauline"), groupedNames("Maths"));
+            assertEquals(List.of("Alice Pauline"), groupedNames("Physics"));
+            assertSummary("1", "1");
+        });
+    }
+
+    @Test
+    public void groupedSort_findAndArchivedFilters_switchPresentationWithoutLosingCriteria() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("archive s/Benson Meier");
+            enterCommand("list -subjects");
+            enterCommand("sort slot/asc n/desc");
+            SortOrder order = logic.getSortOrder();
+            assertEquals(List.of("Alice Pauline"), groupedNames("Maths"));
+            enterCommand("find Alice");
+            assertNotNull(root.lookup(".lesson-list-panel"));
+            assertEquals(1, logic.getFilteredPersonList().size());
+            assertEquals(order, logic.getSortOrder());
+            enterCommand("list -archived");
+            assertSummary("1", "0");
+            assertTrue(logic.getFilteredPersonList().getFirst().isArchived());
+            enterCommand("sort o/desc");
+            assertTrue(logic.getFilteredPersonList().getFirst().isArchived());
+            assertNull(root.lookup(".subject-group-panel"));
+            enterCommand("list -subjects");
+            assertEquals(List.of("Alice Pauline"), groupedNames("Physics"));
+        });
+    }
+
+    @Test
+    public void groupedSort_emptyAndSubjectlessLists_keepTheGroupedEmptyState() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("list -subjects");
+            enterCommand("sort slot/asc");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            enterCommand("list -subjects");
+            assertSummary("2", "1");
+            enterCommand("clear");
+            enterCommand("list -subjects");
+            enterCommand("sort o/desc");
+            assertNotNull(root.lookup(".subject-group-empty"));
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+        });
+    }
+
+    @Test
+    public void ungroupedSlotSort_directionChanges_keepOneNumberedRowPerStudent() throws Exception {
+        runOnFxThread(() -> {
+            addTwoLessonsPerStudent();
+            enterCommand("sort slot/asc");
+            ListView<?> students = (ListView<?>) root.lookup(".lesson-list-panel");
+            assertEquals(List.of("Alice Pauline", "Benson Meier"), students.getItems().stream()
+                    .map(LessonRow.class::cast).map(row -> row.person().getName().fullName).toList());
+            enterCommand("sort slot/desc");
+            students = (ListView<?>) root.lookup(".lesson-list-panel");
+            assertEquals(List.of("Benson Meier", "Alice Pauline"), students.getItems().stream()
+                    .map(LessonRow.class::cast).map(row -> row.person().getName().fullName).toList());
+            assertEquals(List.of("001", "002"), root.lookupAll("#id").stream().map(Label.class::cast)
+                    .map(Label::getText).sorted().toList());
+            enterCommand("view 1");
+            assertTrue(feedbackText().startsWith("Name: Benson Meier"));
+            enterCommand("edit 1 notes/Check fractions");
+            assertEquals("Check fractions", logic.getFilteredPersonList().getFirst().getNotes().value);
+            enterCommand("list -subjects");
+            assertEquals(4, root.lookupAll(".subject-student-row").size());
+            assertEquals(2, root.lookupAll("#id").stream().map(Label.class::cast)
+                    .filter(label -> label.getText().equals("001")).count());
+            enterCommand("list");
+            enterCommand("delete 1");
+            assertEquals(1, root.lookupAll(".lesson-row").size());
+            assertEquals("Alice Pauline", logic.getFilteredPersonList().getFirst().getName().fullName);
+        });
+    }
+
+    private void addTwoLessonsPerStudent() {
+        Person alice = logic.getFilteredPersonList().get(0);
+        Person benson = logic.getFilteredPersonList().get(1);
+        logic.model.setPerson(alice, new PersonBuilder(alice).withScheduledSubjects(
+                new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0))),
+                new Subject("Physics", new LessonSlot(DayOfWeek.THURSDAY, LocalTime.of(15, 0)))).build());
+        logic.model.setPerson(benson, new PersonBuilder(benson).withScheduledSubjects(
+                new Subject("Maths", new LessonSlot(DayOfWeek.FRIDAY, LocalTime.of(9, 0))),
+                new Subject("Physics", new LessonSlot(DayOfWeek.TUESDAY, LocalTime.of(10, 0)))).build());
+    }
+
+    private List<HBox> groupedRows(String subject) {
+        ScrollPane panel = (ScrollPane) root.lookup(".subject-group-panel");
+        VBox groups = (VBox) panel.getContent();
+        VBox section = groups.getChildren().stream().map(VBox.class::cast)
+                .filter(group -> ((Label) group.getChildren().get(0)).getText().equals(subject))
+                .findFirst().orElseThrow();
+        VBox entries = (VBox) section.getChildren().get(1);
+        return entries.getChildren().stream().map(HBox.class::cast).toList();
+    }
+
+    private List<String> groupedNames(String subject) {
+        return groupedRows(subject).stream().map(row -> ((Label) row.lookup("#name")).getText()).toList();
     }
 
     private void assertButtonIcon(String buttonId, String resourcePath) {
@@ -234,7 +571,8 @@ public class MainWindowTest extends FxTestSupport {
 
     /** Executes real parsers and commands against an isolated model, with no storage writes. */
     private static class InMemoryLogic implements Logic {
-        private final ModelManager model = new ModelManager();
+        private final ModelManager model = new ModelManager(new AddressBook(), new UserPrefs(),
+                Clock.fixed(Instant.parse("2026-10-22T14:00:00Z"), ZoneOffset.UTC));
         private final AddressBookParser parser = new AddressBookParser();
 
         InMemoryLogic() {
@@ -244,12 +582,33 @@ public class MainWindowTest extends FxTestSupport {
 
         @Override
         public CommandResult execute(String commandText) throws CommandException, ParseException {
-            return parser.parseCommand(commandText).execute(model);
+            Command command = parser.parseCommand(commandText);
+            model.beginCommand();
+            try {
+                return command.execute(model);
+            } finally {
+                model.endCommand();
+            }
         }
 
         @Override
         public ObservableList<Person> getFilteredPersonList() {
             return model.getFilteredPersonList();
+        }
+
+        @Override
+        public SortOrder getSortOrder() {
+            return model.getSortOrder();
+        }
+
+        @Override
+        public List<LessonRow> getStudentRows() {
+            return model.getStudentRows();
+        }
+
+        @Override
+        public List<LessonRow> getLessonRows() {
+            return model.getLessonRows();
         }
 
         @Override

@@ -136,10 +136,10 @@ note has an empty `Notes:` value. The index must be a positive integer and
 refer to a displayed student; otherwise, the command shows an error.
 Viewing a profile does not change student data or the current list.
 
-Subjects, tags, and notes also appear on each contact card without running `view`.
-Subjects keep their stored order; tags appear alphabetically using their stored
-lowercase labels. Missing subjects or tags show `Not specified`; missing notes
-show an empty `Notes:` value. Long subjects, tags, and notes wrap within the card.
+Each contact card displays the student's index, name, and subjects. Long names and
+subjects are shortened to fit the compact card. Hover over a card to see the
+remaining profile details, or use `view INDEX` to display the complete profile.
+
 ### Exporting contacts: `export`
 
 Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
@@ -149,6 +149,43 @@ Format: `export`
 The generated file is named `contacts-YYYYMMDD-HHMMSS-milliseconds.csv`. Each contact occupies one row. The CSV
 contains the name, phone, address, start date, outstanding amount, subjects, tags, notes, and archive status. Multiple
 subjects or tags are joined with `; `.
+
+### Importing students: `import`
+
+Adds students from a CSV file written by `export`, for example to move students from another computer or to
+restore students you deleted. Importing never removes or changes the students already in TuteeDex.
+
+Format: `import FILE_PATH [confirm]`
+
+* Without `confirm`, TuteeDex only checks the file and shows which students would be added. Nothing changes.
+* Add `confirm` at the end to add them. If any row has a problem, nothing is imported, so a file is never half imported.
+* The file must be inside the folder TuteeDex runs from (the folder with the JAR file), or a folder inside it.
+  This is where `export` saves its files. For safety, TuteeDex does not read files anywhere else, so move or copy
+  the file into that folder first.
+* `FILE_PATH` is relative to that folder, for example `students.csv` or `term 4/students.csv`. Paths with spaces
+  work, with or without double quotes around them. Only `.csv` files are accepted.
+* The first row must be the header that `export` writes. Each following row is one student with the same 9 columns:
+  name, phone, address, start date, outstanding amount, subjects, tags, notes and archived (`true` or `false`).
+* Subjects are written as `SUBJECT (DAY HH:mm)` and separated by semicolons, for example
+  `Maths (Mon 09:00); H2 Chemistry (Wed 11:30)`. Tags are separated by semicolons. A blank outstanding amount
+  means `0`, and blank tags or notes mean none.
+* Every value is checked with the same rules as `add`. Problems are listed by spreadsheet row number, for example
+  `Row 4: Phone numbers should only contain numbers, and it should be 8 digits long.` Up to 10 problems are shown.
+* A row that is exactly the same as a student already in TuteeDex, or as an earlier row in the file, is skipped,
+  so importing the same file twice is safe.
+* A row with the same name, phone, address, start date and outstanding amount as a stored student, but different
+  subjects, tags, notes or archive status, is reported as a problem. Use `edit` to change the stored student instead.
+* Files saved by Excel work too, as long as the columns are not changed.
+* If you edit the file in a text editor, wrap any value that contains a comma, a double quote or a line break
+  in double quotes, and write each double quote inside it twice, for example `"Needs ""revision"""`.
+  Spreadsheet apps such as Excel do this for you. A row with unbalanced or misplaced double quotes is reported
+  as a problem instead of being imported with changed text.
+
+Examples:
+* `import contacts-20261024-175424-176.csv` checks a file that `export` saved earlier.
+* `import contacts-20261024-175424-176.csv confirm` adds the new students from that file.
+* `import "term 4/students.csv" confirm` adds students from `students.csv` in the `term 4` folder inside the
+  TuteeDex folder.
 
 ### Listing and filtering students: `list`
 
@@ -194,14 +231,20 @@ Examples:
 `list -subjects` switches the display to active students grouped under their subjects.
 Each subject group shows the students taking that subject and each student's own weekly
 lesson day and start time. Students taking the same subject at different times remain in
-one subject group. Subject groups and students within each group are sorted alphabetically.
+one subject group. Subject headings are sorted alphabetically. Students within each group
+are alphabetical by default; an active `sort` applies within each subject group instead.
 Archived students are excluded. The option is standalone and cannot be combined with
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
+`view`, `help`, and `export` preserve the current grouping and scroll position. Failed
+commands also leave the displayed list unchanged. Find and other List options switch
+back to the normal contact list for their results. Applying or resetting `sort` keeps the
+current grouped or ungrouped presentation; bare `sort` also preserves scroll position.
+
 #### Listing archived students
 
-`list -archived` displays only archived students in their stored order. It
+`list -archived` displays only archived students, using the active sort or stored order by default. It
 replaces any previous search or filter and does not change saved profiles.
 Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
 exist, the list is empty and feedback is `No archived contacts.`.
@@ -216,6 +259,48 @@ continue to exclude archived students. For example:
 * `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
 * `view 1` shows the first student in that displayed archived list.
 * `list` returns to the active list without restoring archived students.
+
+### Sorting the current display: `sort`
+
+Format: `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`
+
+Supported fields are `n/` (name), `o/` (outstanding amount), `d/` (start date), and `slot/` (upcoming lesson).
+Supply 1 to 4 distinct fields, separated by spaces, with lowercase prefixes and `asc` or `desc` directions.
+The first field has highest priority; later fields resolve ties. A new Sort replaces the previous criteria.
+Bare `sort` reports the current order. Commands and the `reset` keyword are lowercase; `sort RESET` is rejected.
+`sort reset` clears the criteria without changing the filter or presentation. The ungrouped display
+returns to original stored order; the subject-grouped display returns to alphabetical students within each group.
+
+* Names are compared alphabetically without regard to case; amounts are compared numerically.
+* Start dates are compared by calendar month and day, without a year. Existing invalid dates stay last.
+* Slots use the next weekly start relative to the computer's local time. A start exactly now is due now;
+  a start that has passed occurs next week. Lessons have start times, not durations.
+* In the ungrouped display, every student appears **once**, numbered `001`, `002`, `003`, and so on in displayed order.
+  `slot/asc` selects each student's **nearest upcoming lesson**, then orders students from nearest to furthest.
+  `slot/desc` selects each student's **furthest upcoming lesson**, then orders students from furthest to nearest.
+  Each row shows the selected subject and slot; all subjects remain stored. Equal slots use the first subject.
+  Students without subjects show `No lesson slot` and stay last when compared by slot, in either direction.
+* After `list -subjects`, Sort orders lessons within each subject group while keeping headings alphabetical.
+  Each lesson uses its own subject's schedule. Students can appear in several groups with the same student index.
+  Students without subjects have no grouped rows, but remain in the unique student counts.
+* **Use the printed student index.** In the ungrouped display it is the row position. In subject groups it refers
+  to the same current unique-student order, so group indexes may repeat and need not increase from top to bottom.
+  View/Edit/Delete act on the whole profile; deleting a grouped entry removes that student and all their lessons.
+  Total and paid counts count each student once.
+* Sort preserves the filter and student data. Find/List retain the sort; edits reorder students as needed.
+  Full ties retain stored student order. Valid criteria work on an empty display.
+* Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
+  time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
+* Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
+  the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
+  Sorting is currently session-only and resets on restart; preference persistence is a separate feature.
+
+Examples:
+
+* `sort o/desc n/asc` puts the largest balances first, then sorts equal balances by name.
+* `sort slot/asc n/asc` shows students' nearest upcoming lessons first, breaking equal-slot ties by student name.
+* `find Amy` followed by `sort d/asc` sorts only the current search results.
+* `list -subjects` followed by `sort slot/asc n/asc` orders upcoming lessons within each subject group.
 
 ### Editing a student profile: `edit`
 
@@ -395,11 +480,13 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
+**Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary t/A-Level t/Needs revision`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
