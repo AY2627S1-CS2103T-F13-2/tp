@@ -708,7 +708,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 Use a fresh test copy of the JAR in an empty writable folder.
 
-1. Add two students with different names, then archive the second by its full name.
+1. Add two students with different names, then archive the second with `archive 2`.
 2. Run `find Nobody`, then `list -archived`.<br>
    Expected: only the archived student appears, with `Listed 1 contact.`.
 3. Run `view 1`.<br>
@@ -718,7 +718,7 @@ Use a fresh test copy of the JAR in an empty writable folder.
 5. Run `list -archived`, then try `list -archived -summary` and `list t/A-Level -archived`.<br>
    Expected: both invalid combinations fail without changing the archived list or saved profiles.
 6. Restart the app, then run `list -archived`.<br>
-   Expected: the same archived student remains available. Unarchive the student and repeat
+   Expected: the same archived student remains available. Run `unarchive 1` and repeat
    `list -archived`; expect an empty list with `No archived contacts.`.
 
 ### Editing a student profile
@@ -851,7 +851,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 1. Run `clear`, then add
    `add n/Amy Bee a/Block 1, #01-01 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Revise "fractions"`
-   and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive s/Bob Choo`.
+   and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive 2`.
 2. Run `export` and note the file name in the result, for example `contacts-20261024-175424-176.csv`.
 3. Run `clear`, then `import contacts-20261024-175424-176.csv`.<br>
    Expected: A preview names Amy Bee and Bob Choo, and the list is still empty.

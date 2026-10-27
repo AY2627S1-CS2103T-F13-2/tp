@@ -47,7 +47,7 @@ public class FindIntegrationTest {
 
     @Test
     public void execute_archivedNameMatch_isExcludedAfterReload() throws Exception {
-        logic.execute("archive s/Alice Tan");
+        logic.execute("archive 1");
         JsonAddressBookStorage storage = new JsonAddressBookStorage(savedPath);
         Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
         Logic reloadedLogic = new LogicManager(reloaded, new StorageManager(storage,

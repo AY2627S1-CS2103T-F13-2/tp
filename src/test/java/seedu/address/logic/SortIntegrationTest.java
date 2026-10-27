@@ -126,7 +126,7 @@ public class SortIntegrationTest {
         logic.execute("sort n/desc");
         logic.execute("list");
         assertEquals(List.of("Bob Choo", "Amy Bee"), names());
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 1");
         logic.execute("list -archived");
         logic.execute("sort n/asc");
         assertEquals(List.of("Bob Choo"), names());

@@ -475,7 +475,7 @@ public class MainWindowTest extends FxTestSupport {
     public void groupedSort_findAndArchivedFilters_switchPresentationWithoutLosingCriteria() throws Exception {
         runOnFxThread(() -> {
             addTwoLessonsPerStudent();
-            enterCommand("archive s/Benson Meier");
+            enterCommand("archive 2");
             enterCommand("list -subjects");
             enterCommand("sort slot/asc n/desc");
             SortOrder order = logic.getSortOrder();
