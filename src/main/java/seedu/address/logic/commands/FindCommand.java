@@ -39,6 +39,12 @@ public class FindCommand extends Command {
         return new CommandResult(feedback);
     }
 
+    // Startup replays list/find, so they must not overwrite a data file that failed to load.
+    @Override
+    public boolean requiresAddressBookSave() {
+        return false;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {

@@ -387,6 +387,9 @@ result box are updated in the same way as when the user types the commands. The 
 is built in the saved order. The preferences file can be edited by hand, so `LogicManager#getLastSortCommand()`
 and `LogicManager#getLastViewCommand()` parse the saved text and return it only if it is a `sort` command, or a
 `list` or `find` command. Anything else, such as `delete 1`, is logged and ignored.
+Like `sort`, `list` and `find` override `Command#requiresAddressBookSave()` to return `false`, because they
+only change the display. Otherwise, if the data file failed to load and the app started empty, replaying the
+saved view would write that empty address book over the user's file.
 
 **Alternatives considered.** Saving the filter itself is not practical, because the filters are `Predicate`
 objects built from lambdas and cannot be written to JSON without a separate data form for every kind of filter.

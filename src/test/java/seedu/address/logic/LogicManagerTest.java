@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
@@ -107,6 +108,13 @@ public class LogicManagerTest {
         assertThrows(CommandException.class, () -> logic.execute("delete 9"));
         assertThrows(ParseException.class, () -> logic.execute("list -unknown"));
         assertEquals("list -subjects", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_listAndFind_doNotSaveAddressBook() throws Exception {
+        logic.execute("list");
+        logic.execute("find Alice");
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     @Test
@@ -322,8 +330,8 @@ public class LogicManagerTest {
     public void execute_invalidEdit_preservesSavedData() throws Exception {
         Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
         model.addPerson(original);
-        logic.execute("list");
         Path savedPath = temporaryFolder.resolve("addressBook.json");
+        new JsonAddressBookStorage(savedPath).saveAddressBook(model.getAddressBook());
         String originalJson = Files.readString(savedPath);
         String invalidCommand = "edit 1 p/91234567 o/-1";
 
