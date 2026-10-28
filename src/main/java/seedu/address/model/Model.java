@@ -110,4 +110,7 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPersonList(Predicate<Person> predicate);
+
+    /** Returns the filter applied to the filtered person list, or null if no filter has been applied. */
+    Predicate<? super Person> getFilteredPersonListPredicate();
 }

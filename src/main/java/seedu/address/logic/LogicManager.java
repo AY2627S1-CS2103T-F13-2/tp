@@ -3,6 +3,7 @@ package seedu.address.logic;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -37,6 +38,7 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
+    private boolean isShowingSubjectGroups = false;
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -53,13 +55,14 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        Predicate<? super Person> filterBeforeCommand = model.getFilteredPersonListPredicate();
         model.beginCommand();
         try {
             commandResult = command.execute(model);
         } finally {
             model.endCommand();
         }
-        saveLastView(command, commandText, commandResult);
+        saveLastView(command, commandText, commandResult, filterBeforeCommand);
 
         if (command.requiresAddressBookSave()) {
             saveAddressBook();
@@ -130,19 +133,29 @@ public class LogicManager implements Logic {
 
     /**
      * Saves the commands that decide which students are listed and in what order, so the same view is shown
-     * the next time the app opens. Any other command that changes the displayed list goes back to the normal list.
+     * the next time the app opens. The saved view is cleared only when another command changes what is on screen,
+     * by replacing the filter or by switching from subject groups back to contacts.
      */
-    private void saveLastView(Command command, String commandText, CommandResult commandResult) {
+    private void saveLastView(Command command, String commandText, CommandResult commandResult,
+            Predicate<? super Person> filterBeforeCommand) {
+        ListPresentation presentation = commandResult.getListPresentation();
         if (command instanceof SortCommand) {
             // A bare sort only reports the order (UNCHANGED); sort reset leaves no order to save.
-            if (commandResult.getListPresentation() == ListPresentation.REFRESH) {
+            if (presentation == ListPresentation.REFRESH) {
                 model.setLastSortCommand(model.getSortOrder().equals(SortOrder.NONE) ? "" : commandText.strip());
             }
         } else if (isViewCommand(command)) {
             model.setLastViewCommand(commandText.strip());
-        } else if (!commandResult.isExit()
-                && commandResult.getListPresentation() != ListPresentation.UNCHANGED) {
+        } else if (!commandResult.isExit() && presentation != ListPresentation.UNCHANGED
+                && (model.getFilteredPersonListPredicate() != filterBeforeCommand || isShowingSubjectGroups)) {
+            // Commands such as delete keep the filter, so the saved view still matches the screen.
             model.setLastViewCommand("");
+        }
+
+        if (presentation == ListPresentation.SUBJECT_GROUPS) {
+            isShowingSubjectGroups = true;
+        } else if (presentation == ListPresentation.CONTACTS) {
+            isShowingSubjectGroups = false;
         }
     }
 

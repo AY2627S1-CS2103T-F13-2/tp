@@ -7,6 +7,8 @@ import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 import static seedu.address.testutil.TypicalPersons.BOB;
@@ -54,6 +56,7 @@ public class LogicManagerTest {
     public Path temporaryFolder;
 
     private Model model = new ModelManager();
+    private StorageManager storage;
     private Logic logic;
 
     @BeforeEach
@@ -61,7 +64,7 @@ public class LogicManagerTest {
         JsonAddressBookStorage addressBookStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        storage = new StorageManager(addressBookStorage, userPrefsStorage);
         logic = new LogicManager(model, storage);
     }
 
@@ -94,10 +97,44 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_commandThatChangesList_clearsLastView() throws Exception {
-        logic.execute("list -subjects");
-        logic.execute("add n/Zero Balance p/81234567 a/1 Test Street d/14-Oct s/Maths day/MON time/09:00");
+    public void execute_commandThatChangesFilter_clearsLastView() throws Exception {
+        model.addPerson(AMY);
+        logic.execute("find Amy");
+        logic.execute("edit 1 p/" + VALID_PHONE_BOB);
         assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_commandLeavingSubjectGroups_clearsLastView() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").build());
+        logic.execute("list -subjects");
+        logic.execute("delete 1");
+        assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_commandKeepingFilter_keepsLastView() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        logic.execute("find Amy");
+        logic.execute("edit 1 n/" + VALID_NAME_AMY);
+        logic.execute("delete 1");
+        assertEquals("find Amy", model.getLastViewCommand());
+    }
+
+    @Test
+    public void reopen_afterFindAndDelete_showsSameStudents() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        logic.execute("find Amy");
+        logic.execute("delete 1");
+        List<Person> shownBeforeClosing = List.copyOf(model.getFilteredPersonList());
+
+        // Reopen with the same data and preferences, then run the saved view again as MainWindow does on startup.
+        Model reopenedModel = new ModelManager(model.getAddressBook(), model.getUserPrefs());
+        Logic reopenedLogic = new LogicManager(reopenedModel, storage);
+        reopenedLogic.execute(reopenedLogic.getLastViewCommand());
+        assertEquals(shownBeforeClosing, reopenedLogic.getFilteredPersonList());
     }
 
     @Test
