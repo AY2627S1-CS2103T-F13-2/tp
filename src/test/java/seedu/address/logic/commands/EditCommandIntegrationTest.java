@@ -1,6 +1,8 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
@@ -165,6 +167,42 @@ public class EditCommandIntegrationTest {
         Command command = parser.parseCommand("edit 1 p/91234567");
 
         assertCommandSuccess(command, model, "Edited contact: " + target.getName(), expectedModel);
+    }
+
+    @Test
+    public void execute_editArchivedStudent_preservesArchivedStatus() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person archived = original.withArchived(true);
+        model.setPerson(original, archived);
+        model.updateFilteredPersonList(Person::isArchived);
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Person updated = new PersonBuilder(archived).withPhone("91234567").build().withArchived(true);
+        expectedModel.setPerson(archived, updated);
+
+        Command command = parser.parseCommand("edit 1 p/91234567");
+
+        assertCommandSuccess(command, model, "Edited contact: " + archived.getName(), expectedModel);
+        assertTrue(model.getAddressBook().getPersonList().get(0).isArchived());
+    }
+
+    @Test
+    public void execute_editArchivedStudentFromArchivedList_remainsArchived() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person archived = original.withArchived(true);
+        model.setPerson(original, archived);
+        model.updateFilteredPersonList(Person::isArchived);
+
+        Command command = parser.parseCommand("edit 1 o/20");
+        command.execute(model);
+
+        Person updated = model.getAddressBook().getPersonList().get(0);
+        assertTrue(updated.isArchived());
+        assertEquals("20", updated.getOutstandingAmount().toPlainString());
+
+        model.updateFilteredPersonList(Person::isArchived);
+        assertEquals(List.of(updated), model.getFilteredPersonList());
+        model.updateFilteredPersonList(person -> !person.isArchived());
+        assertFalse(model.getFilteredPersonList().contains(updated));
     }
 
     @Test
