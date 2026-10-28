@@ -32,6 +32,7 @@ public final class CsvPersonParser {
     public static final String MESSAGE_INVALID_ARCHIVED = "Archived must be true or false.";
 
     private static final String LIST_SEPARATOR = ";";
+    private static final String FORMULA_PREFIXES = "=+-@";
     private static final Pattern SUBJECT_FORMAT = Pattern.compile("(?<name>.+?)\\s*\\(\\s*(?<day>\\S+)\\s+"
             + "(?<time>\\S+)\\s*\\)");
 
@@ -53,9 +54,18 @@ public final class CsvPersonParser {
         OutstandingAmount outstandingAmount = fields.get(4).isBlank()
                 ? OutstandingAmount.ZERO : ParserUtil.parseOutstandingAmount(fields.get(4));
         return new Person(ParserUtil.parseName(fields.get(0)), ParserUtil.parsePhone(fields.get(1)),
-                ParserUtil.parseAddress(fields.get(2)), ParserUtil.parseStartDate(fields.get(3)),
-                outstandingAmount, parseTags(fields.get(6)), ParserUtil.parseNotes(fields.get(7)),
+                ParserUtil.parseAddress(unescapePlainText(fields.get(2))), ParserUtil.parseStartDate(fields.get(3)),
+                outstandingAmount, parseTags(fields.get(6)), ParserUtil.parseNotes(unescapePlainText(fields.get(7))),
                 parseSubjects(fields.get(5)), parseArchived(fields.get(8)));
+    }
+
+    /** Removes the reversible apostrophe encoding used for formula-like address values. */
+    private static String unescapePlainText(String value) {
+        if (value.length() >= 2 && value.charAt(0) == '\'' && value.charAt(1) == '\'') {
+            return value.substring(1);
+        }
+        return value.length() >= 2 && value.charAt(0) == '\''
+                && FORMULA_PREFIXES.indexOf(value.charAt(1)) >= 0 ? value.substring(1) : value;
     }
 
     /**

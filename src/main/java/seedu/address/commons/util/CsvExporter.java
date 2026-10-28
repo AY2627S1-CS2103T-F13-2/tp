@@ -42,7 +42,8 @@ public final class CsvExporter {
     }
 
     private static String escapePlainText(String value) {
-        return !value.isEmpty() && FORMULA_PREFIXES.indexOf(value.charAt(0)) >= 0
+        return !value.isEmpty() && (value.charAt(0) == '\''
+                || FORMULA_PREFIXES.indexOf(value.charAt(0)) >= 0)
                 ? "'" + value : value;
     }
 

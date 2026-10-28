@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.parser.CsvPersonParser;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -45,5 +46,25 @@ public class CsvExporterTest {
             assertTrue(exportedRow.contains("'" + prefix + "address"));
             assertTrue(exportedRow.contains("'" + prefix + "note"));
         }
+    }
+
+    @Test
+    public void format_formulaPrefixes_roundTripsWithoutChangingData() throws Exception {
+        Person person = new PersonBuilder().withAddress("=1+1").withNotes("@SUM(1,2)")
+                .withSubjects("Maths").build();
+
+        List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
+
+        assertEquals(person, CsvPersonParser.parsePerson(fields));
+    }
+
+    @Test
+    public void format_apostropheFormulaPrefix_roundTripsWithoutChangingData() throws Exception {
+        Person person = new PersonBuilder().withAddress("'=1+1").withNotes("'@SUM(1,2)")
+                .withSubjects("Maths").build();
+
+        List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
+
+        assertEquals(person, CsvPersonParser.parsePerson(fields));
     }
 }
