@@ -110,6 +110,19 @@ public class ListCommandTest {
         assertNotEquals(filter, new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("other")))));
     }
     @Test
+    public void equals_mixedFilters_comparesBothCategoriesAndSummary() {
+        PersonHasAnyTagPredicate tagFilter = new PersonHasAnyTagPredicate(Set.of(new Tag("a-level")));
+        ListCommand mixed = new ListCommand(tagFilter, Set.of("Maths"), false);
+        assertEquals(mixed, new ListCommand(tagFilter, Set.of("MATHS"), false));
+        assertNotEquals(mixed, new ListCommand(tagFilter));
+        assertNotEquals(mixed, new ListCommand(Set.of("Maths")));
+        assertNotEquals(mixed, new ListCommand(tagFilter, Set.of("Physics"), false));
+        assertNotEquals(mixed, new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("other"))),
+                Set.of("Maths"), false));
+        assertNotEquals(mixed, new ListCommand(tagFilter, Set.of("Maths"), true));
+    }
+
+    @Test
     public void execute_summaryWithMixedPaymentStatuses_showsTotalAndPaid() {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(new PersonBuilder().withName("Paid Student").build());

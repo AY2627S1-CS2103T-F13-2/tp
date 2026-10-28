@@ -12,7 +12,7 @@ import seedu.address.model.person.PersonHasAnyTagPredicate;
 import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
-/** Tests plain List and repeated subject or tag filters. */
+/** Tests plain List and repeated subject and tag filters. */
 public class ListCommandParserTest {
 
     private ListCommandParser parser = new ListCommandParser();
@@ -64,8 +64,7 @@ public class ListCommandParserTest {
     @Test
     public void parse_unknownPrefixOrPreamble_failure() {
         for (String args : new String[] {" t/a-level x/value", " T/a-level", " foo t/a-level",
-            " t/a-level notes/hello", " --summary", " t/a-level S/Maths",
-            " t/a-level s/Maths"}) {
+            " t/a-level notes/hello", " --summary", " t/a-level S/Maths"}) {
             assertParseFailure(parser, args, ListCommandParser.MESSAGE_INVALID_PARAMETERS);
         }
     }
@@ -133,7 +132,8 @@ public class ListCommandParserTest {
         assertParseFailure(parser, "s/ -summary", "Subject must not be blank.");
         assertParseFailure(parser, "t/ -summary", Tag.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, "s/Maths -summary x/value", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
-        assertParseFailure(parser, "s/Maths -summary t/A-Level", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseSuccess(parser, "s/Maths -summary t/A-Level", new ListCommand(
+                new PersonHasAnyTagPredicate(Set.of(new Tag("a-level"))), Set.of("Maths"), true));
         for (String args : new String[] {"-summary -subjects", "t/A-Level -summary -subjects",
             "-subjects -summary", "s/Maths -subjects -summary", "t/A-Level -archived -summary"}) {
             assertParseFailure(parser, args, ListCommandParser.MESSAGE_INVALID_PARAMETERS);
@@ -164,6 +164,25 @@ public class ListCommandParserTest {
         assertParseFailure(parser, " s/Maths s/", "Subject must not be blank.");
         assertParseFailure(parser, " s/Maths, Physics", Subject.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, " s/---", Subject.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, " s/Maths t/A-Level", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+    }
+
+    @Test
+    public void parse_mixedFilters_acceptsEitherOrderAndInterleavedRepeatedValues() {
+        ListCommand expected = new ListCommand(new PersonHasAnyTagPredicate(
+                Set.of(new Tag("a-level"), new Tag("needs revision"))), Set.of("Maths", "Physics"), false);
+        assertParseSuccess(parser, " s/Maths s/Physics t/A-Level t/Needs revision", expected);
+        assertParseSuccess(parser, " t/A-Level s/Maths t/Needs revision s/Physics s/MATHS t/a-level", expected);
+        assertParseSuccess(parser, " -summary t/A-Level s/Maths t/Needs revision s/Physics",
+                new ListCommand(new PersonHasAnyTagPredicate(Set.of(new Tag("a-level"), new Tag("needs revision"))),
+                        Set.of("Maths", "Physics"), true));
+    }
+
+    @Test
+    public void parse_mixedFilters_validatesEverySuppliedValue() {
+        assertParseFailure(parser, " s/ t/A-Level", "Subject must not be blank.");
+        assertParseFailure(parser, " s/Maths t/", Tag.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " t/A-Level s/---", Subject.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " s/Maths t/A-Level t/", Tag.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " s/Maths t/A-Level s/", "Subject must not be blank.");
     }
 }

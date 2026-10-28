@@ -13,10 +13,10 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.PersonHasAnyTagPredicate;
 import seedu.address.model.tag.Tag;
 
-/** Parses plain lists, summary lists, and repeated subject or tag filters. */
+/** Parses plain lists, summary lists, and optional repeated subject and tag filters. */
 public class ListCommandParser implements Parser<ListCommand> {
     public static final String MESSAGE_INVALID_PARAMETERS = "Invalid command format! Use list, list -summary, "
-                + "list s/SUBJECT [s/SUBJECT]..., list t/TAG [t/TAG]..., list -archived, or list -subjects. "
+                + "list [s/SUBJECT]... [t/TAG]..., list -archived, or list -subjects. "
                 + "Use -archived and -subjects on their own.";
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
     private static final Pattern EXCLUSIVE_FLAG_PATTERN = Pattern.compile("(?:^|\\s)-(?:archived|subjects)(?=\\s|$)");
@@ -50,34 +50,25 @@ public class ListCommandParser implements Parser<ListCommand> {
             return new ListCommand(isSummary);
         }
 
-        String filterPrefix = null;
+        return parseFilters(filterArgs, isSummary);
+    }
+
+    /** Validates both categories before constructing their combined filter. */
+    private ListCommand parseFilters(String filterArgs, boolean isSummary) throws ParseException {
         Matcher matcher = PREFIX_PATTERN.matcher(filterArgs);
         while (matcher.find()) {
             String prefix = matcher.group(1);
             if (!PREFIX_SUBJECT.toString().equals(prefix) && !PREFIX_TAG.toString().equals(prefix)) {
                 throw new ParseException(MESSAGE_INVALID_PARAMETERS);
             }
-            if (filterPrefix != null && !filterPrefix.equals(prefix)) {
-                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
-            }
-            filterPrefix = prefix;
         }
-        if (PREFIX_SUBJECT.toString().equals(filterPrefix)) {
-            ArgumentMultimap values = ArgumentTokenizer.tokenize(" " + filterArgs, PREFIX_SUBJECT);
-            if (!values.getPreamble().isEmpty() || values.getAllValues(PREFIX_SUBJECT).isEmpty()) {
-                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
-            }
-            Set<String> subjectNames = ParserUtil.parseSubjectNames(values.getAllValues(PREFIX_SUBJECT));
-            return new ListCommand(subjectNames, isSummary);
+        ArgumentMultimap values = ArgumentTokenizer.tokenize(" " + filterArgs, PREFIX_SUBJECT, PREFIX_TAG);
+        if (!values.getPreamble().isEmpty()) {
+            throw new ParseException(MESSAGE_INVALID_PARAMETERS);
         }
-        if (PREFIX_TAG.toString().equals(filterPrefix)) {
-            ArgumentMultimap values = ArgumentTokenizer.tokenize(" " + filterArgs, PREFIX_TAG);
-            if (!values.getPreamble().isEmpty() || values.getAllValues(PREFIX_TAG).isEmpty()) {
-                throw new ParseException(MESSAGE_INVALID_PARAMETERS);
-            }
-            Set<Tag> tags = ParserUtil.parseTags(values.getAllValues(PREFIX_TAG));
-            return new ListCommand(new PersonHasAnyTagPredicate(tags), isSummary);
-        }
-        throw new ParseException(MESSAGE_INVALID_PARAMETERS);
+        Set<String> subjectNames = ParserUtil.parseSubjectNames(values.getAllValues(PREFIX_SUBJECT));
+        Set<Tag> tags = ParserUtil.parseTags(values.getAllValues(PREFIX_TAG));
+        return tags.isEmpty() ? new ListCommand(subjectNames, isSummary)
+                : new ListCommand(new PersonHasAnyTagPredicate(tags), subjectNames, isSummary);
     }
 }

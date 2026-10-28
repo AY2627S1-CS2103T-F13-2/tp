@@ -199,7 +199,7 @@ or tags. Archived students are not shown.
 Each card displays the contact's name, phone, address, start date, outstanding
 amount, subjects, tags, and notes.
 
-Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`
+Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`
 
 * Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
@@ -210,10 +210,20 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
   Match complete tags, ignoring case and surrounding spaces: `t/Needs revision` matches
   `needs revision`, but `t/revision` does not. Tags use the same validation as Add;
   equivalent repeated values are combined. Profiles without tags do not match.
-* Use either subject or tag prefixes in one command; mixing them is invalid.
+* Subject and tag prefixes may be combined in either order. Match **any** requested subject
+  **and any** requested tag: `list s/Maths s/Physics t/A-Level` means
+  `(Maths OR Physics) AND A-Level`. A student matching several values appears only once.
+  An omitted category places no restriction on that category.
 * Each filter searches all stored students, rather than just the current search results.
-  Results retain their stored order. Indexes used by `view`, `edit`, and `delete` refer
+  Results follow the current sort order, or stored order when sorting is reset. Indexes used by `view`, `edit`, and `delete` refer
   to the newly displayed list.
+* The status message reports the displayed count, for example `Listed 2 contacts.`
+  or `Listed 1 contact.` A subject filter with no matches shows
+  `No contacts match the specified subjects.`; a tag filter with no matches shows
+  `No contacts match the specified tags.` A mixed filter with no matches leaves an empty list
+  and shows TOTAL 0 / PAID 0 in the GUI. Its command/log feedback is
+  `No contacts match the specified subjects and tags.`
+  Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
 * Every successful List command shows the **TOTAL/PAID** banner. **TOTAL** is the number of
   displayed students; **PAID** counts those with an outstanding amount of zero.
   A subject or tag filter with no matches leaves the list empty and shows **TOTAL 0 / PAID 0**.
@@ -234,6 +244,9 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
 Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
 * `list t/A-Level t/Needs revision` shows students having either tag.
+* `list s/Maths s/Physics t/A-Level t/Needs revision` shows students taking Maths or Physics
+  who also have A-Level or Needs revision.
+* `list -summary t/A-Level s/Maths` summarizes active students matching both categories.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every active student again.
 
@@ -513,7 +526,7 @@ Action     | Format, Examples
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
 **Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
 **Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`
