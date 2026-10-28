@@ -393,6 +393,34 @@ Examples:
 * `edit 1 notes/` clears the first profile's note.
 * `find Betsy` followed by `edit 1 a/32, Clementi Road` updates only the address of the first search result.
 
+### Recording payments: `paid`
+
+Records a full or partial payment for the student at the specified displayed index.
+
+Format: `paid INDEX [AMOUNT]`
+
+* `paid INDEX` clears the student's outstanding balance.
+* `paid INDEX AMOUNT` reduces the balance by `AMOUNT`. The amount must be positive and have at most two decimal places.
+* A payment larger than the current balance is rejected, and the profile is unchanged.
+* The index refers to the currently displayed student list.
+
+Examples:
+
+* `paid 1` marks the first displayed student's balance as paid in full.
+* `paid 1 20.50` records a SGD 20.50 payment.
+
+### Charging a student: `charge`
+
+Adds a charge to a student's outstanding balance.
+
+Format: `charge INDEX AMOUNT`
+
+* `AMOUNT` is required, must be positive, and may have at most two decimal places.
+* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly.
+* The index refers to the currently displayed student list.
+
+Example: `charge 1 50` adds SGD 50.00 to the first displayed student's balance.
+
 ### Locating persons by name: `find`
 
 Finds active students whose names contain any of the given keywords. Archived
@@ -524,6 +552,8 @@ Action     | Format, Examples
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
+**Paid**   | `paid INDEX [AMOUNT]`<br> e.g., `paid 1 20.50`
+**Charge** | `charge INDEX AMOUNT`<br> e.g., `charge 1 50`
 **Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
