@@ -219,8 +219,11 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
 * Add `-summary` to display total and paid counts for the displayed students, for example
-  `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
-  The flag must be entered exactly as shown.
+  `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
+  The flag must be entered exactly as shown, at most once, before the first filter,
+  between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
+  Text such as `t/Pre-summary` or `t/Needs -summary revision` remains part of the tag value;
+  a separate `-summary` at the end of the command is treated as the flag.
 
 Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.

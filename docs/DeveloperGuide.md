@@ -704,6 +704,25 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
 
+### Summary flag ordering
+
+`ListCommandParser` recognises one standalone `-summary` before, between, or after filter arguments.
+It removes only the flag before delegating subject/tag values to the existing validators.
+The flag must precede another prefix/summary flag or end the input, so a hyphenated value such as
+`t/Pre-summary` and text inside a multiword value such as `t/Needs -summary revision` are preserved.
+Repeated summary flags and combinations with the standalone `-archived` or `-subjects` modes are rejected.
+
+Using the profiles above:
+
+1. Compare `list -summary s/Maths`, `list s/Maths -summary`, and `list s/Maths -summary s/Maths`.<br>
+   Expected: Amy and Cara are displayed, with identical TOTAL/PAID counts for all three commands.
+2. Compare `list -summary t/A-Level t/Needs revision`, `list t/A-Level -summary t/Needs revision`,
+   and `list t/A-Level t/Needs revision -summary`.<br>
+   Expected: Amy and Bob are displayed, with identical TOTAL/PAID counts for all three commands.
+3. Run `find Bob`, then try `list t/A-Level -summary -summary`, `list t/ -summary`,
+   `list -subjects -summary`, and `list -archived -summary`.<br>
+   Expected: Each command fails; Bob remains the displayed student and stored profiles are unchanged.
+
 ### Listing archived students
 
 Use a fresh test copy of the JAR in an empty writable folder.
