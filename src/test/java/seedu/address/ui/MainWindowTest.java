@@ -45,6 +45,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -306,6 +307,18 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals(List.of(ALICE.getName()),
                     logic.getFilteredPersonList().stream().map(Person::getName).toList());
             assertTrue(root.lookup(".subject-group-panel") == null);
+            assertEquals(MainWindow.MESSAGE_LAST_VIEW_RESTORED + " | " + FindCommand.MESSAGE_SINGULAR,
+                    feedbackText());
+        });
+    }
+
+    @Test
+    public void startup_savedFindWithNoMatches_explainsEmptyList() throws Exception {
+        runOnFxThread(() -> {
+            reopenWithSavedView("", "find Zed");
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+            assertEquals(MainWindow.MESSAGE_LAST_VIEW_RESTORED + " | " + FindCommand.MESSAGE_NO_MATCHES,
+                    feedbackText());
         });
     }
 
