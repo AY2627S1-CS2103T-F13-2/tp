@@ -214,14 +214,16 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
 * Each filter searches all stored students, rather than just the current search results.
   Results retain their stored order. Indexes used by `view`, `edit`, and `delete` refer
   to the newly displayed list.
-* The status message reports the displayed count, for example `Listed 2 contacts.`
-  or `Listed 1 contact.` A subject filter with no matches shows
-  `No contacts match the specified subjects.`; a tag filter with no matches shows
-  `No contacts match the specified tags.` Both leave the displayed list empty.
-  Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
+* Every successful List command shows the **TOTAL/PAID** banner. **TOTAL** is the number of
+  displayed students; **PAID** counts those with an outstanding amount of zero.
+  A subject or tag filter with no matches leaves the list empty and shows **TOTAL 0 / PAID 0**.
+  Plain `list` also shows **TOTAL 0 / PAID 0** when there are no active students.
 * Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
+* `-summary` is optional: the GUI already shows the counts without it. For example,
+  `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
+  The flag must be entered exactly as shown.
 * Add `-summary` to display total and paid counts for the displayed students, for example
   `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
   The flag must be entered exactly as shown, at most once, before the first filter,
@@ -246,6 +248,11 @@ Archived students are excluded. The option is standalone and cannot be combined 
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
+The TOTAL/PAID banner counts each active student once, even if they appear under several subjects.
+Students without subjects still count towards the totals, although they have no grouped entry.
+If no active student has a subject, the group area shows `No subjects found for the active contacts.`;
+the banner still reports the active-student counts.
+
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
 commands also leave the displayed list unchanged. Find and other List options switch
 back to the normal contact list for their results. Applying or resetting `sort` keeps the
@@ -255,8 +262,8 @@ current grouped or ungrouped presentation; bare `sort` also preserves scroll pos
 
 `list -archived` displays only archived students, using the active sort or stored order by default. It
 replaces any previous search or filter and does not change saved profiles.
-Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
-exist, the list is empty and feedback is `No archived contacts.`.
+The TOTAL/PAID banner counts only the displayed archived students. If no archived students
+exist, the list is empty and the banner shows **TOTAL 0 / PAID 0**.
 
 Use `-archived` on its own. Combining it with `-summary`, subject/tag filters,
 or other arguments is not supported and shows an error without changing the
