@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
@@ -59,7 +60,7 @@ public class MainWindow extends UiPart<Stage> {
      * Creates a {@code MainWindow} with the given {@code Stage} and {@code Logic}.
      * The data file path parameter is retained for compatibility with existing callers.
      */
-    public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
+    public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath, Consumer<String> openBrowser) {
         super(FXML, primaryStage);
 
         Font.loadFont(MainWindow.class.getResource("/fonts/pokemon_pixel_font.ttf").toExternalForm(), 24);
@@ -74,7 +75,7 @@ public class MainWindow extends UiPart<Stage> {
 
         setAccelerators();
 
-        helpWindow = new HelpWindow();
+        helpWindow = new HelpWindow(new Stage(), openBrowser);
     }
 
     public Stage getPrimaryStage() {
