@@ -196,8 +196,13 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
 * `JsonAdaptedSubject` stores the subject name, weekly lesson day, and lesson start time. It reconstructs
   a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
-  `JsonSerializableAddressBook.toModelType()` also rejects duplicate students. These conversions explain
-  the Storage component's dependency on the Model component; model classes are omitted from this diagram.
+  `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicate students.
+  These conversions explain the Storage component's dependency on the Model component; model classes
+  are omitted from this diagram.
+* `JsonUtil.readJsonFile()` rejects a JSON root of `null` through `DataLoadingException`, rather than
+  treating it as a missing file. `JsonAddressBookStorage` also translates adapter validation failures into
+  `DataLoadingException`. `MainApp` handles that exception by creating an empty in-memory address book;
+  loading itself does not rewrite the invalid student-data file or load only the valid entries.
 * Student records without any `subjects` field load with an empty subject set. Records from v1.4 that store
   subjects as plain strings are incompatible because they do not contain a lesson day or start time.
   Older records without tags, notes, or archive status still load with empty tags, empty notes, and
@@ -887,8 +892,20 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+Use a disposable copy of the built JAR in an empty writable folder. Close the application before editing files.
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+1. Create `data/addressbook.json` containing only `null`, then launch the JAR.<br>
+   Expected: The application opens with an empty address book and logs that the data file could not be loaded,
+   rather than failing with an uncaught `NullPointerException`. Close the window using its close button,
+   without entering any commands, and check that the student-data file still contains `null`.
+2. Repeat with `{"persons":[null]}`, `{"persons":null}`, and `{}`.<br>
+   Expected: Each invalid file follows the same recovery path and is preserved during loading and shutdown.
+3. Start with a valid exported JSON student record, then insert `null` beside it in the `persons` array.<br>
+   Expected: The entire file is rejected; the valid student is not loaded on its own and the original file remains intact.
+4. Replace the file with `{"persons":[]}` and launch again.<br>
+   Expected: The valid empty address book loads without a data-loading warning.
+5. Move the student-data file out of the test folder and launch again.<br>
+   Expected: Missing-file behaviour is unchanged: the application shows its sample students.
 
-1. _{ more test cases … }_
+These checks stop before executing commands that save the address book; such commands can overwrite the data file.
+Keep a backup before editing or attempting to recover real student data.

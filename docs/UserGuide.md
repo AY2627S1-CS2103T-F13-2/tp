@@ -457,6 +457,10 @@ TuteeDex automatically saves data after every command. You do not need to save m
 
 TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 
+The file must contain a JSON object with a `persons` array. An empty address book is
+`{"persons":[]}`. A root value of `null`, a missing or null `persons` array, or a null
+student entry is invalid and triggers the loading recovery described below.
+
 <box type="warning" seamless>
 
 **Caution:**
