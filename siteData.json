@@ -56,6 +56,7 @@
         "combining-subject-and-tag-filters": "Combining subject and tag filters",
         "shared-tag-data": "Shared tag data",
         "csv-import": "CSV import",
+        "restoring-the-last-view": "Restoring the last view",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "proposed-data-archiving": "[Proposed] Data archiving",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
@@ -81,6 +82,7 @@
         "viewing-help": "Viewing help",
         "sorting-students": "Sorting students",
         "importing-students": "Importing students",
+        "restoring-the-last-view-2": "Restoring the last view",
         "saving-data": "Saving data"
       },
       "headingKeywords": {}
@@ -145,6 +147,7 @@
         "clearing-all-entries-clear": "Clearing all entries: clear",
         "exiting-the-program-exit": "Exiting the program: exit",
         "saving-the-data": "Saving the data",
+        "reopening-where-you-left-off": "Reopening where you left off",
         "editing-the-data-file": "Editing the data file",
         "faq": "FAQ",
         "known-issues": "Known issues",
