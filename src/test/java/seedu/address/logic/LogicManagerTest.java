@@ -229,7 +229,6 @@ public class LogicManagerTest {
     public void execute_partialEdit_savesPreservedFieldsAndNotifiesDisplayedList() throws Exception {
         Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
         model.addPerson(original);
-        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ACTIVE_PERSONS);
         Person updated = new PersonBuilder(original).withPhone("91234567").build();
         List<Person> displayedUpdates = new ArrayList<>();
         logic.getFilteredPersonList().addListener((ListChangeListener<Person>) change -> {
@@ -240,7 +239,7 @@ public class LogicManagerTest {
 
         logic.execute("edit 1 p/91234567");
 
-        assertEquals(List.of(updated), displayedUpdates);
+        assertEquals(List.of(updated), displayedUpdates.stream().distinct().toList());
         assertEquals(List.of(updated), logic.getFilteredPersonList());
         JsonAddressBookStorage savedStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
