@@ -176,7 +176,7 @@ The `Model` component,
 * stores each student's subjects as `Subject` objects. Each `Subject` owns one required `LessonSlot`,
   which records a `DayOfWeek` and a `LocalTime` start time.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
-* stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
+* stores a `UserPrefs` object that represents the user’s preferences (the GUI settings and the last list view). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
 
 
@@ -402,6 +402,53 @@ Tests pass in a temporary folder as the home folder through a package-private co
 reading the file twice, but it adds state that can go stale if the file or the address book changes in between.
 Reading and checking the file again on `confirm` is simpler and always uses the current data.
 
+### Restoring the last view
+
+When TuteeDex opens, it shows the same list the user was looking at when they closed it, in the same order,
+such as the subject groups from `list -subjects` sorted by `sort o/desc`.
+
+**What is saved.** `UserPrefs` has two strings. `lastViewCommand` is the `list` or `find` command that last decided
+which students are shown, and `lastSortCommand` is the `sort` command that last set the order. An empty string
+means the normal list or the default order. Both are saved with the GUI settings in `preferences.json`, because
+they are preferences about the display rather than student data.
+
+**When it changes.** After each successful command, `LogicManager#execute()` calls `saveLastView()`:
+
+* A `SortCommand` that applies criteria saves its own command text, and `sort reset` clears the saved order.
+  A bare `sort` only reports the order (its result is `ListPresentation.UNCHANGED`), so nothing changes.
+  Sorting keeps the current presentation, so it never changes the saved view.
+* A `ListCommand` or `FindCommand` saves its own command text.
+* A command whose result has `ListPresentation.UNCHANGED` (`view`, `help`, `export`), or that exits the app,
+  keeps the saved view, because the display does not change.
+* Any other command clears the saved view only if it changed what is on screen. `LogicManager#execute()` reads
+  `Model#getFilteredPersonListPredicate()` before the command runs, and `saveLastView()` compares it with the
+  filter afterwards. Commands that reset the filter, such as `add`, `edit`, `archive` and `import`, clear the saved
+  view. `delete` and an `edit` with no changes keep the filter, so the saved view is kept. The saved view is also
+  cleared when the subject groups are replaced by the contact list, which `LogicManager` tracks from each result's
+  `ListPresentation`. The saved order stays, because sorting carries over to the normal list.
+
+A command that fails throws before `saveLastView()` runs, so it never changes the saved view. `MainApp#stop()`
+already writes `UserPrefs` to disk when the app closes, so no new storage code is needed.
+
+**Restoring.** At the end of `MainWindow#fillInnerParts()`, `restoreLastView()` runs the saved sort command and
+then the saved view command through the normal `executeCommand()` path, so the list, the subject groups and the
+result box are updated in the same way as when the user types the commands. The sort runs first so that the view
+is built in the saved order. The preferences file can be edited by hand, so `LogicManager#getLastSortCommand()`
+and `LogicManager#getLastViewCommand()` parse the saved text and return it only if it is a `sort` command, or a
+`list` or `find` command. Anything else, such as `delete 1`, is logged and ignored.
+A restored `find` can show no students, for example after its only match was deleted, so `restoreLastView()` puts
+`MainWindow.MESSAGE_LAST_VIEW_RESTORED` before the find result. A restored `list` shows the student counts instead
+of the result box, so it needs no message.
+Like `sort`, `list` and `find` override `Command#requiresAddressBookSave()` to return `false`, because they
+only change the display. Otherwise, if the data file failed to load and the app started empty, replaying the
+saved view would write that empty address book over the user's file.
+
+**Alternatives considered.** Saving the filter itself is not practical, because the filters are `Predicate`
+objects built from lambdas and cannot be written to JSON without a separate data form for every kind of filter.
+Saving the command text reuses the existing parsers, so new `list` options are restored without extra code.
+Making `delete` reset the filter would also keep the saved view and the screen in step, but the index numbers on
+screen would change after every deletion, so a following `delete 2` could remove a different student.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -543,8 +590,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                                                                       |
 | `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me                                                                                      |
 | `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
-
 | `* *`    | private tutor                              | import students from a file exported by TuteeDex | move my students to another computer without typing them in again                                                       |
+| `* *`    | private tutor                              | have TuteeDex open on the list I was last using | continue where I left off without typing the same `list`, `find` or `sort` again                                       |
 
 *{More to be added}*
 
@@ -959,6 +1006,25 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: Two numbered row errors, and no student is added.
 7. Try `import missing.csv`, `import notes.txt` and `import` with no path.<br>
    Expected: Each command fails with a specific message.
+
+### Restoring the last view
+
+1. Run `list -subjects`, then close TuteeDex with `exit`. Open it again.<br>
+   Expected: The subject groups are shown, as after typing `list -subjects`.
+2. Run `find Alex`, close the window and open TuteeDex again.<br>
+   Expected: Only the students matching `Alex` are listed.
+3. Run `list -archived`, then `view 1`, then `exit`. Open TuteeDex again.<br>
+   Expected: The archived students are listed, because `view` does not change the saved view.
+4. Run `list -subjects`, then add any student with `add`, then `exit`. Open TuteeDex again.<br>
+   Expected: The normal list is shown.
+5. Close TuteeDex. In `preferences.json`, change `lastViewCommand` to `"delete 1"` and open TuteeDex.<br>
+   Expected: The normal list is shown, and no student is deleted.
+6. Run `sort o/desc n/asc`, then `list -subjects`, then `exit`. Open TuteeDex again.<br>
+   Expected: The subject groups are shown, with the largest balances first in each group.
+7. Run `sort reset`, then `exit`. Open TuteeDex again.<br>
+   Expected: Students are in the default order.
+8. Run `find` with the name of one student, then `delete 1`, then `exit`. Open TuteeDex again.<br>
+   Expected: No students are listed, and the result box says this is the view from when TuteeDex was last closed.
 
 ### Saving data
 

@@ -94,6 +94,28 @@ public class ModelManager implements Model {
         userPrefs.setGuiSettings(guiSettings);
     }
 
+    @Override
+    public String getLastViewCommand() {
+        return userPrefs.getLastViewCommand();
+    }
+
+    @Override
+    public void setLastViewCommand(String lastViewCommand) {
+        requireNonNull(lastViewCommand);
+        userPrefs.setLastViewCommand(lastViewCommand);
+    }
+
+    @Override
+    public String getLastSortCommand() {
+        return userPrefs.getLastSortCommand();
+    }
+
+    @Override
+    public void setLastSortCommand(String lastSortCommand) {
+        requireNonNull(lastSortCommand);
+        userPrefs.setLastSortCommand(lastSortCommand);
+    }
+
     //=========== AddressBook ================================================================================
 
     @Override
@@ -233,6 +255,11 @@ public class ModelManager implements Model {
         requireNonNull(predicate);
         filteredPersons.setPredicate(predicate);
         refreshSorting();
+    }
+
+    @Override
+    public Predicate<? super Person> getFilteredPersonListPredicate() {
+        return filteredPersons.getPredicate();
     }
 
     @Override

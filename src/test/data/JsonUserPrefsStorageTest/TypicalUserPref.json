@@ -6,5 +6,7 @@
       "x" : 300,
       "y" : 100
     }
-  }
+  },
+  "lastViewCommand" : "list -subjects",
+  "lastSortCommand" : "sort o/desc n/asc"
 }
