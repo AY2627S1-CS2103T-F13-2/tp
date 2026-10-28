@@ -20,6 +20,9 @@ public class ListCommandParser implements Parser<ListCommand> {
                 + "Use -archived and -subjects on their own.";
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
     private static final Pattern EXCLUSIVE_FLAG_PATTERN = Pattern.compile("(?:^|\\s)-(?:archived|subjects)(?=\\s|$)");
+    // Recognise a complete option before another option or at the end, not text inside a filter value.
+    private static final Pattern SUMMARY_FLAG_PATTERN = Pattern.compile(
+            "(?<!\\S)-summary(?=\\s+(?:[a-zA-Z][a-zA-Z0-9_-]*/|-summary(?:\\s|$))|\\s*$)\\s*");
 
     @Override
     public ListCommand parse(String args) throws ParseException {
@@ -37,15 +40,12 @@ public class ListCommandParser implements Parser<ListCommand> {
         if (EXCLUSIVE_FLAG_PATTERN.matcher(trimmed).find()) {
             throw new ParseException(MESSAGE_INVALID_PARAMETERS);
         }
-        boolean isSummary = trimmed.equals(ListCommand.SUMMARY_FLAG);
-        String filterArgs = isSummary ? "" : trimmed;
-        if (filterArgs.startsWith(ListCommand.SUMMARY_FLAG + " ")) {
-            isSummary = true;
-            filterArgs = filterArgs.substring(ListCommand.SUMMARY_FLAG.length()).trim();
-        }
-        if (filterArgs.contains(ListCommand.SUMMARY_FLAG)) {
+        Matcher summaryFlag = SUMMARY_FLAG_PATTERN.matcher(trimmed);
+        boolean isSummary = summaryFlag.find();
+        if (summaryFlag.find()) {
             throw new ParseException(MESSAGE_INVALID_PARAMETERS);
         }
+        String filterArgs = summaryFlag.replaceFirst(" ").trim();
         if (filterArgs.isEmpty()) {
             return new ListCommand(isSummary);
         }
