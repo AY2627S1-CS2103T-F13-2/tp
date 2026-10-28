@@ -52,6 +52,21 @@ public class SubjectGroupingTest {
     }
 
     @Test
+    public void group_spaceVariantsAcrossStudents_sharesHeadingAndPreservesIndividualSlots() {
+        Subject monday = new Subject("H2  Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)));
+        Subject tuesday = new Subject("h2   maths", new LessonSlot(DayOfWeek.TUESDAY, LocalTime.of(15, 30)));
+        Person alice = new PersonBuilder(ALICE).withScheduledSubjects(monday).build();
+        Person bob = new PersonBuilder(ALICE).withName("Bob Student").withScheduledSubjects(tuesday).build();
+
+        List<SubjectGrouping.Group> groups = SubjectGrouping.group(List.of(alice, bob));
+
+        assertEquals(1, groups.size());
+        assertEquals("H2 Maths", groups.getFirst().displayName());
+        assertEquals(List.of(monday, tuesday), groups.getFirst().entries().stream()
+                .map(SubjectGrouping.Entry::subject).toList());
+    }
+
+    @Test
     public void group_emptyOrSubjectlessContacts_returnsNoGroups() {
         assertEquals(List.of(), SubjectGrouping.group(List.of()));
         assertEquals(List.of(), SubjectGrouping.group(List.of(ALICE)));

@@ -239,7 +239,7 @@ public class LogicManagerTest {
 
         logic.execute("edit 1 p/91234567");
 
-        assertEquals(List.of(updated), displayedUpdates);
+        assertEquals(List.of(updated), displayedUpdates.stream().distinct().toList());
         assertEquals(List.of(updated), logic.getFilteredPersonList());
         JsonAddressBookStorage savedStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));

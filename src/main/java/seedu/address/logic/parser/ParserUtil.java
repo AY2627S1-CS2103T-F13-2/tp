@@ -171,17 +171,17 @@ public class ParserUtil {
         return tagSet;
     }
 
-    /** Parses and validates a subject name after trimming surrounding spaces. */
+    /** Parses and validates a subject name after normalizing its spaces. */
     public static String parseSubjectName(String subject) throws ParseException {
         requireNonNull(subject);
-        String trimmed = subject.trim();
-        if (trimmed.isEmpty()) {
+        String normalized = Subject.normalizeName(subject);
+        if (normalized.isEmpty()) {
             throw new ParseException("Subject must not be blank.");
         }
-        if (!Subject.isValidSubject(trimmed)) {
+        if (!Subject.isValidSubject(normalized)) {
             throw new ParseException(Subject.MESSAGE_CONSTRAINTS);
         }
-        return trimmed;
+        return normalized;
     }
 
     /** Parses a weekly lesson day using the documented three-letter names. */
