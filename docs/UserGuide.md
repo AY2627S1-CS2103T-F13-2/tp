@@ -69,9 +69,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
-
-![help message](images/helpMessage.png)
+Opens a help window listing the command formats. Scroll to see every format,
+and hover over a row to read its full text in a tooltip.
+Select the blue `here` link to open the full user guide in your default browser.
+Close the help window with its pixel close button or press Escape.
+You can also open help through **Help > Help** or **F1**.
 
 Format: `help`
 
@@ -221,8 +223,11 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
 * Add `-summary` to display total and paid counts for the displayed students, for example
-  `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
-  The flag must be entered exactly as shown.
+  `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
+  The flag must be entered exactly as shown, at most once, before the first filter,
+  between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
+  Text such as `t/Pre-summary` or `t/Needs -summary revision` remains part of the tag value;
+  a separate `-summary` at the end of the command is treated as the flag.
 
 Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
@@ -461,6 +466,9 @@ does not rewrite the file; a later save writes the normalized names. If two subj
 one student become the same name after normalization, the file cannot load, even if their lesson
 times differ. Back up the file and resolve those conflicting entries before using it; TuteeDex does
 not silently discard either lesson.
+The file must contain a JSON object with a `persons` array. An empty address book is
+`{"persons":[]}`. A root value of `null`, a missing or null `persons` array, or a null
+student entry is invalid and triggers the loading recovery described below.
 
 <box type="warning" seamless>
 

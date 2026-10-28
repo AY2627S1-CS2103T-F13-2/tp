@@ -86,6 +86,17 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) defines the main layout and loads `TuteeDex.css`, while `PersonListCard.fxml` defines the layout for `PersonCard`. The main window also loads the bundled pixel fonts. `HelpWindow` has its own FXML layout and stylesheet.
 
+`HelpWindow` renders command formats as single-line JavaFX labels in a scroll pane,
+with full text in tooltips. Gradle bundles `docs/UserGuide.md` as a classpath resource;
+the help window reads the inline-code entries on its `Format:` lines, so the guide
+is the single source for the displayed formats, including sorting. Its browser
+callback comes from the running `MainApp`'s `HostServices`, through `UiManager`
+and `MainWindow`; it does not embed a browser. The close button and Escape call
+`Stage.close()`. MainWindow uses the same pixel close icon but retains its application
+exit handler. `HelpWindowTest` tests format extraction with small fixtures and verifies
+the rendered tooltips, hyperlink, scrolling, and close/reopen behavior without
+comparing a second hard-coded list against the guide.
+
 The UI depends on `Model` classes to display `Person` data and to identify students whose outstanding amount is zero for the PAID count. Commands and access to the filtered list and GUI settings go through `Logic`.
 
 The following sequence diagram shows submission of a successful `list` command and the resulting summary:
@@ -185,8 +196,13 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
 * `JsonAdaptedSubject` stores the subject name, weekly lesson day, and lesson start time. It reconstructs
   a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
-  `JsonSerializableAddressBook.toModelType()` also rejects duplicate students. These conversions explain
-  the Storage component's dependency on the Model component; model classes are omitted from this diagram.
+  `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicate students.
+  These conversions explain the Storage component's dependency on the Model component; model classes
+  are omitted from this diagram.
+* `JsonUtil.readJsonFile()` rejects a JSON root of `null` through `DataLoadingException`, rather than
+  treating it as a missing file. `JsonAddressBookStorage` also translates adapter validation failures into
+  `DataLoadingException`. `MainApp` handles that exception by creating an empty in-memory address book;
+  loading itself does not rewrite the invalid student-data file or load only the valid entries.
 * Student records without any `subjects` field load with an empty subject set. Records from v1.4 that store
   subjects as plain strings are incompatible because they do not contain a lesson day or start time.
   Older records without tags, notes, or archive status still load with empty tags, empty notes, and
@@ -706,6 +722,25 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
 
+### Summary flag ordering
+
+`ListCommandParser` recognises one standalone `-summary` before, between, or after filter arguments.
+It removes only the flag before delegating subject/tag values to the existing validators.
+The flag must precede another prefix/summary flag or end the input, so a hyphenated value such as
+`t/Pre-summary` and text inside a multiword value such as `t/Needs -summary revision` are preserved.
+Repeated summary flags and combinations with the standalone `-archived` or `-subjects` modes are rejected.
+
+Using the profiles above:
+
+1. Compare `list -summary s/Maths`, `list s/Maths -summary`, and `list s/Maths -summary s/Maths`.<br>
+   Expected: Amy and Cara are displayed, with identical TOTAL/PAID counts for all three commands.
+2. Compare `list -summary t/A-Level t/Needs revision`, `list t/A-Level -summary t/Needs revision`,
+   and `list t/A-Level t/Needs revision -summary`.<br>
+   Expected: Amy and Bob are displayed, with identical TOTAL/PAID counts for all three commands.
+3. Run `find Bob`, then try `list t/A-Level -summary -summary`, `list t/ -summary`,
+   `list -subjects -summary`, and `list -archived -summary`.<br>
+   Expected: Each command fails; Bob remains the displayed student and stored profiles are unchanged.
+
 ### Listing archived students
 
 Use a fresh test copy of the JAR in an empty writable folder.
@@ -828,6 +863,18 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 7. Exit and restart from the same folder.<br>
    Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
 
+### Viewing help
+
+1. Run `help`, or use **Help > Help** or **F1**. Expect the command-format window.
+2. Scroll to the last command and hover over a long format such as `add`.
+   Expect all commands to be reachable and the full format to appear in a tooltip.
+3. Select the blue `here` link. Expect the online User Guide in the default browser.
+4. Close help with its pixel button, reopen it, then press Escape.
+   Expect only the help window to close each time; the main window stays open.
+5. Resize help to its minimum size. Expect scrolling and the close button to remain usable.
+6. Select the matching pixel close button in the main window. Expect the application
+   to exit and retain its window size and position on the next launch.
+   
 ### Sorting students
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
@@ -874,8 +921,20 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+Use a disposable copy of the built JAR in an empty writable folder. Close the application before editing files.
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+1. Create `data/addressbook.json` containing only `null`, then launch the JAR.<br>
+   Expected: The application opens with an empty address book and logs that the data file could not be loaded,
+   rather than failing with an uncaught `NullPointerException`. Close the window using its close button,
+   without entering any commands, and check that the student-data file still contains `null`.
+2. Repeat with `{"persons":[null]}`, `{"persons":null}`, and `{}`.<br>
+   Expected: Each invalid file follows the same recovery path and is preserved during loading and shutdown.
+3. Start with a valid exported JSON student record, then insert `null` beside it in the `persons` array.<br>
+   Expected: The entire file is rejected; the valid student is not loaded on its own and the original file remains intact.
+4. Replace the file with `{"persons":[]}` and launch again.<br>
+   Expected: The valid empty address book loads without a data-loading warning.
+5. Move the student-data file out of the test folder and launch again.<br>
+   Expected: Missing-file behaviour is unchanged: the application shows its sample students.
 
-1. _{ more test cases … }_
+These checks stop before executing commands that save the address book; such commands can overwrite the data file.
+Keep a backup before editing or attempting to recover real student data.

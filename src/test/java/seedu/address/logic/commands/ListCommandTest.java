@@ -16,6 +16,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.parser.ListCommandParser;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -171,6 +172,35 @@ public class ListCommandTest {
         String expected = String.format(ListCommand.MESSAGE_SUMMARY_FORMAT,
                 "Total: 2", "Paid: 1");
         assertCommandSuccess(new ListCommand(true), model, expected, expectedModel);
+    }
+
+    @Test
+    public void execute_parsedSummaryFlagPositions_preserveFilteredCountsAndProfiles() throws Exception {
+        Person paid = new PersonBuilder(ALICE).withName("Paid Student").withSubjects("Maths")
+                .withTags("a-level").withOutstandingAmount("0").build();
+        Person owing = new PersonBuilder(BENSON).withName("Owing Student").withSubjects("Physics")
+                .withTags("needs revision").withOutstandingAmount("20").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(paid);
+        addressBook.addPerson(owing);
+        addressBook.addPerson(new PersonBuilder(ALICE).withName("Unmatched Student")
+                .withSubjects("Chemistry").withTags("other").build());
+        addressBook.addPerson(new PersonBuilder(ALICE).withName("Archived Student")
+                .withSubjects("Maths").withTags("a-level").build().withArchived(true));
+
+        for (String args : new String[] {"-summary s/Maths s/Physics", "s/Maths -summary s/Physics",
+            "s/Maths s/Physics -summary", "-summary t/A-Level t/Needs revision",
+            "t/A-Level -summary t/Needs revision", "t/A-Level t/Needs revision -summary"}) {
+            Model filteredModel = new ModelManager(addressBook, new UserPrefs());
+            filteredModel.updateFilteredPersonList(person -> false);
+
+            CommandResult result = new ListCommandParser().parse(args).execute(filteredModel);
+
+            assertEquals(String.format(ListCommand.MESSAGE_SUMMARY_FORMAT, "Total: 2", "Paid: 1"),
+                    result.getFeedbackToUser());
+            assertEquals(List.of(paid, owing), filteredModel.getFilteredPersonList());
+            assertEquals(addressBook, filteredModel.getAddressBook());
+        }
     }
 
     @Test

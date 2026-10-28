@@ -66,6 +66,37 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void readAddressBook_malformedStructures_throwsDataLoadingExceptionAndPreservesFile() throws IOException {
+        String validPerson = JsonUtil.toJsonString(new JsonAdaptedPerson(ALICE));
+        String[] invalidDocuments = {"null", "{\"persons\":[null]}",
+            "{\"persons\":[" + validPerson + ",null]}", "{\"persons\":[null," + validPerson + "]}",
+            "{\"persons\":null}", "{}", "{\"persons\":\"invalid\"}", "{\"persons\":[{}]}",
+            "{\"persons\":[" + validPerson + "," + validPerson + "]}"};
+        Path file = testFolder.resolve("invalid.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+
+        for (String document : invalidDocuments) {
+            Files.writeString(file, document);
+
+            assertThrows(DataLoadingException.class, storage::readAddressBook);
+
+            assertEquals(document, Files.readString(file));
+        }
+    }
+
+    @Test
+    public void readAddressBook_emptyPersons_loadsEmptyBookAndPreservesFile() throws Exception {
+        Path file = testFolder.resolve("empty.json");
+        String document = "{\"persons\":[]}";
+        Files.writeString(file, document);
+
+        ReadOnlyAddressBook loaded = new JsonAddressBookStorage(file).readAddressBook().orElseThrow();
+
+        assertEquals(new AddressBook(), new AddressBook(loaded));
+        assertEquals(document, Files.readString(file));
+    }
+
+    @Test
     public void readAndSaveAddressBook_allInOrder_success() throws Exception {
         Path filePath = testFolder.resolve("TempAddressBook.json");
         AddressBook original = getTypicalAddressBook();

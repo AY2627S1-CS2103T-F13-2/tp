@@ -1,12 +1,16 @@
 package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.testutil.SerializableTestClass;
 import seedu.address.testutil.TestUtil;
 
@@ -16,6 +20,20 @@ import seedu.address.testutil.TestUtil;
 public class JsonUtilTest {
 
     private static final Path SERIALIZATION_FILE = TestUtil.getFilePathInSandboxFolder("serialize.json");
+
+    @TempDir
+    public Path testFolder;
+
+    @Test
+    public void readJsonFile_nullRoot_throwsDataLoadingExceptionAndPreservesFile() throws IOException {
+        Path file = testFolder.resolve("null.json");
+        String content = "  null\n";
+        Files.writeString(file, content);
+
+        assertThrows(DataLoadingException.class, () -> JsonUtil.readJsonFile(file, SerializableTestClass.class));
+
+        assertEquals(content, Files.readString(file));
+    }
 
     @Test
     public void serializeObjectToJsonFile_noExceptionThrown() throws IOException {
