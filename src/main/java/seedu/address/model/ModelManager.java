@@ -68,6 +68,7 @@ public class ModelManager implements Model {
             invalidateRows();
         });
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
+        filteredPersons.setPredicate(PREDICATE_SHOW_ACTIVE_PERSONS);
         sortedPersons = new SortedList<>(filteredPersons);
         sortReference = LocalDateTime.now(clock);
     }
