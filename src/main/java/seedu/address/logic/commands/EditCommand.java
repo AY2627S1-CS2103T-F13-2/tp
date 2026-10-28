@@ -12,7 +12,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
-import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -106,7 +106,7 @@ public class EditCommand extends Command {
         }
 
         model.setPerson(personToEdit, editedPerson);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
         return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, editedPerson.getName()));
     }
 
@@ -127,7 +127,7 @@ public class EditCommand extends Command {
         return new Person(updatedName, updatedPhone, updatedAddress, updatedStartDate, updatedOutstandingAmount,
                 editPersonDescriptor.getTags().orElse(personToEdit.getTags()),
                 editPersonDescriptor.getNotes().orElse(personToEdit.getNotes()),
-                editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()));
+                editPersonDescriptor.getSubjects().orElse(personToEdit.getSubjects()), personToEdit.isArchived());
     }
 
     @Override

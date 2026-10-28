@@ -21,22 +21,29 @@ public final class Subject {
     public Subject(String value, LessonSlot lessonSlot) {
         requireNonNull(value);
         requireNonNull(lessonSlot);
-        checkArgument(isValidSubject(value), MESSAGE_CONSTRAINTS);
-        this.value = value;
+        String normalizedName = normalizeName(value);
+        checkArgument(isValidSubject(normalizedName), MESSAGE_CONSTRAINTS);
+        this.value = normalizedName;
         this.lessonSlot = lessonSlot;
     }
 
     public static boolean isValidSubject(String value) {
-        return value.matches(VALIDATION_REGEX);
+        return normalizeName(value).matches(VALIDATION_REGEX);
+    }
+
+    /** Trims boundary whitespace and collapses repeated ordinary spaces, preserving case. */
+    public static String normalizeName(String name) {
+        requireNonNull(name);
+        return name.trim().replaceAll(" +", " ");
     }
 
     public LessonSlot getLessonSlot() {
         return lessonSlot;
     }
 
-    /** Returns whether this subject has the supplied name, ignoring case. */
+    /** Returns whether this subject has the supplied normalized name, ignoring case. */
     public boolean hasName(String name) {
-        return value.equalsIgnoreCase(name);
+        return name != null && value.equalsIgnoreCase(normalizeName(name));
     }
 
     @Override

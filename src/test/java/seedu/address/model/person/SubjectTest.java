@@ -44,6 +44,38 @@ public class SubjectTest {
     }
 
     @Test
+    public void constructor_repeatedSpaces_normalizesNameAndPreservesCaseAndSlot() {
+        LessonSlot slot = new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0));
+        Subject subject = new Subject("  H2   Maths  ", slot);
+
+        assertEquals("H2 Maths", subject.value);
+        assertEquals(slot, subject.getLessonSlot());
+        assertEquals(new Subject("h2 Maths", slot), subject);
+        assertEquals(new Subject("H2 Maths", slot).hashCode(), subject.hashCode());
+        assertEquals("H2 Maths (Mon 09:00)", subject.toString());
+    }
+
+    @Test
+    public void hasName_caseAndSpaceVariants_matchWholeName() {
+        Subject subject = new Subject("H2  Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)));
+
+        assertTrue(subject.hasName(" h2   MATHS "));
+        assertTrue(subject.hasName("H2 Maths"));
+        assertFalse(subject.hasName("Maths"));
+        assertFalse(subject.hasName(null));
+    }
+
+    @Test
+    public void isValidSubject_normalizedLengthAndInternalTabs_preservesConstraints() {
+        assertTrue(Subject.isValidSubject("A".repeat(48) + "   B"));
+        assertFalse(Subject.isValidSubject("A".repeat(49) + " B"));
+        assertFalse(Subject.isValidSubject("   "));
+        assertFalse(Subject.isValidSubject("H2\tMaths"));
+        assertFalse(Subject.isValidSubject("H2\nMaths"));
+        assertFalse(Subject.isValidSubject("H2\r\nMaths"));
+    }
+
+    @Test
     public void toString_includesLessonSlot() {
         Subject subject = new Subject("H2 Maths",
                 new LessonSlot(DayOfWeek.WEDNESDAY, LocalTime.of(15, 30)));

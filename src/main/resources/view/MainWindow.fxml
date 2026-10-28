@@ -48,7 +48,7 @@
           <Region HBox.hgrow="ALWAYS" />
           <Button fx:id="exitButton" styleClass="exit-button" onAction="#handleExit" accessibleText="Exit TuteeDex">
             <graphic>
-              <ImageView fitWidth="24" fitHeight="24" preserveRatio="true">
+              <ImageView fitWidth="39.32" fitHeight="39.32" preserveRatio="true" smooth="false">
                 <image><Image url="@/images/close.png" /></image>
               </ImageView>
             </graphic>

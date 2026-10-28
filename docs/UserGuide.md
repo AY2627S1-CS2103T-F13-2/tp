@@ -69,9 +69,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
-
-![help message](images/helpMessage.png)
+Opens a help window listing the command formats. Scroll to see every format,
+and hover over a row to read its full text in a tooltip.
+Select the blue `here` link to open the full user guide in your default browser.
+Close the help window with its pixel close button or press Escape.
+You can also open help through **Help > Help** or **F1**.
 
 Format: `help`
 
@@ -93,9 +95,12 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 `FRI`, `SAT`, or `SUN` (letter case is ignored), and `TIME` is a 24-hour start time in strict
 `HH:mm` format, such as `09:00` or `15:30`. Each subject has exactly one weekly lesson.
 Repeat the complete triplet for multiple subjects. Subject names must be 1–50 characters after
-trimming surrounding spaces and may contain English letters, digits, spaces, and the symbols
-`+ & ( ) . ' -`, including at least one letter or digit, for example `C++`, `Maths & Science` or
-`Maths (H2)`. Semicolons, commas and slashes are not allowed. A student cannot have two subjects with the same name, ignoring case.
+trimming surrounding whitespace and collapsing repeated ordinary spaces into one. Names may contain
+English letters, digits, spaces, and the symbols `+ & ( ) . ' -`, including at least one letter or digit,
+for example `C++`, `Maths & Science` or `Maths (H2)`. Semicolons, commas, slashes, internal tabs and line
+breaks are not allowed. Capitalization is preserved. A student cannot have two subjects with the same
+normalized name, ignoring case, even if their lesson times differ.
+For example, `H2  Maths` is stored as `H2 Maths` and counts as the same name as `h2 maths`.
 Comma-separated subjects are not supported.
 
 **Note:** `notes/NOTE` is optional and stores one free-text note per student.
@@ -195,35 +200,54 @@ or tags. Archived students are not shown.
 Each card displays the contact's name, phone, address, start date, outstanding
 amount, subjects, tags, and notes.
 
-Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`
+Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`
 
 * Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
-  Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
+  Subject names match completely, ignoring case and extra spaces: `s/H2  Maths` matches `H2 Maths`,
+  but `s/Maths` does not match `Additional Maths`.
   Subjects use the same validation as Add; equivalent repeated values are combined.
 * Supply one `t/` per tag. A student matches if they have **any** requested tag (OR matching).
   Match complete tags, ignoring case and surrounding spaces: `t/Needs revision` matches
   `needs revision`, but `t/revision` does not. Tags use the same validation as Add;
   equivalent repeated values are combined. Profiles without tags do not match.
-* Use either subject or tag prefixes in one command; mixing them is invalid.
+* Subject and tag prefixes may be combined in either order. Match **any** requested subject
+  **and any** requested tag: `list s/Maths s/Physics t/A-Level` means
+  `(Maths OR Physics) AND A-Level`. A student matching several values appears only once.
+  An omitted category places no restriction on that category.
 * Each filter searches all stored students, rather than just the current search results.
-  Results retain their stored order. Indexes used by `view`, `edit`, and `delete` refer
+  Results follow the current sort order, or stored order when sorting is reset. Indexes used by `view`, `edit`, and `delete` refer
   to the newly displayed list.
 * The status message reports the displayed count, for example `Listed 2 contacts.`
   or `Listed 1 contact.` A subject filter with no matches shows
   `No contacts match the specified subjects.`; a tag filter with no matches shows
-  `No contacts match the specified tags.` Both leave the displayed list empty.
+  `No contacts match the specified tags.` A mixed filter with no matches leaves an empty list
+  and shows TOTAL 0 / PAID 0 in the GUI. Its command/log feedback is
+  `No contacts match the specified subjects and tags.`
   Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
+* Every successful List command shows the **TOTAL/PAID** banner. **TOTAL** is the number of
+  displayed students; **PAID** counts those with an outstanding amount of zero.
+  A subject or tag filter with no matches leaves the list empty and shows **TOTAL 0 / PAID 0**.
+  Plain `list` also shows **TOTAL 0 / PAID 0** when there are no active students.
 * Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
-* Add `-summary` to display total and paid counts for the displayed students, for example
+* `-summary` is optional: the GUI already shows the counts without it. For example,
   `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
   The flag must be entered exactly as shown.
+* Add `-summary` to display total and paid counts for the displayed students, for example
+  `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
+  The flag must be entered exactly as shown, at most once, before the first filter,
+  between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
+  Text such as `t/Pre-summary` or `t/Needs -summary revision` remains part of the tag value;
+  a separate `-summary` at the end of the command is treated as the flag.
 
 Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
 * `list t/A-Level t/Needs revision` shows students having either tag.
+* `list s/Maths s/Physics t/A-Level t/Needs revision` shows students taking Maths or Physics
+  who also have A-Level or Needs revision.
+* `list -summary t/A-Level s/Maths` summarizes active students matching both categories.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every active student again.
 
@@ -238,6 +262,11 @@ Archived students are excluded. The option is standalone and cannot be combined 
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
+The TOTAL/PAID banner counts each active student once, even if they appear under several subjects.
+Students without subjects still count towards the totals, although they have no grouped entry.
+If no active student has a subject, the group area shows `No subjects found for the active contacts.`;
+the banner still reports the active-student counts.
+
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
 commands also leave the displayed list unchanged. Find and other List options switch
 back to the normal contact list for their results. Applying or resetting `sort` keeps the
@@ -247,8 +276,8 @@ current grouped or ungrouped presentation; bare `sort` also preserves scroll pos
 
 `list -archived` displays only archived students, using the active sort or stored order by default. It
 replaces any previous search or filter and does not change saved profiles.
-Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
-exist, the list is empty and feedback is `No archived contacts.`.
+The TOTAL/PAID banner counts only the displayed archived students. If no archived students
+exist, the list is empty and the banner shows **TOTAL 0 / PAID 0**.
 
 Use `-archived` on its own. Combining it with `-summary`, subject/tag filters,
 or other arguments is not supported and shows an error without changing the
@@ -338,7 +367,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
   duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
-* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full contact list. The changes are saved automatically.
+* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full active contact list. Editing preserves the student's archive status; use `list -archived` to view archived students again. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
 
 Errors:
@@ -460,6 +489,15 @@ TuteeDex automatically saves data after every command. You do not need to save m
 
 TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 
+Stored subject names are normalized when loaded, using the same spacing rules as Add. Loading alone
+does not rewrite the file; a later save writes the normalized names. If two subjects belonging to
+one student become the same name after normalization, the file cannot load, even if their lesson
+times differ. Back up the file and resolve those conflicting entries before using it; TuteeDex does
+not silently discard either lesson.
+The file must contain a JSON object with a `persons` array. An empty address book is
+`{"persons":[]}`. A root value of `null`, a missing or null `persons` array, or a null
+student entry is invalid and triggers the loading recovery described below.
+
 <box type="warning" seamless>
 
 **Caution:**
@@ -496,7 +534,7 @@ Action     | Format, Examples
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
 **Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary t/A-Level t/Needs revision`
+**List**   | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
 **Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
 **Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
 **Help**   | `help`
