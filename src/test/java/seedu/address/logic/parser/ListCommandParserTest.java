@@ -132,7 +132,8 @@ public class ListCommandParserTest {
         assertParseFailure(parser, "s/ -summary", "Subject must not be blank.");
         assertParseFailure(parser, "t/ -summary", Tag.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, "s/Maths -summary x/value", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
-        assertParseFailure(parser, "s/Maths -summary t/A-Level", ListCommandParser.MESSAGE_INVALID_PARAMETERS);
+        assertParseSuccess(parser, "s/Maths -summary t/A-Level", new ListCommand(
+                new PersonHasAnyTagPredicate(Set.of(new Tag("a-level"))), Set.of("Maths"), true));
         for (String args : new String[] {"-summary -subjects", "t/A-Level -summary -subjects",
             "-subjects -summary", "s/Maths -subjects -summary", "t/A-Level -archived -summary"}) {
             assertParseFailure(parser, args, ListCommandParser.MESSAGE_INVALID_PARAMETERS);
