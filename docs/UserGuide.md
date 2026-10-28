@@ -366,7 +366,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
   duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
-* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full contact list. The changes are saved automatically.
+* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full active contact list. Editing preserves the student's archive status; use `list -archived` to view archived students again. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
 
 Errors:
