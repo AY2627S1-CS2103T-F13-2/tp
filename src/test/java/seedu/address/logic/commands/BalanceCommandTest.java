@@ -54,6 +54,36 @@ public class BalanceCommandTest {
     }
 
     @Test
+    public void paidResultingInDuplicate_throwsCommandException() {
+        Model model = modelWithStudentAndMatchingBalance("20.00");
+        Assert.assertThrows(CommandException.class, PaidCommand.MESSAGE_DUPLICATE_PERSON, () ->
+                new PaidCommand(INDEX_FIRST_PERSON, new OutstandingAmount("30.00")).execute(model));
+        assertEquals("50", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+    }
+
+    @Test
+    public void paidZeroBalance_doesNotThrowDuplicateException() throws Exception {
+        Model model = modelWithStudent("0.00");
+        new PaidCommand(INDEX_FIRST_PERSON, null).execute(model);
+        assertEquals("0", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+    }
+
+    @Test
+    public void chargeResultingInDuplicate_throwsCommandException() {
+        Model model = modelWithStudentAndMatchingBalance("62.50");
+        Assert.assertThrows(CommandException.class, ChargeCommand.MESSAGE_DUPLICATE_PERSON, () ->
+                new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("12.50")).execute(model));
+        assertEquals("50", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+    }
+
+    @Test
+    public void chargeZeroAmount_doesNotThrowDuplicateException() throws Exception {
+        Model model = modelWithStudent();
+        new ChargeCommand(INDEX_FIRST_PERSON, OutstandingAmount.ZERO).execute(model);
+        assertEquals("50", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+    }
+
+    @Test
     public void paid_invalidIndex_throwsCommandException() {
         Model model = modelWithStudent();
         PaidCommand command = new PaidCommand(seedu.address.commons.core.index.Index.fromOneBased(2), null);
@@ -90,8 +120,19 @@ public class BalanceCommandTest {
     }
 
     private Model modelWithStudent() {
+        return modelWithStudent(student.getOutstandingAmount().toPlainString());
+    }
+
+    private Model modelWithStudent(String outstandingAmount) {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder(student).withOutstandingAmount(outstandingAmount).build());
+        return new ModelManager(addressBook, new UserPrefs());
+    }
+
+    private Model modelWithStudentAndMatchingBalance(String matchingBalance) {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(student);
+        addressBook.addPerson(new PersonBuilder(student).withOutstandingAmount(matchingBalance).build());
         return new ModelManager(addressBook, new UserPrefs());
     }
 }

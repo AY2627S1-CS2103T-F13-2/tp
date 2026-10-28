@@ -16,6 +16,7 @@ public class ChargeCommand extends Command {
     public static final String COMMAND_WORD = "charge";
     public static final String MESSAGE_USAGE = "Usage: charge INDEX AMOUNT";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "No matching contact found at the specified index.";
+    public static final String MESSAGE_DUPLICATE_PERSON = "This contact already exists in TuteeDex.";
     public static final String MESSAGE_SUCCESS = "%1$s's outstanding balance is now %2$s.";
 
     private final Index index;
@@ -37,6 +38,9 @@ public class ChargeCommand extends Command {
         OutstandingAmount updatedAmount = person.getOutstandingAmount().add(amount);
         Person updated = new Person(person.getName(), person.getPhone(), person.getAddress(), person.getStartDate(),
                 updatedAmount, person.getTags(), person.getNotes(), person.getSubjects(), person.isArchived());
+        if (!person.isSamePerson(updated) && model.hasPerson(updated)) {
+            throw new CommandException(MESSAGE_DUPLICATE_PERSON);
+        }
         model.setPerson(person, updated);
         return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), updatedAmount.toCurrencyString()));
     }
