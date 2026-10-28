@@ -86,6 +86,17 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) defines the main layout and loads `TuteeDex.css`, while `PersonListCard.fxml` defines the layout for `PersonCard`. The main window also loads the bundled pixel fonts. `HelpWindow` has its own FXML layout and stylesheet.
 
+`HelpWindow` renders command formats as single-line JavaFX labels in a scroll pane,
+with full text in tooltips. Gradle bundles `docs/UserGuide.md` as a classpath resource;
+the help window reads the inline-code entries on its `Format:` lines, so the guide
+is the single source for the displayed formats, including sorting. Its browser
+callback comes from the running `MainApp`'s `HostServices`, through `UiManager`
+and `MainWindow`; it does not embed a browser. The close button and Escape call
+`Stage.close()`. MainWindow uses the same pixel close icon but retains its application
+exit handler. `HelpWindowTest` tests format extraction with small fixtures and verifies
+the rendered tooltips, hyperlink, scrolling, and close/reopen behavior without
+comparing a second hard-coded list against the guide.
+
 The UI depends on `Model` classes to display `Person` data and to identify students whose outstanding amount is zero for the PAID count. Commands and access to the filtered list and GUI settings go through `Logic`.
 
 The following sequence diagram shows submission of a successful `list` command and the resulting summary:
@@ -98,6 +109,14 @@ The following sequence diagram shows submission of a successful `list` command a
 1. When execution succeeds, `CommandBox` clears the input. If `Logic` throws a `CommandException` or `ParseException`, `MainWindow` displays the exception message and rethrows it. `CommandBox` retains the input and applies its error style, which is removed when the text next changes.
 
 The sequence diagram omits error handling, help/exit flag handling, and the observable list's JavaFX cell updates for clarity.
+
+For List commands, text such as `Listed N contacts.`, `No contacts match the specified subjects.`,
+`No contacts match the specified tags.`, and `No archived contacts.` remains in the `CommandResult`
+and is logged by `MainWindow`, but the visible result is the TOTAL/PAID banner. The optional `-summary`
+changes the command's returned feedback; it does not opt into a different GUI display.
+This applies to plain, filtered, archived and subject-grouped List modes. Empty results show both counts
+as zero. Grouped counts use unique students, including subjectless students, rather than grouped rows.
+Invalid List input follows the exception path instead: error feedback is shown and the current list remains.
 
 ### Logic component
 
@@ -185,8 +204,13 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
 * `JsonAdaptedSubject` stores the subject name, weekly lesson day, and lesson start time. It reconstructs
   a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
-  `JsonSerializableAddressBook.toModelType()` also rejects duplicate students. These conversions explain
-  the Storage component's dependency on the Model component; model classes are omitted from this diagram.
+  `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicate students.
+  These conversions explain the Storage component's dependency on the Model component; model classes
+  are omitted from this diagram.
+* `JsonUtil.readJsonFile()` rejects a JSON root of `null` through `DataLoadingException`, rather than
+  treating it as a missing file. `JsonAddressBookStorage` also translates adapter validation failures into
+  `DataLoadingException`. `MainApp` handles that exception by creating an empty in-memory address book;
+  loading itself does not rewrite the invalid student-data file or load only the valid entries.
 * Student records without any `subjects` field load with an empty subject set. Records from v1.4 that store
   subjects as plain strings are incompatible because they do not contain a lesson day or start time.
   Older records without tags, notes, or archive status still load with empty tags, empty notes, and
@@ -202,6 +226,87 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Sorting criteria
+
+<puml src="diagrams/SortingClassDiagram.puml" width="1000" alt="Sorting criteria, comparisons and display rows" />
+
+The diagram shows the sorting types and their main dependencies; UI, storage and comparator parameter
+lists are omitted for readability.
+
+`SortOrder` is an immutable, ordered list of field/direction pairs. Its first criterion has the highest
+priority. Fields cannot repeat, and an empty order represents the original stored order. The supported
+fields are student name, outstanding amount, start date, and upcoming lesson slot. A lesson slot is a
+combined day/time criterion; each lesson row associates that schedule with its subject.
+
+`SortOrderParser` validates criteria arguments such as `o/desc n/asc` or `slot/asc`, preserving their order
+and independent directions. It rejects malformed arguments, unknown fields, repeated fields, and directions
+other than lowercase `asc` or `desc`. The criteria model and parser do not mutate profiles or user preferences.
+`SortCommandParser` handles the current-order query and reset, and the registered `SortCommand` applies
+criteria to the session's `ModelManager`. Saving and restoring state belongs to the separate persistence feature.
+`SortCommand` overrides `Command#requiresAddressBookSave()` so `LogicManager` does not write profile JSON
+for apply, reset or query. A storage permission error therefore cannot make session-only sorting fail.
+Other commands keep their existing save behaviour; preference persistence remains separate.
+
+`SortComparators` compares names without regard to case, amounts numerically, and start dates as annual
+month/day values. Invalid existing dates and absent lessons stay last in both directions. `LessonRow`
+references a profile and one of its subjects without duplicating stored data. Upcoming lesson comparisons
+use one captured local date/time: a start equal to that time is due now, while a start that has already
+passed is compared using its next weekly occurrence. `representativeLesson()` selects the minimum row under
+the requested comparison: nearest for ascending slots and furthest for descending slots. Student-level
+criteria are constant within one profile, so the slot direction selects its representative even in a mixed
+order. Equal slots retain subject insertion order; subjectless profiles use a null subject.
+
+`ModelManager` exposes a `SortedList` over the existing filtered students. The stored address-book list is
+not reordered. Original stored positions explicitly resolve complete ties, including after an earlier sort.
+The unique-student order compares representative lessons using all supplied criteria; it supplies the
+printed index used by View/Edit/Delete and by both displays. `getStudentRows()` exposes one representative
+per student in that same order. With slot sorting, `LessonListPanel` numbers these rows by their displayed
+position, so every student appears once with the subject/slot actually used for sorting. Counts remain
+unique. Indexed commands continue to target this unique-student list without a separate lesson-index map.
+
+The default clock uses the computer's local zone. An injected clock deliberately defines the local zone
+for that model; tests compare Singapore and UTC at the same instant to verify this contract. Lesson slots
+remain weekly local times rather than timezone-bearing events.
+
+`LogicManager` brackets command execution with `Model#beginCommand()` and `endCommand()` in a `finally`
+block. The first sorting refresh captures a reference; further refreshes in that command reuse it. Thus
+Edit's profile update and filter reset cannot straddle a lesson boundary with different references.
+Query/View capture no new time. No timer reorders rows while a tutor is entering an indexed command.
+A repeated Sort or List refreshes upcoming occurrences; indexed targets are resolved before mutation refreshes.
+
+Student and grouped-lesson row snapshots are built lazily and reused until profile data, the filter,
+criteria or reference time changes. An address-book listener updates the stored-position map before
+transformation listeners compare added/edited profiles. Tie breaks therefore use constant-time lookups
+rather than scanning the stored list during every comparison. Profile changes also invalidate cached rows.
+
+#### Design considerations
+
+| Decision | Reason |
+| --- | --- |
+| `SortedList` over the filtered students | Changes display order while retaining stored/CSV order and the existing unique-student command indexes. Reordering the address book would mix presentation with data changes. |
+| One captured local reference per command | Keeps comparisons consistent at lesson boundaries. Reading the clock inside each comparison could change keys while sorting. |
+| One representative row per ungrouped student | Keeps natural indexes and whole-profile commands simple. Subject groups retain every lesson because each subject has its own schedule. |
+| Lazy snapshots and a stored-position map | Avoid repeated snapshot sorting and linear tie-break scans. Invalidation is explicit when profiles or sorting inputs change. |
+
+#### Sorting within subject groups
+
+`SubjectGrouping` keeps alphabetical subject headings and the printed index of each unique student.
+When a sort is active, it maps the already ordered `ModelManager#getLessonRows()` to positions and uses
+those positions to order entries within each group. This API still includes every lesson; it does not
+collapse to representatives. Comparisons use the same reference time and criterion rules as the ungrouped
+display, but each grouped card retains its own subject and slot. Complete lesson ties explicitly fall back
+to stored student positions, independently of representative ordering. A student can appear under several
+subjects with the same printed student index; deleting that index removes their whole profile and all lessons.
+Without active criteria, grouping retains its original alphabetical student order. Subjectless students
+remain part of the unique-student list and counts, but do not produce subject groups.
+
+`CommandResult.ListPresentation.REFRESH` requests rebuilding the current presentation without selecting
+contacts or subject groups. Applying/resetting Sort uses this request; a bare Sort query uses `UNCHANGED`.
+`MainWindow` remembers the current grouped presentation and rebuilds the appropriate panel after an apply
+or reset. View, Help, Export and a bare Sort query preserve the existing panel and its scroll position.
+Find, other List options and successful profile mutations select the ungrouped presentation, as before.
+The active sorting criteria remain available through Logic/Model for the separate persistence feature.
+
 ### Weekly subject lessons
 
 `Subject` contains its validated display name and one required `LessonSlot`. `LessonSlot` contains a
@@ -210,6 +315,27 @@ ordered `s/SUBJECT day/DAY time/TIME` triplet per subject. `ParserUtil` validate
 order, accepts the documented three-letter day names, requires strict 24-hour `HH:mm` times, and rejects
 duplicate subject names case-insensitively. List filters continue to compare only the subject name so that
 `list s/Maths` works regardless of when each student's Maths lesson begins.
+
+### Combining subject and tag filters
+
+`ListCommandParser` tokenizes both `s/` and `t/` prefixes together, accepting either category order
+and interleaved repeated values. It reuses `ParserUtil` validation and `PersonHasAnyTagPredicate`.
+`ListCommand` combines its subject-name match with the supplied tag predicate using AND, then applies
+active-student visibility. Each category uses OR internally; an omitted category adds no restriction.
+The command updates the existing filtered list, so students appear once and the current sort order
+and displayed indexes still apply. Archived-only and subject-grouped modes remain standalone.
+`Subject.normalizeName()` trims boundary whitespace and collapses runs of ordinary ASCII spaces before
+validation and construction; the 1–50 character limit applies to the normalized name. It preserves case
+and the lesson slot, and does not permit internal tabs or line breaks. `ParserUtil.parseSubjectName()`
+reuses this rule for Add, Edit, List and CSV import. Equality, hashing, name matching and UI grouping
+therefore use consistent names. Each student's subject names remain unique, ignoring case, even when
+their lesson slots differ. Different students can share a subject heading while retaining their own slots.
+
+JSON adapters construct the same normalized `Subject` model. Reading legacy spaced names does not
+rewrite the file; subsequent saves serialize canonical names. If legacy entries for one student collide
+after normalization, `JsonAdaptedPerson` rejects the record with `IllegalValueException`, translated by
+storage into `DataLoadingException`. Loading fails rather than silently losing a lesson. This is an
+upgrade constraint: back up and resolve colliding entries before using the file.
 
 ### Shared tag data
 
@@ -598,19 +724,58 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 t/Needs revision`, and
    `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths day/WED time/11:00`.
 2. Run `find Nobody`, then `list t/A-Level t/Needs revision`.<br>
-   Expected: Amy and Bob are displayed in that order, with `Listed 2 contacts.`.
+   Expected: Amy and Bob are displayed in that order, with TOTAL 2 / PAID 2.
    This checks OR matching across the full address book, including students hidden by Find.
 3. Run `list t/NEEDS REVISION t/needs revision`, then `view 1`.<br>
-   Expected: Only Bob is displayed, with `Listed 1 contact.`. View shows Bob's details.
+   Expected: List displays only Bob, with TOTAL 1 / PAID 1. View then replaces the banner with Bob's details.
    The repeated case variants do not duplicate Bob in the results, and the displayed index is used.
 4. Run `list t/revision`.<br>
-   Expected: An empty list with `No contacts match the specified tags.`. A substring is not a complete tag match.
+   Expected: An empty list with TOTAL 0 / PAID 0. A substring is not a complete tag match.
 5. Run `list`.<br>
-   Expected: Amy, Bob, and untagged Cara return, with `Listed 3 contacts.`.
+   Expected: Amy, Bob, and untagged Cara return, with TOTAL 3 / PAID 3.
 6. Run `find Bob`, then try `list t/`, `list t/A-Level t/`, `list t/A-Level x/value`, and `list T/A-Level`.<br>
    Expected: Each command reports an error. Only Bob remains displayed, and no profile fields change.
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
+8. Compare `list`, `list -summary`, `list t/A-Level`, and `list -summary t/A-Level`.<br>
+   Expected: The first two show the same three students and TOTAL 3 / PAID 3. The last two show only
+   Amy and TOTAL 1 / PAID 1. Adding the optional flag does not change the visible result.
+
+### Summary flag ordering
+
+`ListCommandParser` recognises one standalone `-summary` before, between, or after filter arguments.
+It removes only the flag before delegating subject/tag values to the existing validators.
+The flag must precede another prefix/summary flag or end the input, so a hyphenated value such as
+`t/Pre-summary` and text inside a multiword value such as `t/Needs -summary revision` are preserved.
+Repeated summary flags and combinations with the standalone `-archived` or `-subjects` modes are rejected.
+
+Using the profiles above:
+
+1. Compare `list -summary s/Maths`, `list s/Maths -summary`, and `list s/Maths -summary s/Maths`.<br>
+   Expected: Amy and Cara are displayed, with identical TOTAL/PAID counts for all three commands.
+2. Compare `list -summary t/A-Level t/Needs revision`, `list t/A-Level -summary t/Needs revision`,
+   and `list t/A-Level t/Needs revision -summary`.<br>
+   Expected: Amy and Bob are displayed, with identical TOTAL/PAID counts for all three commands.
+3. Run `find Bob`, then try `list t/A-Level -summary -summary`, `list t/ -summary`,
+   `list -subjects -summary`, and `list -archived -summary`.<br>
+   Expected: Each command fails; Bob remains the displayed student and stored profiles are unchanged.
+
+### Combining subject and tag filters
+
+Use the three profiles from the preceding tag-list test in a disposable test copy.
+
+1. Run `find Nobody`, then `list s/Maths s/Physics t/A-Level t/Needs revision`.<br>
+   Expected: Amy and Bob appear once each; the GUI banner shows TOTAL 2 / PAID 2.
+   Untagged Cara does not match both categories.
+2. Run `list t/Needs revision s/Maths s/Physics`.<br>
+   Expected: Only Bob appears. Prefix order does not change the matching rule.
+3. Run `list -summary s/Maths t/Needs revision`.<br>
+   Expected: An empty list with TOTAL 0 / PAID 0. Cara and Amy have Maths but neither has the required tag.
+4. Run `sort n/desc`, then `list s/Maths s/Physics t/A-Level t/Needs revision`, and `view 1`.<br>
+   Expected: Bob appears before Amy, and View shows Bob. Listing retains the current sort order.
+5. Try `list s/Maths t/`, `list t/A-Level s/`, `list -archived s/Maths t/A-Level`, and
+   `list -subjects t/A-Level s/Maths`.<br>
+   Expected: Each fails without changing the displayed students, sort order, or stored profiles.
 
 ### Listing archived students
 
@@ -618,7 +783,8 @@ Use a fresh test copy of the JAR in an empty writable folder.
 
 1. Add two students with different names, then archive the second by its full name.
 2. Run `find Nobody`, then `list -archived`.<br>
-   Expected: only the archived student appears, with `Listed 1 contact.`.
+   Expected: only the archived student appears, with TOTAL 1. PAID is 1 if that student's outstanding
+   amount is zero, otherwise 0.
 3. Run `view 1`.<br>
    Expected: the archived student's details, not the first stored active student.
 4. Run `list`, `list s/Maths`, or `list t/A-Level` with suitable test data.<br>
@@ -627,7 +793,7 @@ Use a fresh test copy of the JAR in an empty writable folder.
    Expected: both invalid combinations fail without changing the archived list or saved profiles.
 6. Restart the app, then run `list -archived`.<br>
    Expected: the same archived student remains available. Unarchive the student and repeat
-   `list -archived`; expect an empty list with `No archived contacts.`.
+   `list -archived`; expect an empty list with TOTAL 0 / PAID 0.
 
 ### Editing a student profile
 
@@ -695,6 +861,22 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
    Expected: `view 2` shows Bob's updated phone and still lists both scheduled subjects, with his original notes.
 
+### Normalizing subject spaces
+
+Use a fresh copy of the app in an empty folder.
+
+1. Add `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/H2   Maths day/MON time/09:00`.<br>
+   Expected: `view 1` shows `H2 Maths (Mon 09:00)`. Both `list s/H2 Maths` and
+   `list s/h2   maths` find Amy.
+2. Run `edit 1 s/h2  maths day/MON time/09:00`.<br>
+   Expected: No changes are made, and the original capitalization is retained.
+3. Run `edit 1 s/H2 Maths day/MON time/09:00 s/h2   Maths day/TUE time/10:00`.<br>
+   Expected: Duplicate-subject error; Amy's original lesson remains intact.
+4. Add `add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/h2  maths day/TUE time/10:00`,
+   then run `list -subjects`.<br>
+   Expected: One subject heading contains both students with their different slots. Restart and check
+   their profiles; names have single spaces and both schedules are preserved.
+
 ### Editing student notes
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
@@ -717,6 +899,41 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    and preserves the search results. View shows an empty `Notes:` value.
 7. Exit and restart from the same folder.<br>
    Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.
+
+### Viewing help
+
+1. Run `help`, or use **Help > Help** or **F1**. Expect the command-format window.
+2. Scroll to the last command and hover over a long format such as `add`.
+   Expect all commands to be reachable and the full format to appear in a tooltip.
+3. Select the blue `here` link. Expect the online User Guide in the default browser.
+4. Close help with its pixel button, reopen it, then press Escape.
+   Expect only the help window to close each time; the main window stays open.
+5. Resize help to its minimum size. Expect scrolling and the close button to remain usable.
+6. Select the matching pixel close button in the main window. Expect the application
+   to exit and retain its window size and position on the next launch.
+
+### Sorting students
+
+Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
+
+1. Run `clear`, then add
+   `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/2 s/Maths day/MON time/09:00 s/Physics day/FRI time/10:00`
+   and `add n/Bob Choo p/22222222 a/Block 2 d/01-Jan o/10 s/Maths day/TUE time/11:00`.
+2. Run `sort o/desc n/asc`.<br>
+   Expected: Bob is row `001` and Amy is row `002`. `view 1` shows Bob's full profile.
+3. Run `sort slot/asc`, then `sort slot/desc`.<br>
+   Expected: Two student rows remain. Each row shows the student's nearest upcoming subject for ascending,
+   or furthest upcoming subject for descending, relative to the computer's current local time. Compare the
+   selected subject with that student's full schedule in View. All subjects remain stored in the profile.
+4. Run `list -subjects`, then `sort slot/asc n/asc`.<br>
+   Expected: Maths and Physics headings stay alphabetical; each group uses its own lessons' schedules.
+   Amy appears in both groups with the same printed index. View preserves the panel and scroll position.
+5. Run `sort reset`, then `list`.<br>
+   Expected: Reset keeps grouping and restores alphabetical students within groups. List returns to one
+   ungrouped row per student in stored order. Applying slot sorting again keeps two ungrouped student rows.
+6. Try `sort o/desc,n/asc`, `sort n/up`, `sort n/asc n/desc`, and `sort RESET`.<br>
+   Expected: Each command fails without changing the selected order, filter or displayed panel. The comma
+   error explains the criteria format, while an unsupported direction explains the allowed directions.
 
 ### Importing students
 
@@ -741,8 +958,20 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+Use a disposable copy of the built JAR in an empty writable folder. Close the application before editing files.
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+1. Create `data/addressbook.json` containing only `null`, then launch the JAR.<br>
+   Expected: The application opens with an empty address book and logs that the data file could not be loaded,
+   rather than failing with an uncaught `NullPointerException`. Close the window using its close button,
+   without entering any commands, and check that the student-data file still contains `null`.
+2. Repeat with `{"persons":[null]}`, `{"persons":null}`, and `{}`.<br>
+   Expected: Each invalid file follows the same recovery path and is preserved during loading and shutdown.
+3. Start with a valid exported JSON student record, then insert `null` beside it in the `persons` array.<br>
+   Expected: The entire file is rejected; the valid student is not loaded on its own and the original file remains intact.
+4. Replace the file with `{"persons":[]}` and launch again.<br>
+   Expected: The valid empty address book loads without a data-loading warning.
+5. Move the student-data file out of the test folder and launch again.<br>
+   Expected: Missing-file behaviour is unchanged: the application shows its sample students.
 
-1. _{ more test cases … }_
+These checks stop before executing commands that save the address book; such commands can overwrite the data file.
+Keep a backup before editing or attempting to recover real student data.

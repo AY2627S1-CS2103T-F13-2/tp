@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
@@ -21,6 +22,7 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.sort.SortOrder;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -40,6 +42,7 @@ public class MainWindow extends UiPart<Stage> {
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
     private CommandBox commandBox;
+    private boolean subjectGroupsShown;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -57,7 +60,7 @@ public class MainWindow extends UiPart<Stage> {
      * Creates a {@code MainWindow} with the given {@code Stage} and {@code Logic}.
      * The data file path parameter is retained for compatibility with existing callers.
      */
-    public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
+    public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath, Consumer<String> openBrowser) {
         super(FXML, primaryStage);
 
         Font.loadFont(MainWindow.class.getResource("/fonts/pokemon_pixel_font.ttf").toExternalForm(), 24);
@@ -72,7 +75,7 @@ public class MainWindow extends UiPart<Stage> {
 
         setAccelerators();
 
-        helpWindow = new HelpWindow();
+        helpWindow = new HelpWindow(new Stage(), openBrowser);
     }
 
     public Stage getPrimaryStage() {
@@ -117,8 +120,7 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-        personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        refreshPersonList(ListPresentation.CONTACTS, false);
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -216,15 +218,39 @@ public class MainWindow extends UiPart<Stage> {
 
     /** Refreshes the central list using the presentation mode requested by the command. */
     private void refreshPersonList(ListPresentation presentation, boolean updateSummary) {
+        if (presentation == ListPresentation.UNCHANGED) {
+            return;
+        }
         if (presentation == ListPresentation.SUBJECT_GROUPS) {
-            SubjectGroupPanel subjectGroupPanel = new SubjectGroupPanel(logic.getFilteredPersonList());
+            subjectGroupsShown = true;
+        } else if (presentation == ListPresentation.CONTACTS) {
+            subjectGroupsShown = false;
+        }
+        if (subjectGroupsShown) {
+            SubjectGroupPanel subjectGroupPanel = logic.getSortOrder().equals(SortOrder.NONE)
+                    ? new SubjectGroupPanel(logic.getFilteredPersonList())
+                    : new SubjectGroupPanel(logic.getFilteredPersonList(), logic.getLessonRows());
             personListPanelPlaceholder.getChildren().setAll(subjectGroupPanel.getRoot());
-        } else if (presentation == ListPresentation.CONTACTS
-                && !personListPanelPlaceholder.getChildren().contains(personListPanel.getRoot())) {
-            personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
+        } else {
+            refreshUngroupedList();
         }
         if (updateSummary) {
             showListSummary();
+        }
+    }
+
+    private void refreshUngroupedList() {
+        if (logic.getSortOrder().hasLessonSlot()) {
+            LessonListPanel lessonListPanel = new LessonListPanel(logic.getStudentRows());
+            personListPanelPlaceholder.getChildren().setAll(lessonListPanel.getRoot());
+            personListPanel = null;
+        } else {
+            if (personListPanel == null) {
+                personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+            }
+            if (!personListPanelPlaceholder.getChildren().contains(personListPanel.getRoot())) {
+                personListPanelPlaceholder.getChildren().setAll(personListPanel.getRoot());
+            }
         }
     }
 }

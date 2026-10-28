@@ -56,10 +56,15 @@ public class CommandBox extends UiPart<Region> {
         commandTextField.getStyleClass().remove(ERROR_STYLE_CLASS);
     }
 
-    /** Prepares an existing find command without executing or overwriting unfinished input. */
+    /** Converts the current input into a find command without executing it. */
     public void prepareFind() {
-        if (commandTextField.getText().isBlank()) {
+        String query = commandTextField.getText().strip();
+        if (query.isEmpty() || query.equals("find")) {
             commandTextField.setText("find ");
+        } else if (query.startsWith("find ")) {
+            commandTextField.setText(query);
+        } else {
+            commandTextField.setText("find " + query);
         }
         commandTextField.requestFocus();
         commandTextField.positionCaret(commandTextField.getLength());

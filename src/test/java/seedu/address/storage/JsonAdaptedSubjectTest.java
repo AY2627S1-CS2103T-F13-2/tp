@@ -27,6 +27,15 @@ public class JsonAdaptedSubjectTest {
     }
 
     @Test
+    public void toModelType_legacySpacedName_normalizesWithoutChangingSlot() throws Exception {
+        Subject loaded = new JsonAdaptedSubject("  H2   Maths  ", "MONDAY", "09:00").toModelType();
+
+        assertEquals("H2 Maths", loaded.value);
+        assertEquals(new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)), loaded.getLessonSlot());
+        assertEquals("H2 Maths", new JsonAdaptedSubject(loaded).getName());
+    }
+
+    @Test
     public void toModelType_invalidOrMissingValues_throwsIllegalValueException() {
         assertThrows(IllegalValueException.class, Subject.MESSAGE_CONSTRAINTS, () ->
                 new JsonAdaptedSubject("Invalid!", "MONDAY", "09:00").toModelType());

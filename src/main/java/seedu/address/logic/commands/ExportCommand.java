@@ -3,15 +3,17 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import seedu.address.commons.util.CsvExporter;
-import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 
@@ -41,13 +43,20 @@ public class ExportCommand extends Command {
         requireNonNull(model);
         Path outputPath = outputPathSupplier.get();
         String csv = CsvExporter.format(model.getAddressBook().getPersonList());
-        try {
-            FileUtil.writeToFile(outputPath, csv);
-        } catch (IOException exception) {
-            throw new CommandException(String.format(MESSAGE_FAILURE, exception.getMessage()), exception);
+        int suffix = 0;
+        while (true) {
+            try (OutputStream outputStream = Files.newOutputStream(outputPath, StandardOpenOption.CREATE_NEW)) {
+                outputStream.write(csv.getBytes(StandardCharsets.UTF_8));
+                break;
+            } catch (FileAlreadyExistsException exception) {
+                suffix++;
+                outputPath = outputPath.resolveSibling(addSuffix(outputPath.getFileName().toString(), suffix));
+            } catch (IOException exception) {
+                throw new CommandException(String.format(MESSAGE_FAILURE, exception.getMessage()), exception);
+            }
         }
         return new CommandResult(String.format(MESSAGE_SUCCESS,
-                model.getAddressBook().getPersonList().size(), outputPath.toAbsolutePath()),
+                model.getAddressBook().getPersonList().size(), outputPath.toAbsolutePath().normalize()),
                 CommandResult.ListPresentation.UNCHANGED);
     }
 
@@ -58,12 +67,14 @@ public class ExportCommand extends Command {
 
     static Path generateOutputPath(LocalDateTime dateTime, Path directory) {
         String timestamp = dateTime.format(FILE_TIMESTAMP);
-        Path basePath = directory.resolve(FILE_PREFIX + timestamp + FILE_SUFFIX);
-        return Stream.iterate(0, index -> index + 1)
-                .map(index -> index == 0 ? basePath
-                        : directory.resolve(FILE_PREFIX + timestamp + "-" + index + FILE_SUFFIX))
-                .filter(path -> !Files.exists(path))
-                .findFirst()
-                .orElseThrow();
+        return directory.resolve(FILE_PREFIX + timestamp + FILE_SUFFIX);
+    }
+
+    private static String addSuffix(String fileName, int suffix) {
+        int extensionStart = fileName.lastIndexOf('.');
+        if (extensionStart < 0) {
+            return fileName + "-" + suffix;
+        }
+        return fileName.substring(0, extensionStart) + "-" + suffix + fileName.substring(extensionStart);
     }
 }

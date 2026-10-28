@@ -13,7 +13,9 @@ public class CommandResult {
 
     /** The list presentation requested by a successful command. */
     public enum ListPresentation {
-        CONTACTS, SUBJECT_GROUPS, UNCHANGED
+        CONTACTS, SUBJECT_GROUPS, UNCHANGED,
+        /** Rebuilds the current presentation without switching between contacts and subject groups. */
+        REFRESH
     }
 
     private final String feedbackToUser;
