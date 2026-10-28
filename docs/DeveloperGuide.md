@@ -386,8 +386,12 @@ they are preferences about the display rather than student data.
 * A `ListCommand` or `FindCommand` saves its own command text.
 * A command whose result has `ListPresentation.UNCHANGED` (`view`, `help`, `export`), or that exits the app,
   keeps the saved view, because the display does not change.
-* Any other command, such as `add` or `delete`, changes the displayed list and returns it to the normal list,
-  so the saved view is cleared. The saved order stays, because sorting carries over to the normal list.
+* Any other command clears the saved view only if it changed what is on screen. `LogicManager#execute()` reads
+  `Model#getFilteredPersonListPredicate()` before the command runs, and `saveLastView()` compares it with the
+  filter afterwards. Commands that reset the filter, such as `add`, `edit`, `archive` and `import`, clear the saved
+  view. `delete` and an `edit` with no changes keep the filter, so the saved view is kept. The saved view is also
+  cleared when the subject groups are replaced by the contact list, which `LogicManager` tracks from each result's
+  `ListPresentation`. The saved order stays, because sorting carries over to the normal list.
 
 A command that fails throws before `saveLastView()` runs, so it never changes the saved view. `MainApp#stop()`
 already writes `UserPrefs` to disk when the app closes, so no new storage code is needed.
@@ -398,6 +402,9 @@ result box are updated in the same way as when the user types the commands. The 
 is built in the saved order. The preferences file can be edited by hand, so `LogicManager#getLastSortCommand()`
 and `LogicManager#getLastViewCommand()` parse the saved text and return it only if it is a `sort` command, or a
 `list` or `find` command. Anything else, such as `delete 1`, is logged and ignored.
+A restored `find` can show no students, for example after its only match was deleted, so `restoreLastView()` puts
+`MainWindow.MESSAGE_LAST_VIEW_RESTORED` before the find result. A restored `list` shows the student counts instead
+of the result box, so it needs no message.
 Like `sort`, `list` and `find` override `Command#requiresAddressBookSave()` to return `false`, because they
 only change the display. Otherwise, if the data file failed to load and the app started empty, replaying the
 saved view would write that empty address book over the user's file.
@@ -405,8 +412,8 @@ saved view would write that empty address book over the user's file.
 **Alternatives considered.** Saving the filter itself is not practical, because the filters are `Predicate`
 objects built from lambdas and cannot be written to JSON without a separate data form for every kind of filter.
 Saving the command text reuses the existing parsers, so new `list` options are restored without extra code.
-Restoring exactly what was on screen after commands like `delete` (which keep the current filter) would need every
-command to report its filter. Going back to the normal list after such commands is simpler to explain and test.
+Making `delete` reset the filter would also keep the saved view and the screen in step, but the index numbers on
+screen would change after every deletion, so a following `delete 2` could remove a different student.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -922,6 +929,8 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: The subject groups are shown, with the largest balances first in each group.
 7. Run `sort reset`, then `exit`. Open TuteeDex again.<br>
    Expected: Students are in the default order.
+8. Run `find` with the name of one student, then `delete 1`, then `exit`. Open TuteeDex again.<br>
+   Expected: No students are listed, and the result box says this is the view from when TuteeDex was last closed.
 
 ### Saving data
 

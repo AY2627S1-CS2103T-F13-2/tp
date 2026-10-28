@@ -459,8 +459,13 @@ first.
 
 * `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
 * `sort reset` clears the remembered order, so TuteeDex opens in the default order.
-* Other commands that change the displayed list, such as `add`, `edit`, `delete`, `archive` or `import`, switch back
-  to the normal list, so TuteeDex also opens on the normal list next time. The sort order is kept.
+* `delete`, and an `edit` that changes nothing, keep the students you were looking at, so TuteeDex still opens on
+  that view. For example, after `find Alex` and `delete 1`, TuteeDex opens on `find Alex` again.
+* Commands that switch back to the normal list, such as `add`, `edit`, `archive` or `import`, make TuteeDex open on
+  the normal list next time. So does a `delete` from the subject groups, which shows the normal list afterwards.
+  The sort order is kept.
+* When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
+  Type `list` to see all students.
 * The view and order are saved in `preferences.json`, next to the JAR file, when you close TuteeDex. If that file
   is edited so that a saved command is not a valid `list`, `find` or `sort` command, TuteeDex ignores it.
 
