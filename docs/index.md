@@ -4,11 +4,16 @@ title: "Home"
 ---
 
 <link rel="stylesheet" href="stylesheets/landing.css">
+<script src="scripts/landing.js" defer></script>
 
 <main class="landing-page">
+  <div class="landing-masthead">
+    <a class="landing-wordmark" href="index.html" aria-label="TuteeDex home"><span aria-hidden="true">&gt;</span> TuteeDex</a>
+    <span>MADE FOR PRIVATE TUTORS</span>
+  </div>
   <section class="landing-hero" aria-labelledby="landing-title">
     <div class="landing-intro">
-      <p class="landing-eyebrow">TUTEEDEX / MADE FOR PRIVATE TUTORS</p>
+      <p class="landing-eyebrow">YOUR TUTORING DESK</p>
       <h1 id="landing-title">Less admin.<br>More <span>teaching.</span></h1>
       <p class="landing-lead">Your students, lesson schedules, and tuition balances.<br class="landing-desktop-break">
         Together in one desktop app.</p>
@@ -21,7 +26,7 @@ title: "Home"
       <p class="landing-platform">Java 25 · Windows, macOS &amp; Linux · Desktop CLI + GUI</p>
     </div>
     <figure class="landing-preview">
-      <div class="landing-preview-label"><span class="landing-status-dot" aria-hidden="true"></span> YOUR TUTORING DESK</div>
+      <div class="landing-preview-label"><span class="landing-status-dot" aria-hidden="true"></span> TUTEEDEX / DESKTOP PREVIEW</div>
       <a href="images/TuteeDexLanding.png" aria-label="Open the full-size TuteeDex screenshot">
         <img src="images/TuteeDexLanding.png" width="962" height="563"
           alt="TuteeDex showing example students grouped by subject, with weekly lesson slots and a total and paid summary.">
@@ -32,53 +37,67 @@ title: "Home"
 
   <section class="landing-features" aria-labelledby="landing-features-title">
     <div class="landing-section-heading">
-      <p class="landing-eyebrow">A LITTLE ORGANISATION GOES A LONG WAY</p>
+      <p class="landing-eyebrow">EXPLORE YOUR TOOLKIT</p>
       <h2 id="landing-features-title">Keep the details. Find the overview.</h2>
       <p>Tools for the everyday work around your lessons.</p>
     </div>
-    <div class="landing-feature-grid">
-      <article class="landing-feature">
-        <span class="landing-feature-number" aria-hidden="true">01 / PROFILES</span>
+    <div class="landing-feature-selector" role="group" aria-label="Explore TuteeDex features" hidden>
+      <button type="button" aria-pressed="true" aria-controls="feature-profiles">001 / Profiles</button>
+      <button type="button" aria-pressed="false" aria-controls="feature-lessons">002 / Lessons</button>
+      <button type="button" aria-pressed="false" aria-controls="feature-focus">003 / Focus</button>
+      <button type="button" aria-pressed="false" aria-controls="feature-priorities">004 / Priorities</button>
+      <button type="button" aria-pressed="false" aria-controls="feature-records">005 / Records</button>
+      <button type="button" aria-pressed="false" aria-controls="feature-data">006 / Your data</button>
+    </div>
+    <div class="landing-feature-grid" aria-live="polite" aria-atomic="true">
+      <article class="landing-feature" id="feature-profiles">
+        <span class="landing-feature-number">001 / PROFILES</span>
         <h3>Know each student</h3>
         <p>Keep contact details, tuition start dates, subjects, tags, notes, and outstanding balances
           in one profile. View the details or edit just the fields that need changing.</p>
+        <div class="landing-feature-example"><span>OPEN A STUDENT PROFILE</span><code>view 1</code></div>
       </article>
-      <article class="landing-feature">
-        <span class="landing-feature-number" aria-hidden="true">02 / LESSONS</span>
+      <article class="landing-feature" id="feature-lessons">
+        <span class="landing-feature-number">002 / LESSONS</span>
         <h3>See who you teach, and when</h3>
         <p>Give each subject a weekly lesson day and start time. Group students by subject while
           keeping each student's own lesson slot visible.</p>
+        <div class="landing-feature-example"><span>PUT UPCOMING LESSONS FIRST</span><code>sort slot/asc n/asc</code></div>
       </article>
-      <article class="landing-feature">
-        <span class="landing-feature-number" aria-hidden="true">03 / FOCUS</span>
+      <article class="landing-feature" id="feature-focus">
+        <span class="landing-feature-number">003 / FOCUS</span>
         <h3>Find the right students</h3>
         <p>Search by name, filter by subject, or bring up a tag such as <code>needs revision</code>.
           Return to the active student list whenever you need the full picture.</p>
+        <div class="landing-feature-example"><span>FOCUS ON A SHARED TAG</span><code>list t/Needs revision</code></div>
       </article>
-      <article class="landing-feature">
-        <span class="landing-feature-number" aria-hidden="true">04 / PRIORITIES</span>
+      <article class="landing-feature" id="feature-priorities">
+        <span class="landing-feature-number">004 / PRIORITIES</span>
         <h3>Put your next lesson first</h3>
         <p>Sort by upcoming lesson, name, tuition start date, or outstanding amount. Combine
           criteria and choose ascending or descending order for each.</p>
+        <div class="landing-feature-example"><span>SORT STUDENTS BY NAME</span><code>sort n/asc</code></div>
       </article>
-      <article class="landing-feature">
-        <span class="landing-feature-number" aria-hidden="true">05 / FOLLOW-THROUGH</span>
+      <article class="landing-feature" id="feature-records">
+        <span class="landing-feature-number">005 / RECORDS</span>
         <h3>Keep balances and records clear</h3>
         <p>See outstanding tuition amounts and total/paid student counts. Archive past students
           without deleting their profiles, and restore them when they return.</p>
+        <div class="landing-feature-example"><span>ARCHIVE A PAST STUDENT</span><code>archive s/Aisha Tan</code></div>
       </article>
-      <article class="landing-feature">
-        <span class="landing-feature-number" aria-hidden="true">06 / YOUR DATA</span>
+      <article class="landing-feature" id="feature-data">
+        <span class="landing-feature-number">006 / YOUR DATA</span>
         <h3>Bring your records with you</h3>
         <p>Export profiles to CSV for a copy outside the app. Preview a CSV import before
           confirming it. Your student records are stored locally on your computer.</p>
+        <div class="landing-feature-example"><span>EXPORT YOUR STUDENT RECORDS</span><code>export</code></div>
       </article>
     </div>
   </section>
 
   <section class="landing-workflow" aria-labelledby="landing-workflow-title">
     <div>
-      <p class="landing-eyebrow">TYPE A LITTLE. GET THERE QUICKLY.</p>
+      <p class="landing-eyebrow">THE COMMAND DESK</p>
       <h2 id="landing-workflow-title">A focused view is<br>just a command away.</h2>
       <p>Type in the command box and press Enter. The student list updates in the same window;
         there is no need to work through a series of forms.</p>
