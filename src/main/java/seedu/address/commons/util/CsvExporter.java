@@ -9,9 +9,9 @@ import seedu.address.model.tag.Tag;
 
 /** Formats address-book contacts as CSV text. */
 public final class CsvExporter {
-
     public static final String HEADER = "Name,Phone,Address,Start Date,Outstanding Amount,Subjects,Tags,Notes,"
             + "Archived";
+    private static final String FORMULA_PREFIXES = "=+-@";
 
     private CsvExporter() {
         // Prevent instantiation.
@@ -29,16 +29,22 @@ public final class CsvExporter {
         return Stream.of(
                 person.getName().toString(),
                 person.getPhone().toString(),
-                person.getAddress().toString(),
+                escapePlainText(person.getAddress().toString()),
                 person.getStartDate().toString(),
                 person.getOutstandingAmount().toPlainString(),
                 person.getSubjects().stream().map(Object::toString).collect(Collectors.joining("; ")),
                 person.getTags().stream().map(Tag::toString).map(value -> value.substring(1, value.length() - 1))
                         .sorted().collect(Collectors.joining("; ")),
-                person.getNotes().toString(),
+                escapePlainText(person.getNotes().toString()),
                 Boolean.toString(person.isArchived()))
                 .map(CsvExporter::escape)
                 .collect(Collectors.joining(","));
+    }
+
+    private static String escapePlainText(String value) {
+        return !value.isEmpty() && (value.charAt(0) == '\''
+                || FORMULA_PREFIXES.indexOf(value.charAt(0)) >= 0)
+                ? "'" + value : value;
     }
 
     private static String escape(String value) {

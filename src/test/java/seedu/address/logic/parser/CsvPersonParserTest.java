@@ -53,6 +53,15 @@ public class CsvPersonParserTest {
     }
 
     @Test
+    public void parsePerson_apostropheNotFollowedByFormulaPrefix_preservesApostrophe() throws Exception {
+        Person person = CsvPersonParser.parsePerson(withColumn(withColumn(VALID_ROW, 2, "'plain address"),
+                7, "'plain note"));
+
+        assertEquals("'plain address", person.getAddress().value);
+        assertEquals("'plain note", person.getNotes().value);
+    }
+
+    @Test
     public void parsePerson_wrongColumnCount_throwsParseException() {
         assertThrows(ParseException.class, String.format(CsvPersonParser.MESSAGE_WRONG_COLUMN_COUNT, 8), () ->
                 CsvPersonParser.parsePerson(VALID_ROW.subList(0, 8)));
