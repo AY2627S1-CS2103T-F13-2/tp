@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ArchiveCommand;
+import seedu.address.logic.commands.ChargeCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -23,6 +24,7 @@ import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.PaidCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -123,6 +125,13 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_view() throws Exception {
         assertEquals(new ViewCommand(INDEX_FIRST_PERSON), parser.parseCommand("view 1"));
+    }
+
+    @Test
+    public void parseCommand_balanceCommands() throws Exception {
+        assertEquals(new PaidCommand(INDEX_FIRST_PERSON, null), parser.parseCommand("paid 1"));
+        assertEquals(new ChargeCommand(INDEX_FIRST_PERSON, new seedu.address.model.person.OutstandingAmount("5")),
+                parser.parseCommand("charge 1 5"));
     }
 
     @Test
