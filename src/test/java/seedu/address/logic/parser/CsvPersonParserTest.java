@@ -78,6 +78,14 @@ public class CsvPersonParserTest {
     }
 
     @Test
+    public void parseSubjects_repeatedSpaces_normalizesNamesAndRejectsCollisions() throws Exception {
+        assertEquals(Set.of(subject("H2 Maths", DayOfWeek.MONDAY, 9, 0)),
+                CsvPersonParser.parseSubjects("H2   Maths (Mon 09:00)"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_DUPLICATE_SUBJECT, () ->
+                CsvPersonParser.parseSubjects("H2 Maths (Mon 09:00); h2  Maths (Tue 10:00)"));
+    }
+
+    @Test
     public void parseSubjects_invalidFormats_throwParseException() {
         assertThrows(ParseException.class, CsvPersonParser.MESSAGE_MISSING_SUBJECT, () ->
                 CsvPersonParser.parseSubjects(" "));

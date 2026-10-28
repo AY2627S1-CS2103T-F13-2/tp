@@ -69,9 +69,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
-
-![help message](images/helpMessage.png)
+Opens a help window listing the command formats. Scroll to see every format,
+and hover over a row to read its full text in a tooltip.
+Select the blue `here` link to open the full user guide in your default browser.
+Close the help window with its pixel close button or press Escape.
+You can also open help through **Help > Help** or **F1**.
 
 Format: `help`
 
@@ -93,8 +95,11 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 `FRI`, `SAT`, or `SUN` (letter case is ignored), and `TIME` is a 24-hour start time in strict
 `HH:mm` format, such as `09:00` or `15:30`. Each subject has exactly one weekly lesson.
 Repeat the complete triplet for multiple subjects. Subject names must be 1–50 characters after
-trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including
-at least one letter or digit. A student cannot have two subjects with the same name, ignoring case.
+trimming surrounding whitespace and collapsing repeated ordinary spaces into one. Names may contain
+English letters, digits, spaces, and hyphens, including at least one letter or digit; internal tabs
+and line breaks are invalid. Capitalization is preserved. A student cannot have two subjects with
+the same normalized name, ignoring case, even if their lesson times differ.
+For example, `H2  Maths` is stored as `H2 Maths` and counts as the same name as `h2 maths`.
 Comma-separated subjects are not supported.
 
 **Note:** `notes/NOTE` is optional and stores one free-text note per student.
@@ -198,7 +203,8 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
 
 * Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
-  Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
+  Subject names match completely, ignoring case and extra spaces: `s/H2  Maths` matches `H2 Maths`,
+  but `s/Maths` does not match `Additional Maths`.
   Subjects use the same validation as Add; equivalent repeated values are combined.
 * Supply one `t/` per tag. A student matches if they have **any** requested tag (OR matching).
   Match complete tags, ignoring case and surrounding spaces: `t/Needs revision` matches
@@ -218,6 +224,12 @@ Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -a
 * `-summary` is optional: the GUI already shows the counts without it. For example,
   `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
   The flag must be entered exactly as shown.
+* Add `-summary` to display total and paid counts for the displayed students, for example
+  `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
+  The flag must be entered exactly as shown, at most once, before the first filter,
+  between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
+  Text such as `t/Pre-summary` or `t/Needs -summary revision` remains part of the tag value;
+  a separate `-summary` at the end of the command is treated as the flag.
 
 Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
@@ -455,6 +467,15 @@ TuteeDex automatically saves data after every command. You do not need to save m
 ### Editing the data file
 
 TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+
+Stored subject names are normalized when loaded, using the same spacing rules as Add. Loading alone
+does not rewrite the file; a later save writes the normalized names. If two subjects belonging to
+one student become the same name after normalization, the file cannot load, even if their lesson
+times differ. Back up the file and resolve those conflicting entries before using it; TuteeDex does
+not silently discard either lesson.
+The file must contain a JSON object with a `persons` array. An empty address book is
+`{"persons":[]}`. A root value of `null`, a missing or null `persons` array, or a null
+student entry is invalid and triggers the loading recovery described below.
 
 <box type="warning" seamless>
 
