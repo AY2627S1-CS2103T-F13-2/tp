@@ -54,6 +54,8 @@ public class ClearCommandTest {
 
     @Test
     public void equals() {
+        ClearCommand command = new ClearCommand(true);
+        assertTrue(command.equals(command));
         assertTrue(new ClearCommand(true).equals(new ClearCommand(true)));
         assertNotEquals(new ClearCommand(true), new ClearCommand(false));
         assertNotEquals(new ClearCommand(true), null);
