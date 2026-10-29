@@ -93,7 +93,8 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 
 <box type="tip" seamless>
 
-**Note:** `START_DATE` must use the `DD-MMM` format, for example `10-Aug`. Calendar validity is not checked.
+**Note:** `START_DATE` must be a valid calendar date in `DD-MMM` format, for example `10-Aug`.
+Month names are case-insensitive. `29-Feb` is allowed because no year is specified; `31-Feb` and unknown months are rejected.
 
 **Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
 
@@ -366,7 +367,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   Surrounding whitespace is trimmed; internal spacing, punctuation, display case, and Unicode text are preserved.
   Specify `notes/` only once. The prefix rules below also apply inside notes: a recognized field prefix starts
   another field, while an unknown prefix-shaped token is rejected. URLs such as `https://example.com` remain note text.
-* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates use `DD-MMM`, and outstanding amounts are nonnegative numbers with at most two decimal places. Calendar validity is not checked.
+* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places.
 * Use `o/0` to reset the outstanding amount to zero. Blank values for the five scalar fields, including `o/`, are invalid.
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.

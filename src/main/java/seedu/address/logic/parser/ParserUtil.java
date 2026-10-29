@@ -4,6 +4,10 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -42,6 +46,8 @@ public class ParserUtil {
     public static final String MESSAGE_DUPLICATE_SUBJECT =
             "Each student may have only one lesson for a given subject.";
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
+    private static final DateTimeFormatter START_DATE_FORMAT = new DateTimeFormatterBuilder()
+            .parseCaseInsensitive().appendPattern("dd-MMM").toFormatter(Locale.ENGLISH);
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
@@ -101,12 +107,18 @@ public class ParserUtil {
         return new Address(trimmedAddress);
     }
 
-    /** Parses a start date, trimming leading and trailing whitespace. */
+    /** Parses a valid calendar month and day, trimming leading and trailing whitespace. */
     public static StartDate parseStartDate(String startDate) throws ParseException {
         requireNonNull(startDate);
         String trimmedStartDate = startDate.trim();
         if (!StartDate.isValidStartDate(trimmedStartDate)) {
             throw new ParseException(StartDate.MESSAGE_CONSTRAINTS);
+        }
+        // Validate new input here so legacy profiles with impossible dates can still load.
+        try {
+            MonthDay.parse(trimmedStartDate, START_DATE_FORMAT);
+        } catch (DateTimeParseException exception) {
+            throw new ParseException(StartDate.MESSAGE_CONSTRAINTS, exception);
         }
         return new StartDate(trimmedStartDate);
     }
