@@ -32,6 +32,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -77,6 +78,27 @@ public class MainWindowTest extends FxTestSupport {
             window.fillInnerParts();
             root = window.getPrimaryStage().getScene().getRoot();
             input = (TextField) root.lookup("#commandTextField");
+        });
+    }
+
+    @Test
+    public void contactTooltips_matchCommandResultFontSize() throws Exception {
+        runOnFxThread(() -> {
+            root.applyCss();
+            enterCommand("view 1");
+            ScrollPane result = feedback();
+            Tooltip resultTooltip = result.getTooltip();
+            resultTooltip.show(result, 0, 0);
+            double expectedSize = resultTooltip.getFont().getSize();
+            resultTooltip.hide();
+
+            for (String selector : List.of("#name", "#subjects")) {
+                Label label = (Label) root.lookup(selector);
+                Tooltip tooltip = label.getTooltip();
+                tooltip.show(label, 0, 0);
+                assertEquals(expectedSize, tooltip.getFont().getSize(), 0.001);
+                tooltip.hide();
+            }
         });
     }
 

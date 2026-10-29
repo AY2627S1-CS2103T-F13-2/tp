@@ -98,6 +98,8 @@
     -fx-max-height: 37;
 }
 .person-card .label { -fx-text-fill: white; -fx-font-size: 29.24px; }
+/* Match the command-result tooltip: JavaFX applies 0.85em to its 39.3px font. */
+.person-card .tooltip { -fx-font-size: 33.4px; }
 .student-icon { -fx-background-color: #94ef18; -fx-min-width: 52; -fx-pref-width: 52;
     -fx-max-width: 52; -fx-min-height: 31; -fx-pref-height: 31; -fx-max-height: 31; }
 .scroll-bar:vertical { -fx-background-color: #007352; -fx-pref-width: 14; -fx-padding: 0; }
