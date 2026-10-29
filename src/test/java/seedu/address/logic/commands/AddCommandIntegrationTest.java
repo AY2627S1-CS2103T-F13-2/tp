@@ -5,6 +5,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
@@ -53,7 +54,7 @@ public class AddCommandIntegrationTest {
     @Test
     public void execute_newPersonAfterArchive_keepsArchivedPersonHidden() throws Exception {
         Person toArchive = model.getFilteredPersonList().getFirst();
-        new ArchiveCommand(toArchive.getName().fullName).execute(model);
+        new ArchiveCommand(INDEX_FIRST_PERSON).execute(model);
         Person archived = toArchive.withArchived(true);
         List<Person> activePersons = new ArrayList<>(model.getFilteredPersonList());
         Person newPerson = new PersonBuilder().build();
@@ -71,7 +72,7 @@ public class AddCommandIntegrationTest {
     @Test
     public void execute_newPersonFromArchivedList_restoresActiveList() throws Exception {
         Person toArchive = model.getFilteredPersonList().getFirst();
-        new ArchiveCommand(toArchive.getName().fullName).execute(model);
+        new ArchiveCommand(INDEX_FIRST_PERSON).execute(model);
         List<Person> activePersons = new ArrayList<>(model.getFilteredPersonList());
         ListCommand.forArchivedStudents().execute(model);
         Person newPerson = new PersonBuilder().build();
