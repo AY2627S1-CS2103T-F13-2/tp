@@ -144,6 +144,21 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void nonHelpKey_fromCommandInput_preservesInputAndDoesNotOpenHelp() throws Exception {
+        runOnFxThread(() -> {
+            input.setText("unfinished command");
+            AtomicReference<KeyCode> receivedKey = new AtomicReference<>();
+            input.addEventFilter(KeyEvent.KEY_PRESSED, event -> receivedKey.set(event.getCode()));
+            input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F2,
+                    false, false, false, false));
+            assertEquals(KeyCode.F2, receivedKey.get());
+            assertEquals("unfinished command", input.getText());
+            assertFalse(Window.getWindows().stream().filter(Stage.class::isInstance)
+                    .map(Stage.class::cast).anyMatch(stage -> stage.getTitle().equals("Help") && stage.isShowing()));
+        });
+    }
+
+    @Test
     public void contactTooltips_useReadableFontSize() throws Exception {
         runOnFxThread(() -> {
             root.applyCss();
