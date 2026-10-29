@@ -13,7 +13,8 @@
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* TuteeDex is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the [SE-EDU initiative](https://se-education.org).
+* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit 5](https://github.com/junit-team/junit5).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -159,7 +160,7 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-* `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `FindCommandParser`, `ListCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, and `ViewCommandParser`.
+* `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `ClearCommandParser`, `PaidCommandParser`, `ChargeCommandParser`, `FindCommandParser`, `ListCommandParser`, `SortCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, `ImportCommandParser`, and `ViewCommandParser`.
 * Commands without arguments (`exit` and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
 * The command parsers implement the generic `Parser<T extends Command>` interface. Prefix-based parsers use `CliSyntax` and `Prefix` to identify fields, `ArgumentTokenizer` to split the input, and `ArgumentMultimap` to collect repeated values. `ParserUtil` validates and converts values such as indexes, subjects, tags, notes, names, and contact fields before the command is created.
 * Invalid command words, malformed arguments, unsupported prefixes, duplicate fields, and invalid field values result in a `ParseException`; the command is not executed.
@@ -349,21 +350,16 @@ repeated tags, and produces an empty set when no tags are supplied. The shared c
   order has no meaning. The five-argument constructor creates a profile without tags, while the
   six-argument constructor accepts a set of tags.
 * `Person.isSamePerson()` compares name, phone, address, start date, and outstanding amount, ignoring tags.
-  Profiles with the same core fields but different tags are duplicates. The outstanding-amount identity
-  discussion in issue #73 remains separate and this change preserves its current behavior.
+  Profiles with the same core fields but different tags are duplicates.
 * `Person.equals()` and `hashCode()` include tags, so changes to stored data remain detectable even when
   the student identity stays the same.
 * JSON stores a `tags` array of normalized strings in alphabetical order. A missing or null array loads
   as an empty set, preserving compatibility with the previous student-profile schema. Invalid or null
   elements reject the stored profile. For example: `"tags": ["a-level", "needs revision"]`.
-* Existing Edit commands preserve tags while editing the other fields. Tag editing and filtering are
-  separate follow-ups (#81 and #82); they should reuse `Tag` normalization and set equality.
-
-Add tag input, shared storage, and validation are implemented in issue #80. Another team member owns
-extending View for all new fields. Profile-card changes are deferred to That Li's UI work; neither
-display change is part of the Add Tags contribution. Both should read `Person.getTags()` and display
-the stored lowercase labels, preferably in alphabetical order. No tag length or count limit is
-introduced by this contract.
+* Edit replaces the whole tag set when `t/` is supplied and keeps the existing tags otherwise. A single
+  blank `t/` clears all tags. `list t/TAG` filters with `PersonHasAnyTagPredicate`, which reuses the same
+  normalization, so `t/A-Level` matches the stored `a-level`.
+* `view INDEX` shows the stored lowercase tags. No tag length or count limit is enforced.
 
 `LogicManagerTest` verifies Add with real temporary JSON storage: normalized tags survive loading into
 a new model, and invalid tags or duplicate profiles leave saved data and search results unchanged.
@@ -449,99 +445,29 @@ Saving the command text reuses the existing parsers, so new `list` options are r
 Making `delete` reset the filter would also keep the saved view and the screen in step, but the index numbers on
 screen would change after every deletion, so a following `delete 2` could remove a different student.
 
-### \[Proposed\] Undo/redo feature
+### Archiving students
 
-#### Proposed Implementation
+`Person` has an `archived` flag, which is saved in the JSON file and in the CSV export. Records without the flag
+load as active. `archive INDEX` and `unarchive INDEX` pick the student from the currently displayed list, like
+`delete`, and replace the profile with `Person#withArchived()` through `Model#setPerson()`. Archiving an already
+archived student, or unarchiving an active one, is rejected with a `CommandException`.
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+`Model.PREDICATE_SHOW_ACTIVE_PERSONS` hides archived students. Plain `list`, the subject and tag filters, `find`,
+`list -subjects` and the TOTAL/PAID counts all apply it, and `add`, `edit`, `archive` and `unarchive` reset the
+filter to it. Only `list -archived` shows the archived students instead.
 
-* `VersionedAddressBook#commit()` -- Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` -- Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` -- Restores a previously undone address book state from its history.
+**Alternatives considered.** Moving archived students to a second list in `AddressBook` would keep them out of
+every filter automatically, but `edit`, `export`, `import` and duplicate checks would then have to look in two
+places. A flag on `Person` keeps one list and one duplicate check.
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+### Balance commands
 
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
-
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
-
-<puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
-
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
-
-<puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
-
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
-
-<puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
-
-<box type="info" seamless>
-
-**Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
-</box>
-
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
-
-<puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
-
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-</box>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-<puml src="diagrams/UndoSequenceDiagram-Logic.puml" alt="UndoSequenceDiagram-Logic" />
-
-<box type="info" seamless>
-
-**Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-</box>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-<puml src="diagrams/UndoSequenceDiagram-Model.puml" alt="UndoSequenceDiagram-Model" />
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-</box>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-<puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
-
-<puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  * Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
+The `paid` and `charge` commands use the index from the currently displayed student list. Their parsers validate
+the index and amount before creating a command. `paid INDEX` replaces the balance with zero, while
+`paid INDEX AMOUNT` subtracts a positive amount. `charge INDEX AMOUNT` adds a positive amount. Amount arithmetic
+is performed by the immutable `OutstandingAmount` value object, so balances remain nonnegative and limited to two
+decimal places. Payments greater than the current balance are rejected with a command error before the profile
+is modified.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -561,12 +487,12 @@ _{Explain here how the data archiving feature will be implemented}_
 **Target user profile**:
 
 * is a private tutor who teaches multiple students one-on-one
-* needs to keep track of student contact details, parent contact details, and fee payments
+* needs to keep track of student contact details, weekly lesson slots, and fee payments
 * juggles many students at once and needs an easy way to avoid losing track of details
 * prefers desktop apps over other types of applications
 * is reasonably comfortable using CLI apps
 
-**Value proposition**: Organizes the chaos that comes with tutoring many students privately — track each student's contact details, parent contacts, and fee payments in one place, so private tutors spend less time on admin and less time chasing missed payments.
+**Value proposition**: Organizes the chaos that comes with tutoring many students privately — track each student's contact details, lesson schedule, and fee payments in one place, so private tutors spend less time on admin and less time chasing missed payments.
 
 
 ### User stories
@@ -576,11 +502,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | Priority | As a …                                    | I want to …                 | So that I can…                                                                                                         |
 |----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                                                                 |
-| `* * *`  | user                                       | add a new person             |                                                                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                                                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list                                                 |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                                                                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                                                                 |
 | `* * *`  | private tutor                              | add a student                | keep track of the students I teach                                                                                     |
 | `* * *`  | private tutor                              | view a list of all my students | see all my students in one place                                                                                       |
 | `* * *`  | private tutor                              | view a student's profile     | quickly access the student's information                                                                               |
@@ -592,8 +513,16 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
 | `* *`    | private tutor                              | import students from a file exported by TuteeDex | move my students to another computer without typing them in again                                                       |
 | `* *`    | private tutor                              | have TuteeDex open on the list I was last using | continue where I left off without typing the same `list`, `find` or `sort` again                                       |
-
-*{More to be added}*
+| `* * *`  | private tutor                              | record each student's subjects with a weekly lesson day and time | know when I teach each student                                                                     |
+| `* *`    | private tutor                              | list students by subject     | prepare for lessons of one subject at a time                                                                           |
+| `* *`    | private tutor                              | group students under their subjects | see who I teach for each subject at a glance                                                                    |
+| `* *`    | private tutor                              | tag students, such as `needs revision`, and list them by tag | focus on students who need the same kind of attention                                                  |
+| `* *`    | private tutor                              | add a note to a student      | remember things about the student that do not fit other fields                                                         |
+| `* *`    | private tutor                              | sort students by name, balance, start date or next lesson | put the most urgent students first                                                                    |
+| `* *`    | private tutor                              | record payments and new charges | keep each student's outstanding balance up to date                                                                  |
+| `* *`    | private tutor                              | archive a student who has stopped lessons | hide them from my active list without losing their records                                               |
+| `* *`    | private tutor                              | export my students to a CSV file | keep a copy of my records outside the app                                                                          |
+| `*`      | private tutor                              | clear all students after a confirmation | start over without deleting the data file by hand                                                             |
 
 ### Use cases
 
@@ -628,7 +557,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1. Tutor requests to list all students or search for a student by name.
-2. TuteeDex displays the matching students with their names and phone numbers.
+2. TuteeDex displays the matching students with their indexes, names and subjects.
 3. Tutor selects a student using the index shown in the displayed list.
 4. Tutor requests to view the selected profile.
 5. TuteeDex displays the student's full profile, including available contact, subject, fee, and note details.
@@ -709,15 +638,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * **Private tutor**: The single user who uses TuteeDex to manage students they teach.
 * **Student (tutee)**: A learner whose tutoring and contact information is recorded in TuteeDex.
-* **Student profile**: A record for one student. It can contain the student's name, address, phone number, subjects, tuition start date, outstanding balance, guardian contact, education level, and notes.
-* **Guardian contact**: The phone number of a student's parent or guardian, recorded separately from the student's own phone number.
+* **Student profile**: A record for one student. It contains the student's name, address, phone number, tuition start date, subjects with weekly lesson slots, outstanding balance, tags, notes, and archive status.
 * **Outstanding balance**: The amount, in Singapore dollars (SGD), that remains owed for a student's tuition. The amount cannot be negative. It represents the current balance, not a history of individual payments.
-
-### Balance commands
-
-The `paid` and `charge` commands use the index from the currently displayed person list. Their parsers validate the index and amount before creating a command. `paid INDEX` replaces the balance with zero, while `paid INDEX AMOUNT` subtracts a positive amount. `charge INDEX AMOUNT` adds a positive amount. Amount arithmetic is performed by the immutable `OutstandingAmount` value object, so balances remain nonnegative and limited to two decimal places. Payments greater than the current balance are rejected with a command error before the profile is modified.
+* **Archived student**: A student hidden from the active list without being deleted. `list -archived` shows them, and `unarchive` makes them active again.
 * **Displayed index**: The one-based number shown beside a student in the current displayed list. After a search, the index refers to that search result list.
-* **Duplicate profile**: A new profile whose stored details are identical to an existing profile. TuteeDex rejects an exact duplicate; two profiles may have the same student name if their other details differ.
+* **Duplicate profile**: A profile with the same name, phone, address, start date and outstanding amount as an existing profile. TuteeDex rejects it even if subjects, tags or notes differ; two profiles may share a name if one of those five fields differs.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -737,34 +662,30 @@ testers are expected to do more *exploratory* testing.
 
    1. Download the JAR file and copy it into an empty folder.
 
-   1. Double-click the JAR file.<br>
+   1. Open a terminal in that folder and run `java -jar "TuteeDex.jar"`.<br>
       Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
+   1. Relaunch the app with the same command.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
+### Deleting a student
 
-### Deleting a person
+1. Deleting a student while all active students are being shown
 
-1. Deleting a person while all persons are being shown
-
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Prerequisites: List all active students using the `list` command, with multiple students in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: The first student is deleted from the list. The status message shows the deleted student's details.
 
    1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
+      Expected: No student is deleted. The status message shows error details.
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
-
-1. _{ more test cases … }_
 
 ### Listing students by tags
 
@@ -854,8 +775,8 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 o/20` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/600`.
 2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
-   Expected: `Edited contact: Bob Choo`. The full list returns; Bob's card immediately shows the new phone
-   and `SGD 20.50`, while his name, address, and start date remain unchanged.
+   Expected: `Edited contact: Bob Choo`. The full list returns, and Bob's name, address, and start date
+   remain unchanged.
 3. Run `view 2`.<br>
    Expected: Bob's details include phone `91234567` and outstanding amount `SGD 20.50`.
 4. Run `find Bob`, then `edit 1 o/20.5`.<br>
@@ -866,7 +787,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 6. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/20.00`.<br>
    Expected: `This contact already exists in TuteeDex.` Bob remains unchanged in the search results.
 7. Run `edit 1 o/0`.<br>
-   Expected: `Edited contact: Bob Choo`. The full list returns, and Bob's card shows `SGD 0.00`.
+   Expected: `Edited contact: Bob Choo`. The full list returns, and `view 2` shows `SGD 0.00`.
 8. Exit and restart the app from the same folder, then run `view 2`.<br>
    Expected: Bob's phone is still `91234567` and outstanding amount is still `SGD 0.00`.
 
@@ -1016,6 +937,33 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: Two numbered row errors, and no student is added.
 7. Try `import missing.csv`, `import notes.txt` and `import` with no path.<br>
    Expected: Each command fails with a specific message.
+
+### Recording payments and charges
+
+Use a fresh copy of the app in an empty folder.
+
+1. Run `clear confirm`, then `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 o/50`.
+2. Run `charge 1 20.50`.<br>
+   Expected: `Amy Bee's outstanding balance is now SGD 70.50.`
+3. Run `paid 1 0.50`, then `paid 1 100`.<br>
+   Expected: The first leaves `SGD 70.00`. The second is rejected because it is more than the balance.
+4. Run `paid 1`.<br>
+   Expected: The balance is `SGD 0.00`, and `list` shows PAID 1.
+5. Try `charge 1`, `charge 1 0`, `charge 1 -5`, `paid 1 1.234` and `paid 2`.<br>
+   Expected: Each command fails, and Amy's balance stays `SGD 0.00`.
+
+### Archiving students
+
+1. Run `clear confirm`, then add two students and run `archive 2`.<br>
+   Expected: `Archived <name>.`, and only the first student remains in the list.
+2. Run `find` with the archived student's name.<br>
+   Expected: No students are listed.
+3. Run `list -archived`, then `archive 1`.<br>
+   Expected: `<name> is already archived.`
+4. Run `unarchive 1`.<br>
+   Expected: `Unarchived <name>.`, and both students are in the active list again.
+5. Try `archive 0`, `archive x` and `archive 9`.<br>
+   Expected: Each command fails without changing any student.
 
 ### Clearing all students
 

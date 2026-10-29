@@ -17,6 +17,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import seedu.address.commons.core.GuiSettings;
@@ -42,6 +43,8 @@ public class MainWindow extends UiPart<Stage> {
     private static final String FXML = "MainWindow.fxml";
     private static final DateTimeFormatter HEADER_DATE = DateTimeFormatter.ofPattern("dd  -  MM", Locale.ENGLISH);
     private static final DateTimeFormatter HEADER_TIME = DateTimeFormatter.ofPattern("HH  :  mm", Locale.ENGLISH);
+    /** Height of the window title bar that must be visible for the saved position to be reused. */
+    private static final double TITLE_BAR_HEIGHT = 30;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -183,13 +186,22 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Sets the default size based on {@code guiSettings}.
+     * The saved position is only used if the window's title bar would be on a connected screen,
+     * so the user can always see and drag the window.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
         primaryStage.setHeight(guiSettings.getWindowHeight());
         primaryStage.setWidth(guiSettings.getWindowWidth());
         if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
+            double x = guiSettings.getWindowCoordinates().getX();
+            double y = guiSettings.getWindowCoordinates().getY();
+            double titleBarMiddleX = x + guiSettings.getWindowWidth() / 2;
+            boolean isTitleBarOnScreen = Screen.getScreens().stream()
+                    .anyMatch(screen -> screen.getVisualBounds().contains(titleBarMiddleX, y, 1, TITLE_BAR_HEIGHT));
+            if (isTitleBarOnScreen) {
+                primaryStage.setX(x);
+                primaryStage.setY(y);
+            }
         }
     }
 

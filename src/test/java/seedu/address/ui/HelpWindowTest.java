@@ -68,6 +68,17 @@ public class HelpWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void focus_minimisedWindow_restoresWindow() throws Exception {
+        runOnFxThread(() -> {
+            // Not shown, so the iconified state does not depend on the OS window manager
+            HelpWindow window = new HelpWindow(new Stage(), url -> { });
+            window.getRoot().setIconified(true);
+            window.focus();
+            assertFalse(window.getRoot().isIconified());
+        });
+    }
+
+    @Test
     public void closeButton_closesStageAndHelpCanBeOpenedAgain() throws Exception {
         runOnFxThread(() -> {
             HelpWindow window = new HelpWindow(new Stage(), url -> { });
