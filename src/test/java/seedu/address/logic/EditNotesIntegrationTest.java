@@ -54,7 +54,7 @@ public class EditNotesIntegrationTest {
 
         assertEquals("Edited contact: Bob Choo", logic.execute("edit 1 notes/  " + note + "  ").getFeedbackToUser());
         Person updated = new PersonBuilder(bob).withNotes(note).build();
-        assertEquals(List.of(amy, updated), model.getFilteredPersonList());
+        assertEquals(List.of(updated), model.getFilteredPersonList());
         Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
         assertEquals(List.of(amy, updated), reloaded.getAddressBook().getPersonList());
         Logic reloadedLogic = createLogic(reloaded);
@@ -96,7 +96,7 @@ public class EditNotesIntegrationTest {
                 .withSubjects("H2 Chemistry", "Maths").withTags("a-level", "needs revision").build();
         assertEquals(List.of(amy, updated), storage.readAddressBook().orElseThrow().getPersonList());
 
-        logic.execute("edit 2 t/ s/Physics day/MON time/09:00 o/0");
+        logic.execute("edit 1 t/ s/Physics day/MON time/09:00 o/0");
         Person partialEdit = new PersonBuilder(updated).withTags().withSubjects("Physics")
                 .withOutstandingAmount("0").build();
         assertEquals(List.of(amy, partialEdit), storage.readAddressBook().orElseThrow().getPersonList());

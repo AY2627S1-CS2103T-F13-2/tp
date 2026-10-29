@@ -271,7 +271,7 @@ remain weekly local times rather than timezone-bearing events.
 
 `LogicManager` brackets command execution with `Model#beginCommand()` and `endCommand()` in a `finally`
 block. The first sorting refresh captures a reference; further refreshes in that command reuse it. Thus
-Edit's profile update and filter reset cannot straddle a lesson boundary with different references.
+A command's profile update and sorting refresh cannot straddle a lesson boundary with different references.
 Query/View capture no new time. No timer reorders rows while a tutor is entering an indexed command.
 A repeated Sort or List refreshes upcoming occurrences; indexed targets are resolved before mutation refreshes.
 
@@ -418,8 +418,8 @@ they are preferences about the display rather than student data.
   keeps the saved view, because the display does not change.
 * Any other command clears the saved view only if it changed what is on screen. `LogicManager#execute()` reads
   `Model#getFilteredPersonListPredicate()` before the command runs, and `saveLastView()` compares it with the
-  filter afterwards. Commands that reset the filter, such as `add`, `edit`, `archive` and `import`, clear the saved
-  view. `delete` and an `edit` with no changes keep the filter, so the saved view is kept. The saved view is also
+  filter afterwards. Commands that reset the filter, such as `add`, `archive` and `import`, clear the saved
+  view. `delete` and `edit` keep the filter, so the saved view is kept. The saved view is also
   cleared when the subject groups are replaced by the contact list, which `LogicManager` tracks from each result's
   `ListPresentation`. The saved order stays, because sorting carries over to the normal list.
 
@@ -453,8 +453,8 @@ load as active. `archive INDEX` and `unarchive INDEX` pick the student from the 
 archived student, or unarchiving an active one, is rejected with a `CommandException`.
 
 `Model.PREDICATE_SHOW_ACTIVE_PERSONS` hides archived students. Plain `list`, the subject and tag filters, `find`,
-`list -subjects` and the TOTAL/PAID counts all apply it, and `add`, `edit`, `archive` and `unarchive` reset the
-filter to it. Only `list -archived` shows the archived students instead.
+`list -subjects` and the TOTAL/PAID counts all apply it, and `add`, `archive` and `unarchive` reset the
+filter to it. Edit keeps the current filter. Only `list -archived` shows the archived students instead.
 
 **Alternatives considered.** Moving archived students to a second list in `AddressBook` would keep them out of
 every filter automatically, but `edit`, `export`, `import` and duplicate checks would then have to look in two
@@ -775,9 +775,9 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 o/20` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/600`.
 2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
-   Expected: `Edited contact: Bob Choo`. The full list returns, and Bob's name, address, and start date
+   Expected: `Edited contact: Bob Choo`. Only Bob remains displayed, and Bob's name, address, and start date
    remain unchanged.
-3. Run `view 2`.<br>
+3. Run `view 1`.<br>
    Expected: Bob's details include phone `91234567` and outstanding amount `SGD 20.50`.
 4. Run `find Bob`, then `edit 1 o/20.5`.<br>
    Expected: `No changes made to contact: Bob Choo`. Only Bob remains displayed.
@@ -787,9 +787,22 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 6. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/20.00`.<br>
    Expected: `This contact already exists in TuteeDex.` Bob remains unchanged in the search results.
 7. Run `edit 1 o/0`.<br>
-   Expected: `Edited contact: Bob Choo`. The full list returns, and `view 2` shows `SGD 0.00`.
-8. Exit and restart the app from the same folder, then run `view 2`.<br>
+   Expected: `Edited contact: Bob Choo`. Only Bob remains displayed, and `view 1` shows `SGD 0.00`.
+8. Exit and restart the app from the same folder, then run `view 1`.<br>
    Expected: Bob's phone is still `91234567` and outstanding amount is still `SGD 0.00`.
+
+### Preserving edit context
+
+Edits keep the existing predicate and sort order. `ModelManager#setPerson()` updates the filtered and sorted
+lists and invalidates rendered rows; no index snapshot is retained. An edited student can disappear from the
+filter or move after a sort-key change. Edit feedback warns when that student's displayed index changes.
+Archived edits keep the archived filter and archive flag. Successful edits from subject groups still switch
+to contacts and clear the saved grouped presentation, as other contact-changing commands do.
+
+To check the next indexed action, add Zed Test and Amy Test with balances of SGD 10.00, run `sort n/asc`,
+`find Zed`, `edit 1 notes/Updated`, then `charge 1 5`. Only Zed should remain visible and owe SGD 15.00;
+Amy must still owe SGD 10.00. Rename Zed to another name: the search becomes empty and feedback warns
+about changed indexes. Restart: the same search and sort should be restored with no matches.
 
 ### Editing student tags
 
@@ -800,7 +813,7 @@ after successful edits; these checks do not require changes to the profile-card 
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/Old notes/Keep note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 t/A-Level t/Needs revision t/a-level`.<br>
-   Expected: `Edited contact: Amy Bee`, and both students return to the list.
+   Expected: `Edited contact: Amy Bee`, and only Amy remains displayed.
    Amy's stored tags are `a-level` and `needs revision`; `old` is removed and the repeated tag is combined.
    `view 1` still shows subject `Maths` and notes `Keep note`, with all five core fields unchanged.
 3. Run `find Amy`, then `edit 1 t/needs revision t/A-LEVEL`.<br>
@@ -808,7 +821,7 @@ after successful edits; these checks do not require changes to the profile-card 
 4. Try `edit 1 p/87654321 t/A-Level t/` and `edit 1 T/A-Level`.<br>
    Expected: Both commands fail, and Amy's phone, tags, and current search results remain unchanged.
 5. Run `edit 1 t/`, then `find Amy` and `edit 1 t/` again.<br>
-   Expected: The first edit clears Amy's tags and restores both students. The second reports no changes
+   Expected: The first edit clears Amy's tags and keeps only Amy displayed. The second reports no changes
    and preserves the search results. Amy's other profile fields remain unchanged.
 6. Exit and restart from the same folder.<br>
    Expected: Amy's tags remain empty, and both profiles retain their other details.
@@ -821,8 +834,8 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Amy note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English day/TUE time/10:00 o/600 t/Needs revision notes/Bob note`.
 2. Run `find Bob`, then `edit 1 s/Physics day/WED time/15:30 s/H2 Chemistry day/FRI time/17:00`.<br>
-   Expected: `Edited contact: Bob Choo`, and both students return to the list.
-   `view 2` shows `Subjects: Physics (Wed 15:30), H2 Chemistry (Fri 17:00)` and notes `Bob note`; the five core fields and tags are preserved.
+   Expected: `Edited contact: Bob Choo`, and only Bob remains displayed.
+   `view 1` shows `Subjects: Physics (Wed 15:30), H2 Chemistry (Fri 17:00)` and notes `Bob note`; the five core fields and tags are preserved.
 3. Run `find Bob`, then `edit 1 s/h2 chemistry day/FRI time/17:00 s/physics day/WED time/15:30`.<br>
    Expected: `No changes made to contact: Bob Choo`. Only Bob remains displayed.
    `view 1` retains the original subject spelling and order from step 2.
@@ -831,7 +844,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 5. Run `edit 1 n/Amy Bee a/Block 1 p/11111111 d/10-Aug o/0 s/Physics day/WED time/15:30`.<br>
    Expected: `This contact already exists in TuteeDex.` Different subjects, tags, and notes do not bypass duplicate checks.
 6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
-   Expected: `view 2` shows Bob's updated phone and still lists both scheduled subjects, with his original notes.
+   Expected: `view 1` shows Bob's updated phone and still lists both scheduled subjects, with his original notes.
 
 ### Normalizing subject spaces
 
@@ -857,7 +870,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Original note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
-   Expected: `Edited contact: Amy Bee`, and both students return to the list.
+   Expected: `Edited contact: Amy Bee`, and only Amy remains displayed.
    `view 1` shows `Notes: Revise fractions, graphs & 中文!`; all other profile fields are unchanged.
 3. Run `find Amy`, then repeat `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
    Expected: `No changes made to contact: Amy Bee`. Only Amy remains displayed.
@@ -867,7 +880,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: Amy's note becomes `Call parent` and her phone becomes `87654321`.
    A recognized prefix starts another field rather than becoming literal note text.
 6. Run `find Amy`, then `edit 1 notes/`, `find Amy`, and `edit 1 notes/` again.<br>
-   Expected: The first edit clears the note and returns the full list. The second reports no changes
+   Expected: The first edit clears the note and keeps only Amy displayed. The second reports no changes
    and preserves the search results. View shows an empty `Notes:` value.
 7. Exit and restart from the same folder.<br>
    Expected: Amy's note remains empty, her phone is `87654321`, and her subjects and tags remain unchanged.

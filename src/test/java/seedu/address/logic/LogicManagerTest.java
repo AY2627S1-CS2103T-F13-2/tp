@@ -8,7 +8,6 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 import static seedu.address.testutil.TypicalPersons.BOB;
@@ -30,6 +29,7 @@ import javafx.collections.ListChangeListener;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -100,8 +100,68 @@ public class LogicManagerTest {
     public void execute_commandThatChangesFilter_clearsLastView() throws Exception {
         model.addPerson(AMY);
         logic.execute("find Amy");
-        logic.execute("edit 1 p/" + VALID_PHONE_BOB);
+        logic.execute("archive 1");
         assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_editAfterFind_nextChargeTargetsSameStudent() throws Exception {
+        Person zed = new PersonBuilder(AMY).withName("Zed Test").withOutstandingAmount("10").build();
+        Person amy = new PersonBuilder(BOB).withName("Amy Test").withOutstandingAmount("10").build();
+        model.addPerson(zed);
+        model.addPerson(amy);
+        logic.execute("sort n/asc");
+        logic.execute("find Zed");
+        logic.execute("edit 1 notes/Updated");
+        assertEquals(List.of(new PersonBuilder(zed).withNotes("Updated").build()), logic.getFilteredPersonList());
+        assertEquals("find Zed", logic.getLastViewCommand());
+        logic.execute("charge 1 5");
+        assertEquals("15", logic.getFilteredPersonList().getFirst().getOutstandingAmount().toPlainString());
+        assertEquals(amy, model.getAddressBook().getPersonList().get(1));
+    }
+
+    @Test
+    public void reopen_afterFilteredEdits_restoresRecomputedViewAndSort() throws Exception {
+        for (String view : List.of("find Amy", "list s/Maths t/Exam", "list -archived")) {
+            model = new ModelManager();
+            logic = new LogicManager(model, storage);
+            model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").withTags("Exam").build());
+            model.addPerson(new PersonBuilder(BOB).withSubjects("Maths").withTags("Exam").build());
+            if (view.equals("list -archived")) {
+                logic.execute("archive 1");
+            }
+            logic.execute("sort n/asc");
+            logic.execute(view);
+            logic.execute("edit 1 notes/Updated");
+            assertEquals(view, logic.getLastViewCommand());
+            if (view.equals("find Amy")) {
+                assertEquals("Edited contact: Zed Test" + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 n/Zed Test").getFeedbackToUser());
+            } else if (view.startsWith("list s/")) {
+                assertEquals("Edited contact: Zed Test" + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 n/Zed Test").getFeedbackToUser());
+                assertEquals("Zed Test", logic.getFilteredPersonList().getLast().getName().fullName);
+                assertEquals("Edited contact: " + BOB.getName() + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 t/Other").getFeedbackToUser());
+                assertEquals(1, logic.getFilteredPersonList().size());
+                assertEquals("Edited contact: Zed Test" + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 s/Physics day/MON time/09:00").getFeedbackToUser());
+            }
+            if (!view.equals("list -archived")) {
+                assertEquals(List.of(), logic.getFilteredPersonList());
+                assertThrows(CommandException.class, () -> logic.execute("charge 1 5"));
+            }
+            List<Person> shown = List.copyOf(logic.getFilteredPersonList());
+            storage.saveUserPrefs(model.getUserPrefs());
+            Model reopened = new ModelManager(storage.readAddressBook().orElseThrow(),
+                    storage.readUserPrefs().orElseThrow());
+            Logic reopenedLogic = new LogicManager(reopened, storage);
+            reopenedLogic.execute(reopenedLogic.getLastSortCommand());
+            reopenedLogic.execute(reopenedLogic.getLastViewCommand());
+            assertEquals(shown, reopenedLogic.getFilteredPersonList());
+            assertEquals(model.getSortOrder(), reopened.getSortOrder());
+            assertEquals(view, reopenedLogic.getLastViewCommand());
+        }
     }
 
     @Test

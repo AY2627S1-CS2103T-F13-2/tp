@@ -385,7 +385,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
   duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
-* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full active contact list. Editing preserves the student's archive status; use `list -archived` to view archived students again. The changes are saved automatically.
+* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and keeps the current search or subject/tag filter and sort order. A profile that no longer matches disappears from the filtered list; a changed sort key can move it. When the edited student's index changes or disappears, feedback asks you to check the displayed indexes before your next command. Editing in `list -archived` keeps that view and the student's archive status; use `unarchive` to restore the student to the active list. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
 
 Errors:
@@ -541,10 +541,10 @@ first.
 
 * `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
 * `sort reset` clears the remembered order, so TuteeDex opens in the default order.
-* `delete`, and an `edit` that changes nothing, keep the students you were looking at, so TuteeDex still opens on
+* `delete` and `edit` keep the students you were looking at, so TuteeDex still opens on
   that view. For example, after `find Alex` and `delete 1`, TuteeDex opens on `find Alex` again.
-* Commands that switch back to the normal list, such as `add`, `edit`, `archive` or `import`, make TuteeDex open on
-  the normal list next time. So does a `delete` from the subject groups, which shows the normal list afterwards.
+* Commands that switch back to the normal list, such as `add`, `archive` or `import`, make TuteeDex open on
+  the normal list next time. So does an `edit` or `delete` from the subject groups, which shows the normal list afterwards.
   The sort order is kept.
 * When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
   Type `list` to see all students.

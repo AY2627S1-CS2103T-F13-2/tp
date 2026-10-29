@@ -57,7 +57,7 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_archivedStudent_preservesArchiveStateAndReturnsToActiveList() throws Exception {
+    public void execute_archivedStudent_preservesArchiveStateAndArchivedView() throws Exception {
         Person original = model.getFilteredPersonList().get(0);
         Person archivedPerson = original.withArchived(true);
         model.setPerson(original, archivedPerson);
@@ -69,9 +69,7 @@ public class EditCommandTest {
 
         assertEquals("Edited contact: " + original.getName(), result.getFeedbackToUser());
         assertTrue(model.getAddressBook().getPersonList().contains(editedPerson));
-        assertEquals(model.getAddressBook().getPersonList().filtered(person -> !person.isArchived()),
-                model.getFilteredPersonList());
-        ListCommand.forArchivedStudents().execute(model);
+        assertTrue(model.getFilteredPersonList().stream().allMatch(Person::isArchived));
         assertEquals(List.of(editedPerson), model.getFilteredPersonList());
     }
 
@@ -208,9 +206,10 @@ public class EditCommandTest {
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
                 new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build());
 
-        String expectedMessage = "Edited contact: " + editedPerson.getName();
+        String expectedMessage = "Edited contact: " + editedPerson.getName() + EditCommand.MESSAGE_INDEXES_CHANGED;
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
         expectedModel.setPerson(model.getFilteredPersonList().get(0), editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
