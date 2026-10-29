@@ -134,7 +134,7 @@ public class Person {
     }
 
     /**
-     * Returns true if both persons have the same five core fields, ignoring tags, notes, and subjects.
+     * Returns true if name, phone, address and start date match, regardless of balance or optional details.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -145,8 +145,7 @@ public class Person {
                 && name.equals(otherPerson.name)
                 && phone.equals(otherPerson.phone)
                 && address.equals(otherPerson.address)
-                && startDate.equals(otherPerson.startDate)
-                && outstandingAmount.equals(otherPerson.outstandingAmount);
+                && startDate.equals(otherPerson.startDate);
     }
 
     /**

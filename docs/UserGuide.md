@@ -134,10 +134,10 @@ Tags are optional descriptive labels, separate from subjects:
 * Repeated tags, including case variants such as `t/A-Level t/a-level`, are combined. Tag order does not matter.
 * Every tag must be valid. Blank tags, including `t/A-Level t/`, reject the entire command with `Tags must contain only letters, digits, spaces, or hyphens and must not be blank.`
 
-An add command is rejected as a duplicate when name, phone, address, start date,
-and outstanding amount match an existing profile, even if subjects, tags, or notes differ.
-Outstanding amounts are compared numerically, so `0`, `0.0`, and `0.00` are
-equivalent. A duplicate produces `This contact already exists in TuteeDex` and
+An add command is rejected as a duplicate when name, phone, address and start date
+match an existing profile, even if outstanding amount, subjects, tags, notes or archive status differ.
+Students may share a full name if their phone, address or start date differs.
+A duplicate produces `This contact already exists in TuteeDex` and
 does not add another profile.
 
 Examples:
@@ -194,8 +194,9 @@ Format: `import FILE_PATH [confirm]`
   `Row 4: Phone numbers should only contain numbers, and it should be 8 digits long.` Up to 10 problems are shown.
 * A row that is exactly the same as a student already in TuteeDex, or as an earlier row in the file, is skipped,
   so importing the same file twice is safe.
-* A row with the same name, phone, address, start date and outstanding amount as a stored student, but different
+* A row with the same name, phone, address and start date as a stored student, but different outstanding amount,
   subjects, tags, notes or archive status, is reported as a problem. Use `edit` to change the stored student instead.
+  The same rule applies to conflicting rows within the file; preview and confirm both reject the whole import.
 * Files saved by Excel work too, as long as the columns are not changed.
 * If you edit the file in a text editor, wrap any value that contains a comma, a double quote or a line break
   in double quotes, and write each double quote inside it twice, for example `"Needs ""revision"""`.
@@ -381,9 +382,9 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * Each single-valued field, including notes, may appear only once in an edit command. Tags accept repeated `t/` prefixes,
   and subjects accept repeated `s/` prefixes.
 * Unknown prefixes, including uppercase variants such as `P/`, are rejected. A letter-led token ending in `/` at the start of input or after whitespace is treated as a prefix even inside a value; a slash in `#02/03` remains part of the address.
-* An edit is rejected as a duplicate only if name, phone, address, start date,
-  and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
-  duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
+* An edit is rejected as a duplicate if name, phone, address and start date match another profile.
+  Outstanding amount, tags, subjects, notes and archive status do not distinguish duplicates.
+  Changing only `o/`, or using `paid` or `charge`, keeps the student's identity.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
 * A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full active contact list. Editing preserves the student's archive status; use `list -archived` to view archived students again. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
@@ -552,6 +553,18 @@ first.
   is edited so that a saved command is not a valid `list`, `find` or `sort` command, TuteeDex ignores it.
 
 ### Editing the data file
+
+Older files may contain profiles differing only in outstanding amount. On loading these files,
+TuteeDex keeps the first profile's name and appends ` Recovered` to each later duplicate's name.
+It repeats the suffix until the name avoids both existing and recovered profiles with the same
+phone, address and start date. Every balance and all other details are preserved; no balances are merged.
+For example, `Twin Student` and `Twin Student Recovered` remain separate and can both be paid in full.
+Recovery is logged and the names are visible in the student list. Loading leaves the original file untouched;
+the recovered names are written on the next automatic save and remain stable on reload.
+Review these profiles with `view` and use `edit` to enter distinguishing real details.
+To restore the original name, first ensure phone, address or start date distinguishes the profiles.
+Delete a profile only after you have checked its balance and decided how to reconcile it.
+Records that also have identical balances violate the old duplicate rule and are still rejected as invalid.
 
 TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 

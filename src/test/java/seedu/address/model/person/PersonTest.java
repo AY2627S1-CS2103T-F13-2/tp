@@ -49,9 +49,11 @@ public class PersonTest {
         editedBob = new PersonBuilder(BOB).withStartDate("20-Oct").build();
         assertFalse(BOB.isSamePerson(editedBob));
 
-        // different outstanding amount -> returns false
+        // different outstanding amount -> same identity, different data
         editedBob = new PersonBuilder(BOB).withOutstandingAmount("20").build();
-        assertFalse(BOB.isSamePerson(editedBob));
+        assertTrue(BOB.isSamePerson(editedBob));
+        assertTrue(editedBob.isSamePerson(BOB));
+        assertFalse(BOB.equals(editedBob));
     }
 
     @Test

@@ -205,7 +205,15 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
 * `JsonAdaptedSubject` stores the subject name, weekly lesson day, and lesson start time. It reconstructs
   a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
-  `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicate students.
+  `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicates under the
+  legacy five-field rule (name, phone, address, start date and amount). It then recovers balance-only
+  duplicates under the current four-field identity rule by appending ` Recovered` to later names,
+  repeating until neither an original nor a recovered identity collides. All original identities are
+  checked before recovery, so the suffix cannot take a name needed by a later record.
+  Recovery logs a warning, preserves every balance and all other fields, and does not rewrite the
+  source file on read. Normal saving persists the recovered names; subsequent loads need no recovery.
+  Users review the visible suffixes and correct distinguishing identity details with `edit`; amounts
+  are never automatically merged.
   These conversions explain the Storage component's dependency on the Model component; model classes
   are omitted from this diagram.
 * `JsonUtil.readJsonFile()` rejects a JSON root of `null` through `DataLoadingException`, rather than
@@ -349,8 +357,10 @@ repeated tags, and produces an empty set when no tags are supplied. The shared c
 * `Person.getTags()` returns an immutable set. Repeated tags and case variants collapse into one value;
   order has no meaning. The five-argument constructor creates a profile without tags, while the
   six-argument constructor accepts a set of tags.
-* `Person.isSamePerson()` compares name, phone, address, start date, and outstanding amount, ignoring tags.
-  Profiles with the same core fields but different tags are duplicates.
+* `Person.isSamePerson()` compares name, phone, address and start date. Outstanding amount, tags,
+  notes, subjects and archive state do not distinguish identity. `UniquePersonList`, Add, Edit and Import
+  share this rule. Paid and Charge change only the balance and cannot create an identity collision.
+  Full names alone need not be unique: different phone, address or start date distinguishes students.
 * `Person.equals()` and `hashCode()` include tags, so changes to stored data remain detectable even when
   the student identity stays the same.
 * JSON stores a `tags` array of normalized strings in alphabetical order. A missing or null array loads

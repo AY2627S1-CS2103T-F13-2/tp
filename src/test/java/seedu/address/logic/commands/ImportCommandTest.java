@@ -44,6 +44,28 @@ public class ImportCommandTest {
 
     private Model model;
 
+    @Test
+    public void execute_balanceOnlyDuplicateWithinFile_previewAndConfirmRejectAll() throws Exception {
+        Person duplicate = new PersonBuilder(AMY).withOutstandingAmount("20").build();
+        Path file = writeFile("students.csv", CsvExporter.format(List.of(AMY, BOB, duplicate)));
+        String expected = String.format(ImportCommand.MESSAGE_ERRORS, file) + "\n"
+                + String.format(ImportCommand.MESSAGE_ROW_ERROR, 4,
+                        String.format(ImportCommand.MESSAGE_DUPLICATE_IN_FILE, 2));
+        assertCommandFailure(new ImportCommand(file, false, temporaryFolder), model, expected);
+        assertCommandFailure(new ImportCommand(file, true, temporaryFolder), model, expected);
+    }
+
+    @Test
+    public void execute_storedBalanceConflict_previewAndConfirmRejectAll() throws Exception {
+        Person duplicate = new PersonBuilder(CARA).withOutstandingAmount("20").build().withArchived(true);
+        Path file = writeFile("students.csv", CsvExporter.format(List.of(AMY, duplicate)));
+        String expected = String.format(ImportCommand.MESSAGE_ERRORS, file) + "\n"
+                + String.format(ImportCommand.MESSAGE_ROW_ERROR, 3,
+                        String.format(ImportCommand.MESSAGE_CONFLICT, CARA.getName()));
+        assertCommandFailure(new ImportCommand(file, false, temporaryFolder), model, expected);
+        assertCommandFailure(new ImportCommand(file, true, temporaryFolder), model, expected);
+    }
+
     @BeforeEach
     public void setUp() {
         AddressBook addressBook = new AddressBook();
