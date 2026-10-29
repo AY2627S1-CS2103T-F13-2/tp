@@ -28,6 +28,12 @@ TuteeDex is a **desktop application for private tutors to manage student profile
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
+   On a first launch without a data file, six fictional sample students demonstrate weekly
+   Maths, English and Science lessons, tags, notes and mixed balances (**TOTAL 6 / PAID 3**).
+   Try `view 1` for Alex's Monday 15:30 Maths lesson, note and SGD 120.00 balance, or
+   `list -subjects` to see two students in each subject group. Existing data files,
+   including empty address books, load as saved and do not receive sample students.
+
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
@@ -95,6 +101,12 @@ Format: `help`
 ### Adding a student: `add`
 
 Adds a student profile to TuteeDex.
+
+New profiles require at least one subject with a weekly lesson day and time. Older saved
+profiles may have no subjects and display `Not specified`. They remain usable as saved;
+TuteeDex does not invent schedules or add subjects to them. Use, for example,
+`edit 1 s/Maths day/MON time/15:30` to supply a real lesson schedule. Profiles without
+subjects remain in the normal list and TOTAL/PAID counts but have no entry in `list -subjects`.
 
 Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]`
 
