@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ArchiveCommand;
+import seedu.address.logic.commands.ChargeCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -23,6 +24,7 @@ import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.PaidCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -45,8 +47,12 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_clear() throws Exception {
-        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
-        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
+        assertEquals(new ClearCommand(false), parser.parseCommand(ClearCommand.COMMAND_WORD));
+        assertEquals(new ClearCommand(true), parser.parseCommand(ClearCommand.COMMAND_WORD + "  confirm "));
+        for (String extra : new String[] {" 3", " Confirm", " confirm now"}) {
+            assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                    ClearCommand.MESSAGE_USAGE), () -> parser.parseCommand(ClearCommand.COMMAND_WORD + extra));
+        }
     }
 
     @Test
@@ -112,13 +118,20 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_archiveAndUnarchive() throws Exception {
-        assertEquals(new ArchiveCommand("Alice Pauline"), parser.parseCommand("archive s/Alice Pauline"));
-        assertEquals(new UnarchiveCommand("Alice Pauline"), parser.parseCommand("unarchive s/Alice Pauline"));
+        assertEquals(new ArchiveCommand(INDEX_FIRST_PERSON), parser.parseCommand("archive 1"));
+        assertEquals(new UnarchiveCommand(INDEX_FIRST_PERSON), parser.parseCommand("unarchive 1"));
     }
 
     @Test
     public void parseCommand_view() throws Exception {
         assertEquals(new ViewCommand(INDEX_FIRST_PERSON), parser.parseCommand("view 1"));
+    }
+
+    @Test
+    public void parseCommand_balanceCommands() throws Exception {
+        assertEquals(new PaidCommand(INDEX_FIRST_PERSON, null), parser.parseCommand("paid 1"));
+        assertEquals(new ChargeCommand(INDEX_FIRST_PERSON, new seedu.address.model.person.OutstandingAmount("5")),
+                parser.parseCommand("charge 1 5"));
     }
 
     @Test

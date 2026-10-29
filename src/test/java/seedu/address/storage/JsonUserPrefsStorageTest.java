@@ -73,6 +73,8 @@ public class JsonUserPrefsStorageTest {
     private UserPrefs getTypicalUserPrefs() {
         UserPrefs userPrefs = new UserPrefs();
         userPrefs.setGuiSettings(new GuiSettings(1000, 500, 300, 100));
+        userPrefs.setLastViewCommand("list -subjects");
+        userPrefs.setLastSortCommand("sort o/desc n/asc");
         return userPrefs;
     }
 
@@ -103,6 +105,8 @@ public class JsonUserPrefsStorageTest {
 
         UserPrefs original = new UserPrefs();
         original.setGuiSettings(new GuiSettings(1200, 200, 0, 2));
+        original.setLastViewCommand("find Alice");
+        original.setLastSortCommand("sort slot/asc");
 
         Path pefsFilePath = testFolder.resolve("TempPrefs.json");
         JsonUserPrefsStorage jsonUserPrefsStorage = new JsonUserPrefsStorage(pefsFilePath);

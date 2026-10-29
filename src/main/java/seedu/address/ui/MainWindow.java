@@ -30,6 +30,9 @@ import seedu.address.model.sort.SortOrder;
  */
 public class MainWindow extends UiPart<Stage> {
 
+    public static final String MESSAGE_LAST_VIEW_RESTORED =
+            "Showing the same view as when you last closed TuteeDex. Type list to see all students.";
+
     private static final String FXML = "MainWindow.fxml";
 
     private final Logger logger = LogsCenter.getLogger(getClass());
@@ -128,6 +131,34 @@ public class MainWindow extends UiPart<Stage> {
         commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         showListSummary();
+        restoreLastView();
+    }
+
+    /** Shows the sort order and the list or find view that were on screen when the app was last closed. */
+    private void restoreLastView() {
+        // Sort first, so the list or find view that follows is shown in the saved order.
+        restoreCommand(logic.getLastSortCommand());
+        String lastViewCommand = logic.getLastViewCommand();
+        CommandResult viewResult = restoreCommand(lastViewCommand);
+        // A restored list shows the student counts instead, so only a restored find explains why it is filtered.
+        if (viewResult != null && !isListCommand(lastViewCommand)) {
+            resultDisplay.setFeedbackToUser(MESSAGE_LAST_VIEW_RESTORED + "\n" + viewResult.getFeedbackToUser());
+        }
+    }
+
+    /** Runs a saved command and returns its result, or null if nothing was saved or it failed. */
+    private CommandResult restoreCommand(String savedCommand) {
+        if (savedCommand.isEmpty()) {
+            return null;
+        }
+        logger.info("Restoring last view: " + savedCommand);
+        try {
+            return executeCommand(savedCommand);
+        } catch (CommandException | ParseException e) {
+            // executeCommand has already shown the error, and the current list stays on screen.
+            logger.warning("Could not restore last view: " + e.getMessage());
+            return null;
+        }
     }
 
     /** Displays the current list's total and number of students with no balance due. */
@@ -197,8 +228,7 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
-            boolean isListCommand = commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD);
-            refreshPersonList(commandResult.getListPresentation(), isListCommand);
+            refreshPersonList(commandResult.getListPresentation(), isListCommand(commandText));
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -214,6 +244,10 @@ public class MainWindow extends UiPart<Stage> {
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
         }
+    }
+
+    private boolean isListCommand(String commandText) {
+        return commandText.strip().split("\\s+", 2)[0].equals(ListCommand.COMMAND_WORD);
     }
 
     /** Refreshes the central list using the presentation mode requested by the command. */

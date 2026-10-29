@@ -28,6 +28,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -45,6 +46,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -198,6 +200,53 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void groupedList_successfulEdit_reusesContactPanelWithUpdatedCards() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            Person alice = logic.getFilteredPersonList().get(0);
+            Person benson = logic.getFilteredPersonList().get(1);
+            Person updated = new PersonBuilder(alice).withName("Alice Updated").withPhone("87654321")
+                    .withSubjects("Chemistry").withNotes("Updated note").build();
+            PersonListPanel contactPanel = window.getPersonListPanel();
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+
+            enterCommand("edit 1 n/Alice Updated p/87654321 s/Chemistry day/MON time/09:00 notes/Updated note");
+
+            assertNull(root.lookup(".subject-group-panel"));
+            assertSame(contactPanel, window.getPersonListPanel());
+            assertContactCards(List.of(updated, benson));
+            enterCommand("view 1");
+            assertTrue(feedbackText().startsWith("Name: Alice Updated | Phone: 87654321"));
+            assertTrue(feedbackText().contains("Subjects: Chemistry (Mon 09:00)"));
+            assertTrue(feedbackText().endsWith("Notes: Updated note"));
+        });
+    }
+
+    @Test
+    public void groupedList_successfulDelete_reindexesRemainingCardsAndCommandTargets() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            Person alice = logic.getFilteredPersonList().get(0);
+            Person cara = new PersonBuilder(ALICE).withName("Cara Student").withSubjects("English").build();
+            logic.model.addPerson(cara);
+            PersonListPanel contactPanel = window.getPersonListPanel();
+            enterCommand("list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+
+            enterCommand("delete 2");
+
+            assertNull(root.lookup(".subject-group-panel"));
+            assertSame(contactPanel, window.getPersonListPanel());
+            assertContactCards(List.of(alice, cara));
+            enterCommand("view 2");
+            assertTrue(feedbackText().startsWith("Name: Cara Student | Phone:"));
+            enterCommand("delete 2");
+            assertContactCards(List.of(alice));
+        });
+    }
+
+    @Test
     public void groupedList_readOnlyAndFailedCommands_preservePanelAndScroll() throws Exception {
         runOnFxThread(() -> {
             addScheduledSubjects();
@@ -275,6 +324,62 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals("Physics", ((Label) root.lookup(".subject-group-heading")).getText());
             assertEquals("002", ((Label) root.lookup(".subject-group-panel").lookup("#id")).getText());
         });
+    }
+
+    @Test
+    public void startup_savedGroupedView_showsSubjectGroups() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            reopenWithSavedView("", "list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+            assertSummary("2", "1");
+        });
+    }
+
+    @Test
+    public void startup_savedSortAndView_showsViewInSavedOrder() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            reopenWithSavedView("sort o/desc", "list -subjects");
+            // Benson owes more, so the saved descending order puts Benson before Alice.
+            assertEquals(List.of(BENSON.getName(), ALICE.getName()),
+                    logic.getFilteredPersonList().stream().map(Person::getName).toList());
+            assertNotNull(root.lookup(".subject-group-panel"));
+        });
+    }
+
+    @Test
+    public void startup_savedFindView_showsMatchingStudents() throws Exception {
+        runOnFxThread(() -> {
+            reopenWithSavedView("", "find Alice");
+            assertEquals(List.of(ALICE.getName()),
+                    logic.getFilteredPersonList().stream().map(Person::getName).toList());
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertEquals(MainWindow.MESSAGE_LAST_VIEW_RESTORED + " | " + FindCommand.MESSAGE_SINGULAR,
+                    feedbackText());
+        });
+    }
+
+    @Test
+    public void startup_savedFindWithNoMatches_explainsEmptyList() throws Exception {
+        runOnFxThread(() -> {
+            reopenWithSavedView("", "find Zed");
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+            assertEquals(MainWindow.MESSAGE_LAST_VIEW_RESTORED + " | " + FindCommand.MESSAGE_NO_MATCHES,
+                    feedbackText());
+        });
+    }
+
+    /** Opens a new window, as on the next launch, with the sort and view commands saved by the last session. */
+    private void reopenWithSavedView(String lastSortCommand, String lastViewCommand) {
+        window.getPrimaryStage().hide();
+        logic.lastSortCommand = lastSortCommand;
+        logic.lastViewCommand = lastViewCommand;
+        window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+        window.show();
+        window.fillInnerParts();
+        root = window.getPrimaryStage().getScene().getRoot();
+        input = (TextField) root.lookup("#commandTextField");
     }
 
     private void addScheduledSubjects() {
@@ -360,6 +465,25 @@ public class MainWindowTest extends FxTestSupport {
         input.fireEvent(new ActionEvent());
         root.applyCss();
         root.layout();
+    }
+
+    private void assertContactCards(List<Person> expected) {
+        ListView<?> view = (ListView<?>) root.lookup("#personListView");
+        assertEquals(expected, view.getItems());
+        for (int index = 0; index < expected.size(); index++) {
+            int cellIndex = index;
+            Person person = expected.get(index);
+            ListCell<?> cell = view.lookupAll(".list-cell").stream()
+                    .filter(ListCell.class::isInstance).map(node -> (ListCell<?>) node)
+                    .filter(candidate -> !candidate.isEmpty() && candidate.getIndex() == cellIndex)
+                    .findFirst().orElseThrow();
+            assertEquals(String.format("%03d", index + 1), ((Label) cell.getGraphic().lookup("#id")).getText());
+            assertEquals(person.getName().fullName, ((Label) cell.getGraphic().lookup("#name")).getText());
+            Label subjects = (Label) cell.getGraphic().lookup("#subjects");
+            assertEquals("Subjects: " + Messages.formatSubjects(person), subjects.getTooltip().getText());
+            assertEquals((index + 1) + ". " + Messages.format(person) + "; Tags: " + Messages.formatTags(person)
+                    + "; Notes: " + person.getNotes(), cell.getAccessibleText());
+        }
     }
 
     @Test
@@ -475,7 +599,7 @@ public class MainWindowTest extends FxTestSupport {
     public void groupedSort_findAndArchivedFilters_switchPresentationWithoutLosingCriteria() throws Exception {
         runOnFxThread(() -> {
             addTwoLessonsPerStudent();
-            enterCommand("archive s/Benson Meier");
+            enterCommand("archive 2");
             enterCommand("list -subjects");
             enterCommand("sort slot/asc n/desc");
             SortOrder order = logic.getSortOrder();
@@ -503,7 +627,7 @@ public class MainWindowTest extends FxTestSupport {
             assertNotNull(root.lookup(".subject-group-empty"));
             enterCommand("list -subjects");
             assertSummary("2", "1");
-            enterCommand("clear");
+            enterCommand("clear confirm");
             enterCommand("list -subjects");
             enterCommand("sort o/desc");
             assertNotNull(root.lookup(".subject-group-empty"));
@@ -598,6 +722,8 @@ public class MainWindowTest extends FxTestSupport {
         private final ModelManager model = new ModelManager(new AddressBook(), new UserPrefs(),
                 Clock.fixed(Instant.parse("2026-10-22T14:00:00Z"), ZoneOffset.UTC));
         private final AddressBookParser parser = new AddressBookParser();
+        private String lastViewCommand = "";
+        private String lastSortCommand = "";
 
         InMemoryLogic() {
             model.addPerson(new PersonBuilder(ALICE).withOutstandingAmount("0").build());
@@ -643,6 +769,16 @@ public class MainWindowTest extends FxTestSupport {
         @Override
         public void setGuiSettings(GuiSettings guiSettings) {
             model.setGuiSettings(guiSettings);
+        }
+
+        @Override
+        public String getLastViewCommand() {
+            return lastViewCommand;
+        }
+
+        @Override
+        public String getLastSortCommand() {
+            return lastSortCommand;
         }
     }
 }

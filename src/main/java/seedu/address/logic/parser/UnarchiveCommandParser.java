@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -8,9 +9,13 @@ public class UnarchiveCommandParser implements Parser<UnarchiveCommand> {
     @Override
     public UnarchiveCommand parse(String args) throws ParseException {
         String value = args.trim();
-        if (!value.matches("s/[A-Za-z][A-Za-z ]*")) {
-            throw new ParseException(UnarchiveCommand.MESSAGE_USAGE);
+        if (value.isEmpty() || value.matches(".*\\s+.*")) {
+            throw new ParseException(UnarchiveCommand.MESSAGE_INVALID_COMMAND_FORMAT);
         }
-        return new UnarchiveCommand(value.substring(2));
+        try {
+            return new UnarchiveCommand(ParserUtil.parseIndex(value));
+        } catch (ParseException pe) {
+            throw new ParseException(DeleteCommand.MESSAGE_INVALID_INDEX, pe);
+        }
     }
 }

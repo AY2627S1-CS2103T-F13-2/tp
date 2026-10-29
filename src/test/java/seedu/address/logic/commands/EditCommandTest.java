@@ -15,6 +15,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,58 @@ import seedu.address.testutil.PersonBuilder;
 public class EditCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_activeStudent_keepsArchivedStudentsHidden() throws Exception {
+        Person archivedPerson = model.getFilteredPersonList().get(0).withArchived(true);
+        model.setPerson(model.getFilteredPersonList().get(0), archivedPerson);
+        new ListCommand().execute(model);
+        Person target = model.getFilteredPersonList().get(0);
+        Person editedPerson = new PersonBuilder(target).withNotes("Updated").build();
+
+        new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNotes("Updated").build()).execute(model);
+
+        assertTrue(model.getFilteredPersonList().contains(editedPerson));
+        assertFalse(model.getFilteredPersonList().stream().anyMatch(Person::isArchived));
+        assertTrue(model.getAddressBook().getPersonList().contains(archivedPerson));
+        ListCommand.forArchivedStudents().execute(model);
+        assertEquals(List.of(archivedPerson), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_archivedStudent_preservesArchiveStateAndReturnsToActiveList() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person archivedPerson = original.withArchived(true);
+        model.setPerson(original, archivedPerson);
+        ListCommand.forArchivedStudents().execute(model);
+        Person editedPerson = new PersonBuilder(original).withNotes("Updated").build().withArchived(true);
+
+        CommandResult result = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNotes("Updated").build()).execute(model);
+
+        assertEquals("Edited contact: " + original.getName(), result.getFeedbackToUser());
+        assertTrue(model.getAddressBook().getPersonList().contains(editedPerson));
+        assertEquals(model.getAddressBook().getPersonList().filtered(person -> !person.isArchived()),
+                model.getFilteredPersonList());
+        ListCommand.forArchivedStudents().execute(model);
+        assertEquals(List.of(editedPerson), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_archivedStudentUnchanged_preservesArchiveStateAndFilter() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person archivedPerson = original.withArchived(true);
+        model.setPerson(original, archivedPerson);
+        ListCommand.forArchivedStudents().execute(model);
+
+        CommandResult result = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withPhone(original.getPhone().value).build()).execute(model);
+
+        assertEquals("No changes made to contact: " + original.getName(), result.getFeedbackToUser());
+        assertEquals(List.of(archivedPerson), model.getFilteredPersonList());
+        assertTrue(model.getAddressBook().getPersonList().contains(archivedPerson));
+    }
 
     @Test
     public void execute_replacementNotes_preservesOtherFieldsAndCommandSnapshot() {
@@ -226,7 +279,7 @@ public class EditCommandTest {
         assertFalse(standardCommand.equals(null));
 
         // different types -> returns false
-        assertFalse(standardCommand.equals(new ClearCommand()));
+        assertFalse(standardCommand.equals(new ClearCommand(true)));
 
         // different index -> returns false
         assertFalse(standardCommand.equals(new EditCommand(INDEX_SECOND_PERSON, DESC_AMY)));

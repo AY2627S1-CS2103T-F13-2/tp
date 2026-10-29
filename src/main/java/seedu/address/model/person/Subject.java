@@ -9,8 +9,10 @@ import java.util.Objects;
 /** A subject taught to a student. */
 public final class Subject {
     public static final String MESSAGE_CONSTRAINTS = "Subject must be 1 to 50 characters long, contain only "
-            + "English letters, digits, spaces or hyphens, and include at least one letter or digit.";
-    private static final String VALIDATION_REGEX = "(?=.{1,50}$)(?=.*[A-Za-z0-9])[A-Za-z0-9 -]+";
+            + "English letters, digits, spaces and the symbols + & ( ) . ' -, "
+            + "and include at least one letter or digit.";
+    // Semicolons, commas and slashes stay out: they separate subjects in exports, lists and command prefixes.
+    private static final String VALIDATION_REGEX = "(?=.{1,50}$)(?=.*[A-Za-z0-9])[A-Za-z0-9 +&().'-]+";
 
     public final String value;
     private final LessonSlot lessonSlot;
@@ -19,22 +21,29 @@ public final class Subject {
     public Subject(String value, LessonSlot lessonSlot) {
         requireNonNull(value);
         requireNonNull(lessonSlot);
-        checkArgument(isValidSubject(value), MESSAGE_CONSTRAINTS);
-        this.value = value;
+        String normalizedName = normalizeName(value);
+        checkArgument(isValidSubject(normalizedName), MESSAGE_CONSTRAINTS);
+        this.value = normalizedName;
         this.lessonSlot = lessonSlot;
     }
 
     public static boolean isValidSubject(String value) {
-        return value.matches(VALIDATION_REGEX);
+        return normalizeName(value).matches(VALIDATION_REGEX);
+    }
+
+    /** Trims boundary whitespace and collapses repeated ordinary spaces, preserving case. */
+    public static String normalizeName(String name) {
+        requireNonNull(name);
+        return name.trim().replaceAll(" +", " ");
     }
 
     public LessonSlot getLessonSlot() {
         return lessonSlot;
     }
 
-    /** Returns whether this subject has the supplied name, ignoring case. */
+    /** Returns whether this subject has the supplied normalized name, ignoring case. */
     public boolean hasName(String name) {
-        return value.equalsIgnoreCase(name);
+        return name != null && value.equalsIgnoreCase(normalizeName(name));
     }
 
     @Override

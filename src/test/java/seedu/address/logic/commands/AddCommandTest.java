@@ -136,6 +136,26 @@ public class AddCommandTest {
         }
 
         @Override
+        public String getLastViewCommand() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void setLastViewCommand(String lastViewCommand) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public String getLastSortCommand() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void setLastSortCommand(String lastSortCommand) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void addPerson(Person person) {
             throw new AssertionError("This method should not be called.");
         }
@@ -172,6 +192,11 @@ public class AddCommandTest {
 
         @Override
         public void updateFilteredPersonList(Predicate<Person> predicate) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Predicate<? super Person> getFilteredPersonListPredicate() {
             throw new AssertionError("This method should not be called.");
         }
     }

@@ -42,7 +42,7 @@ public class ImportIntegrationTest {
                 + " t/A-Level notes/Revise \"fractions\", then graphs");
         logic.execute("add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/Physics day/TUE time/10:00"
                 + " s/H2 Chemistry day/WED time/11:30 o/120.50");
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 2");
 
         // Import only reads files inside the folder TuteeDex runs from, so the CSV files go in a folder under it.
         Files.createDirectories(Path.of("build"));

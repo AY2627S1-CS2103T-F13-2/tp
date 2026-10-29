@@ -35,7 +35,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
-   * `clear` : Deletes all contacts.
+   * `clear confirm` : Deletes all contacts.
 
    * `exit` : Exits the app.
 
@@ -61,10 +61,17 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for `help` and `clear` are ignored.<br>
+* Extraneous parameters for `help` are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
+</box>
+
+<box type="tip" seamless>
+
+**Tip:** Press <kbd>Up</kbd> in the command box to bring back the commands you entered earlier, newest first, and
+<kbd>Down</kbd> to move forward again. This is handy for fixing a typo in a long `add` or `edit` command. Going down
+past the newest command gives back whatever you were typing. The history is kept until you close TuteeDex.
 </box>
 
 ### Viewing help: `help`
@@ -95,8 +102,12 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 `FRI`, `SAT`, or `SUN` (letter case is ignored), and `TIME` is a 24-hour start time in strict
 `HH:mm` format, such as `09:00` or `15:30`. Each subject has exactly one weekly lesson.
 Repeat the complete triplet for multiple subjects. Subject names must be 1–50 characters after
-trimming surrounding spaces and may contain English letters, digits, spaces, and hyphens, including
-at least one letter or digit. A student cannot have two subjects with the same name, ignoring case.
+trimming surrounding whitespace and collapsing repeated ordinary spaces into one. Names may contain
+English letters, digits, spaces, and the symbols `+ & ( ) . ' -`, including at least one letter or digit,
+for example `C++`, `Maths & Science` or `Maths (H2)`. Semicolons, commas, slashes, internal tabs and line
+breaks are not allowed. Capitalization is preserved. A student cannot have two subjects with the same
+normalized name, ignoring case, even if their lesson times differ.
+For example, `H2  Maths` is stored as `H2 Maths` and counts as the same name as `h2 maths`.
 Comma-separated subjects are not supported.
 
 **Note:** `notes/NOTE` is optional and stores one free-text note per student.
@@ -196,35 +207,54 @@ or tags. Archived students are not shown.
 Each card displays the contact's name, phone, address, start date, outstanding
 amount, subjects, tags, and notes.
 
-Format: `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`
+Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`
 
 * Plain `list` restores all active students, including after a Find or filter.
 * Supply one `s/` per subject. A student matches if they take **any** requested subject.
-  Subject names match completely, ignoring case: `s/Maths` does not match `Additional Maths`.
+  Subject names match completely, ignoring case and extra spaces: `s/H2  Maths` matches `H2 Maths`,
+  but `s/Maths` does not match `Additional Maths`.
   Subjects use the same validation as Add; equivalent repeated values are combined.
 * Supply one `t/` per tag. A student matches if they have **any** requested tag (OR matching).
   Match complete tags, ignoring case and surrounding spaces: `t/Needs revision` matches
   `needs revision`, but `t/revision` does not. Tags use the same validation as Add;
   equivalent repeated values are combined. Profiles without tags do not match.
-* Use either subject or tag prefixes in one command; mixing them is invalid.
+* Subject and tag prefixes may be combined in either order. Match **any** requested subject
+  **and any** requested tag: `list s/Maths s/Physics t/A-Level` means
+  `(Maths OR Physics) AND A-Level`. A student matching several values appears only once.
+  An omitted category places no restriction on that category.
 * Each filter searches all stored students, rather than just the current search results.
-  Results retain their stored order. Indexes used by `view`, `edit`, and `delete` refer
+  Results follow the current sort order, or stored order when sorting is reset. Indexes used by `view`, `edit`, and `delete` refer
   to the newly displayed list.
 * The status message reports the displayed count, for example `Listed 2 contacts.`
   or `Listed 1 contact.` A subject filter with no matches shows
   `No contacts match the specified subjects.`; a tag filter with no matches shows
-  `No contacts match the specified tags.` Both leave the displayed list empty.
+  `No contacts match the specified tags.` A mixed filter with no matches leaves an empty list
+  and shows TOTAL 0 / PAID 0 in the GUI. Its command/log feedback is
+  `No contacts match the specified subjects and tags.`
   Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
+* Every successful List command shows the **TOTAL/PAID** banner. **TOTAL** is the number of
+  displayed students; **PAID** counts those with an outstanding amount of zero.
+  A subject or tag filter with no matches leaves the list empty and shows **TOTAL 0 / PAID 0**.
+  Plain `list` also shows **TOTAL 0 / PAID 0** when there are no active students.
 * Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
-* Add `-summary` to display total and paid counts for the displayed students, for example
+* `-summary` is optional: the GUI already shows the counts without it. For example,
   `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
   The flag must be entered exactly as shown.
+* Add `-summary` to display total and paid counts for the displayed students, for example
+  `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
+  The flag must be entered exactly as shown, at most once, before the first filter,
+  between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
+  Text such as `t/Pre-summary` or `t/Needs -summary revision` remains part of the tag value;
+  a separate `-summary` at the end of the command is treated as the flag.
 
 Examples:
 * `list s/Maths s/H2 Chemistry` shows students taking either subject.
 * `list t/A-Level t/Needs revision` shows students having either tag.
+* `list s/Maths s/Physics t/A-Level t/Needs revision` shows students taking Maths or Physics
+  who also have A-Level or Needs revision.
+* `list -summary t/A-Level s/Maths` summarizes active students matching both categories.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every active student again.
 
@@ -239,17 +269,26 @@ Archived students are excluded. The option is standalone and cannot be combined 
 `-summary`, `-archived`, or `s/`/`t/` filters. Enter plain `list` to return to the normal
 student contact list.
 
+The TOTAL/PAID banner counts each active student once, even if they appear under several subjects.
+Students without subjects still count towards the totals, although they have no grouped entry.
+If no active student has a subject, the group area shows `No subjects found for the active contacts.`;
+the banner still reports the active-student counts.
+
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
-commands also leave the displayed list unchanged. Find and other List options switch
-back to the normal contact list for their results. Applying or resetting `sort` keeps the
-current grouped or ungrouped presentation; bare `sort` also preserves scroll position.
+commands also leave the displayed list unchanged. Commands that change student records
+switch back to the normal contact list, as do successful `find` commands and all `list`
+options except `list -subjects`. This also applies when
+`edit` makes no changes or `import` only previews students or finds nothing new.
+`exit` closes the application.
+Applying or resetting `sort` keeps the current grouped or ungrouped presentation;
+bare `sort` also preserves scroll position.
 
 #### Listing archived students
 
 `list -archived` displays only archived students, using the active sort or stored order by default. It
 replaces any previous search or filter and does not change saved profiles.
-Feedback is `Listed 1 contact.` or `Listed N contacts.`; if no archived students
-exist, the list is empty and feedback is `No archived contacts.`.
+The TOTAL/PAID banner counts only the displayed archived students. If no archived students
+exist, the list is empty and the banner shows **TOTAL 0 / PAID 0**.
 
 Use `-archived` on its own. Combining it with `-summary`, subject/tag filters,
 or other arguments is not supported and shows an error without changing the
@@ -258,7 +297,7 @@ cannot be included as a separate word within a tag or subject filter value.
 Plain `list` returns to active students; subject/tag lists and summaries also
 continue to exclude archived students. For example:
 
-* `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
+* `archive 2` (where Bob is 2nd in the list), then `list -archived`, shows Bob in the archived list.
 * `view 1` shows the first student in that displayed archived list.
 * `list` returns to the active list without restoring archived students.
 
@@ -295,7 +334,7 @@ returns to original stored order; the subject-grouped display returns to alphabe
   time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
 * Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
   the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
-  Sorting is currently session-only and resets on restart; preference persistence is a separate feature.
+  TuteeDex remembers the last applied sort when you close it (see [Reopening where you left off](#reopening-where-you-left-off)).
 
 Examples:
 
@@ -339,7 +378,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
   duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
-* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full contact list. The changes are saved automatically.
+* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full active contact list. Editing preserves the student's archive status; use `list -archived` to view archived students again. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
 
 Errors:
@@ -366,6 +405,34 @@ Examples:
 * `edit 1 notes/` clears the first profile's note.
 * `find Betsy` followed by `edit 1 a/32, Clementi Road` updates only the address of the first search result.
 
+### Recording payments: `paid`
+
+Records a full or partial payment for the student at the specified displayed index.
+
+Format: `paid INDEX [AMOUNT]`
+
+* `paid INDEX` clears the student's outstanding balance.
+* `paid INDEX AMOUNT` reduces the balance by `AMOUNT`. The amount must be positive and have at most two decimal places.
+* A payment larger than the current balance is rejected, and the profile is unchanged.
+* The index refers to the currently displayed student list.
+
+Examples:
+
+* `paid 1` marks the first displayed student's balance as paid in full.
+* `paid 1 20.50` records a SGD 20.50 payment.
+
+### Charging a student: `charge`
+
+Adds a charge to a student's outstanding balance.
+
+Format: `charge INDEX AMOUNT`
+
+* `AMOUNT` is required, must be positive, and may have at most two decimal places.
+* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly.
+* The index refers to the currently displayed student list.
+
+Example: `charge 1 50` adds SGD 50.00 to the first displayed student's balance.
+
 ### Locating persons by name: `find`
 
 Finds active students whose names contain any of the given keywords. Archived
@@ -377,7 +444,8 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search is case-insensitive; for example, `hans` matches `Hans`.
 * Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
+* A keyword matches the start of any word in the name; for example, `Han` matches `Hans Gruber` and `Gru`
+  matches it too, but `ans` does not.
 * Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
 * Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
 * No matches produce an empty list with `No contacts match the specified name keywords.`.
@@ -408,37 +476,45 @@ Examples:
 
 Archives a student without deleting the student profile. Archived students are hidden from `list` and are excluded from its summary counts, but their data remains saved in TuteeDex.
 
-Format: `archive s/STUDENT_NAME`
+Format: `archive INDEX`
 
-* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
-* The name must match the student's full name exactly, ignoring letter case. For example, `archive s/john doe` can archive a student named `John Doe`.
-* A successful command displays `Student archived.` and refreshes the active student list.
-* If no student with the specified name exists, the command displays `Student cannot be found.`
-* If the student is already archived, the command displays `Student already archived.`
+* Archives the student at the specified `INDEX`. The index refers to the index number shown in the displayed student list, like `view`, `edit` and `delete`.
+* The index **must be a positive integer** 1, 2, 3, …
+* Students who share a name can each be archived, because the index picks one profile.
+* A successful command displays `Archived <name>.` and refreshes the active student list.
+* If the index is larger than the displayed list, the command displays `No matching contact found at the specified index.`
+* If the student is already archived, for example `archive 1` after `list -archived`, the command displays `<name> is already archived.`
 
-Example:
-* `archive s/John Doe` archives John Doe and removes the student from the active list.
+Examples:
+* `list` followed by `archive 2` archives the 2nd student and removes them from the active list.
+* `find John` followed by `archive 1` archives the 1st student in the results of the `find` command.
 
 ### Unarchiving a student: `unarchive`
 
 Restores an archived student to the active student list. Unarchiving does not change the student's profile details.
 
-Format: `unarchive s/STUDENT_NAME`
+Format: `unarchive INDEX`
 
-* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
-* The name must match the student's full name exactly, ignoring letter case.
-* A successful command displays `Student unarchived.` and makes the student appear in `list` again.
-* If no student with the specified name exists, the command displays `Student cannot be found.`
-* If the student is already active, the command displays `Student already active.`
+* Restores the student at the specified `INDEX` in the displayed list. Use `list -archived` first to see archived students and their indexes.
+* The index **must be a positive integer** 1, 2, 3, …
+* A successful command displays `Unarchived <name>.`, returns to the active student list and makes the student appear in `list` again.
+* If the index is larger than the displayed list, the command displays `No matching contact found at the specified index.`
+* If the student is already active, the command displays `<name> is already active.`
 
 Example:
-* `unarchive s/John Doe` restores John Doe to the active student list.
+* `list -archived` followed by `unarchive 1` restores the 1st archived student to the active student list.
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Deletes every student, including archived students. There is no undo, so TuteeDex asks you to confirm first.
 
-Format: `clear`
+Format: `clear` or `clear confirm`
+
+* `clear` only shows how many students would be deleted, for example `This will permanently delete all 6
+  student(s), including archived students. There is no undo. Type 'clear confirm' to continue.` Nothing changes.
+* `clear confirm` deletes them and shows `Deleted all 6 student(s) from TuteeDex.`
+* Anything else after `clear`, such as `clear 3` or `clear Confirm`, is rejected without deleting anything.
+* Consider running `export` first, so you keep a copy of your students.
 
 ### Exiting the program: `exit`
 
@@ -450,9 +526,37 @@ Format: `exit`
 
 TuteeDex automatically saves data after every command. You do not need to save manually.
 
+### Reopening where you left off
+
+TuteeDex remembers which students you were looking at and in what order. When you open it again, it runs the
+last `sort` you applied and then the last `list` or `find` you entered, so the same view comes back. For example,
+if you close TuteeDex after `sort o/desc` and `list -subjects`, it opens with the subject groups, largest balances
+first.
+
+* `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
+* `sort reset` clears the remembered order, so TuteeDex opens in the default order.
+* `delete`, and an `edit` that changes nothing, keep the students you were looking at, so TuteeDex still opens on
+  that view. For example, after `find Alex` and `delete 1`, TuteeDex opens on `find Alex` again.
+* Commands that switch back to the normal list, such as `add`, `edit`, `archive` or `import`, make TuteeDex open on
+  the normal list next time. So does a `delete` from the subject groups, which shows the normal list afterwards.
+  The sort order is kept.
+* When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
+  Type `list` to see all students.
+* The view and order are saved in `preferences.json`, next to the JAR file, when you close TuteeDex. If that file
+  is edited so that a saved command is not a valid `list`, `find` or `sort` command, TuteeDex ignores it.
+
 ### Editing the data file
 
 TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+
+Stored subject names are normalized when loaded, using the same spacing rules as Add. Loading alone
+does not rewrite the file; a later save writes the normalized names. If two subjects belonging to
+one student become the same name after normalization, the file cannot load, even if their lesson
+times differ. Back up the file and resolve those conflicting entries before using it; TuteeDex does
+not silently discard either lesson.
+The file must contain a JSON object with a `persons` array. An empty address book is
+`{"persons":[]}`. A root value of `null`, a missing or null `persons` array, or a null
+student entry is invalid and triggers the loading recovery described below.
 
 <box type="warning" seamless>
 
@@ -485,12 +589,14 @@ Action     | Format, Examples
 **Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
-**Clear**  | `clear`
+**Clear**  | `clear`, then `clear confirm`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
+**Paid**   | `paid INDEX [AMOUNT]`<br> e.g., `paid 1 20.50`
+**Charge** | `charge INDEX AMOUNT`<br> e.g., `charge 1 50`
 **Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]...`, `list [-summary] [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary t/A-Level t/Needs revision`
-**Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
-**Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
+**List**   | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
+**Archive** | `archive INDEX`<br> e.g., `archive 2`
+**Unarchive** | `unarchive INDEX`<br> e.g., `list -archived`, then `unarchive 1`
 **Help**   | `help`

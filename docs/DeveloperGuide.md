@@ -110,6 +110,14 @@ The following sequence diagram shows submission of a successful `list` command a
 
 The sequence diagram omits error handling, help/exit flag handling, and the observable list's JavaFX cell updates for clarity.
 
+For List commands, text such as `Listed N contacts.`, `No contacts match the specified subjects.`,
+`No contacts match the specified tags.`, and `No archived contacts.` remains in the `CommandResult`
+and is logged by `MainWindow`, but the visible result is the TOTAL/PAID banner. The optional `-summary`
+changes the command's returned feedback; it does not opt into a different GUI display.
+This applies to plain, filtered, archived and subject-grouped List modes. Empty results show both counts
+as zero. Grouped counts use unique students, including subjectless students, rather than grouped rows.
+Invalid List input follows the exception path instead: error feedback is shown and the current list remains.
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
@@ -152,7 +160,7 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 
 How the parsing works:
 * `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `FindCommandParser`, `ListCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, and `ViewCommandParser`.
-* Commands without arguments (`clear`, `exit`, and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
+* Commands without arguments (`exit` and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
 * The command parsers implement the generic `Parser<T extends Command>` interface. Prefix-based parsers use `CliSyntax` and `Prefix` to identify fields, `ArgumentTokenizer` to split the input, and `ArgumentMultimap` to collect repeated values. `ParserUtil` validates and converts values such as indexes, subjects, tags, notes, names, and contact fields before the command is created.
 * Invalid command words, malformed arguments, unsupported prefixes, duplicate fields, and invalid field values result in a `ParseException`; the command is not executed.
 
@@ -168,7 +176,7 @@ The `Model` component,
 * stores each student's subjects as `Subject` objects. Each `Subject` owns one required `LessonSlot`,
   which records a `DayOfWeek` and a `LocalTime` start time.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
-* stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
+* stores a `UserPrefs` object that represents the user’s preferences (the GUI settings and the last list view). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
 
 
@@ -196,8 +204,13 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
 * `JsonAdaptedSubject` stores the subject name, weekly lesson day, and lesson start time. It reconstructs
   a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
-  `JsonSerializableAddressBook.toModelType()` also rejects duplicate students. These conversions explain
-  the Storage component's dependency on the Model component; model classes are omitted from this diagram.
+  `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicate students.
+  These conversions explain the Storage component's dependency on the Model component; model classes
+  are omitted from this diagram.
+* `JsonUtil.readJsonFile()` rejects a JSON root of `null` through `DataLoadingException`, rather than
+  treating it as a missing file. `JsonAddressBookStorage` also translates adapter validation failures into
+  `DataLoadingException`. `MainApp` handles that exception by creating an empty in-memory address book;
+  loading itself does not rewrite the invalid student-data file or load only the valid entries.
 * Student records without any `subjects` field load with an empty subject set. Records from v1.4 that store
   subjects as plain strings are incompatible because they do not contain a lesson day or start time.
   Older records without tags, notes, or archive status still load with empty tags, empty notes, and
@@ -303,6 +316,27 @@ order, accepts the documented three-letter day names, requires strict 24-hour `H
 duplicate subject names case-insensitively. List filters continue to compare only the subject name so that
 `list s/Maths` works regardless of when each student's Maths lesson begins.
 
+### Combining subject and tag filters
+
+`ListCommandParser` tokenizes both `s/` and `t/` prefixes together, accepting either category order
+and interleaved repeated values. It reuses `ParserUtil` validation and `PersonHasAnyTagPredicate`.
+`ListCommand` combines its subject-name match with the supplied tag predicate using AND, then applies
+active-student visibility. Each category uses OR internally; an omitted category adds no restriction.
+The command updates the existing filtered list, so students appear once and the current sort order
+and displayed indexes still apply. Archived-only and subject-grouped modes remain standalone.
+`Subject.normalizeName()` trims boundary whitespace and collapses runs of ordinary ASCII spaces before
+validation and construction; the 1–50 character limit applies to the normalized name. It preserves case
+and the lesson slot, and does not permit internal tabs or line breaks. `ParserUtil.parseSubjectName()`
+reuses this rule for Add, Edit, List and CSV import. Equality, hashing, name matching and UI grouping
+therefore use consistent names. Each student's subject names remain unique, ignoring case, even when
+their lesson slots differ. Different students can share a subject heading while retaining their own slots.
+
+JSON adapters construct the same normalized `Subject` model. Reading legacy spaced names does not
+rewrite the file; subsequent saves serialize canonical names. If legacy entries for one student collide
+after normalization, `JsonAdaptedPerson` rejects the record with `IllegalValueException`, translated by
+storage into `DataLoadingException`. Loading fails rather than silently losing a lesson. This is an
+upgrade constraint: back up and resolve colliding entries before using the file.
+
 ### Shared tag data
 
 Tags are optional descriptive labels, separate from subjects. Add accepts repeated `t/TAG` values
@@ -367,6 +401,53 @@ Tests pass in a temporary folder as the home folder through a package-private co
 **Alternatives considered.** Keeping the preview in memory and confirming it with a separate command would avoid
 reading the file twice, but it adds state that can go stale if the file or the address book changes in between.
 Reading and checking the file again on `confirm` is simpler and always uses the current data.
+
+### Restoring the last view
+
+When TuteeDex opens, it shows the same list the user was looking at when they closed it, in the same order,
+such as the subject groups from `list -subjects` sorted by `sort o/desc`.
+
+**What is saved.** `UserPrefs` has two strings. `lastViewCommand` is the `list` or `find` command that last decided
+which students are shown, and `lastSortCommand` is the `sort` command that last set the order. An empty string
+means the normal list or the default order. Both are saved with the GUI settings in `preferences.json`, because
+they are preferences about the display rather than student data.
+
+**When it changes.** After each successful command, `LogicManager#execute()` calls `saveLastView()`:
+
+* A `SortCommand` that applies criteria saves its own command text, and `sort reset` clears the saved order.
+  A bare `sort` only reports the order (its result is `ListPresentation.UNCHANGED`), so nothing changes.
+  Sorting keeps the current presentation, so it never changes the saved view.
+* A `ListCommand` or `FindCommand` saves its own command text.
+* A command whose result has `ListPresentation.UNCHANGED` (`view`, `help`, `export`), or that exits the app,
+  keeps the saved view, because the display does not change.
+* Any other command clears the saved view only if it changed what is on screen. `LogicManager#execute()` reads
+  `Model#getFilteredPersonListPredicate()` before the command runs, and `saveLastView()` compares it with the
+  filter afterwards. Commands that reset the filter, such as `add`, `edit`, `archive` and `import`, clear the saved
+  view. `delete` and an `edit` with no changes keep the filter, so the saved view is kept. The saved view is also
+  cleared when the subject groups are replaced by the contact list, which `LogicManager` tracks from each result's
+  `ListPresentation`. The saved order stays, because sorting carries over to the normal list.
+
+A command that fails throws before `saveLastView()` runs, so it never changes the saved view. `MainApp#stop()`
+already writes `UserPrefs` to disk when the app closes, so no new storage code is needed.
+
+**Restoring.** At the end of `MainWindow#fillInnerParts()`, `restoreLastView()` runs the saved sort command and
+then the saved view command through the normal `executeCommand()` path, so the list, the subject groups and the
+result box are updated in the same way as when the user types the commands. The sort runs first so that the view
+is built in the saved order. The preferences file can be edited by hand, so `LogicManager#getLastSortCommand()`
+and `LogicManager#getLastViewCommand()` parse the saved text and return it only if it is a `sort` command, or a
+`list` or `find` command. Anything else, such as `delete 1`, is logged and ignored.
+A restored `find` can show no students, for example after its only match was deleted, so `restoreLastView()` puts
+`MainWindow.MESSAGE_LAST_VIEW_RESTORED` before the find result. A restored `list` shows the student counts instead
+of the result box, so it needs no message.
+Like `sort`, `list` and `find` override `Command#requiresAddressBookSave()` to return `false`, because they
+only change the display. Otherwise, if the data file failed to load and the app started empty, replaying the
+saved view would write that empty address book over the user's file.
+
+**Alternatives considered.** Saving the filter itself is not practical, because the filters are `Predicate`
+objects built from lambdas and cannot be written to JSON without a separate data form for every kind of filter.
+Saving the command text reuses the existing parsers, so new `list` options are restored without extra code.
+Making `delete` reset the filter would also keep the saved view and the screen in step, but the index numbers on
+screen would change after every deletion, so a following `delete 2` could remove a different student.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -509,8 +590,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                                                                       |
 | `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me                                                                                      |
 | `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
-
 | `* *`    | private tutor                              | import students from a file exported by TuteeDex | move my students to another computer without typing them in again                                                       |
+| `* *`    | private tutor                              | have TuteeDex open on the list I was last using | continue where I left off without typing the same `list`, `find` or `sort` again                                       |
 
 *{More to be added}*
 
@@ -631,6 +712,10 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Student profile**: A record for one student. It can contain the student's name, address, phone number, subjects, tuition start date, outstanding balance, guardian contact, education level, and notes.
 * **Guardian contact**: The phone number of a student's parent or guardian, recorded separately from the student's own phone number.
 * **Outstanding balance**: The amount, in Singapore dollars (SGD), that remains owed for a student's tuition. The amount cannot be negative. It represents the current balance, not a history of individual payments.
+
+### Balance commands
+
+The `paid` and `charge` commands use the index from the currently displayed person list. Their parsers validate the index and amount before creating a command. `paid INDEX` replaces the balance with zero, while `paid INDEX AMOUNT` subtracts a positive amount. `charge INDEX AMOUNT` adds a positive amount. Amount arithmetic is performed by the immutable `OutstandingAmount` value object, so balances remain nonnegative and limited to two decimal places. Payments greater than the current balance are rejected with a command error before the profile is modified.
 * **Displayed index**: The one-based number shown beside a student in the current displayed list. After a search, the index refers to that search result list.
 * **Duplicate profile**: A new profile whose stored details are identical to an existing profile. TuteeDex rejects an exact duplicate; two profiles may have the same student name if their other details differ.
 
@@ -685,32 +770,72 @@ testers are expected to do more *exploratory* testing.
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear` in this test copy, then add three profiles:
+1. Run `clear confirm` in this test copy, then add three profiles:
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level`,
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 t/Needs revision`, and
    `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths day/WED time/11:00`.
 2. Run `find Nobody`, then `list t/A-Level t/Needs revision`.<br>
-   Expected: Amy and Bob are displayed in that order, with `Listed 2 contacts.`.
+   Expected: Amy and Bob are displayed in that order, with TOTAL 2 / PAID 2.
    This checks OR matching across the full address book, including students hidden by Find.
 3. Run `list t/NEEDS REVISION t/needs revision`, then `view 1`.<br>
-   Expected: Only Bob is displayed, with `Listed 1 contact.`. View shows Bob's details.
+   Expected: List displays only Bob, with TOTAL 1 / PAID 1. View then replaces the banner with Bob's details.
    The repeated case variants do not duplicate Bob in the results, and the displayed index is used.
 4. Run `list t/revision`.<br>
-   Expected: An empty list with `No contacts match the specified tags.`. A substring is not a complete tag match.
+   Expected: An empty list with TOTAL 0 / PAID 0. A substring is not a complete tag match.
 5. Run `list`.<br>
-   Expected: Amy, Bob, and untagged Cara return, with `Listed 3 contacts.`.
+   Expected: Amy, Bob, and untagged Cara return, with TOTAL 3 / PAID 3.
 6. Run `find Bob`, then try `list t/`, `list t/A-Level t/`, `list t/A-Level x/value`, and `list T/A-Level`.<br>
    Expected: Each command reports an error. Only Bob remains displayed, and no profile fields change.
 7. Exit and restart from the same folder, then run `list t/A-Level` and `list`.<br>
    Expected: Amy still matches the tag filter, and all three original profiles remain stored.
+8. Compare `list`, `list -summary`, `list t/A-Level`, and `list -summary t/A-Level`.<br>
+   Expected: The first two show the same three students and TOTAL 3 / PAID 3. The last two show only
+   Amy and TOTAL 1 / PAID 1. Adding the optional flag does not change the visible result.
+
+### Summary flag ordering
+
+`ListCommandParser` recognises one standalone `-summary` before, between, or after filter arguments.
+It removes only the flag before delegating subject/tag values to the existing validators.
+The flag must precede another prefix/summary flag or end the input, so a hyphenated value such as
+`t/Pre-summary` and text inside a multiword value such as `t/Needs -summary revision` are preserved.
+Repeated summary flags and combinations with the standalone `-archived` or `-subjects` modes are rejected.
+
+Using the profiles above:
+
+1. Compare `list -summary s/Maths`, `list s/Maths -summary`, and `list s/Maths -summary s/Maths`.<br>
+   Expected: Amy and Cara are displayed, with identical TOTAL/PAID counts for all three commands.
+2. Compare `list -summary t/A-Level t/Needs revision`, `list t/A-Level -summary t/Needs revision`,
+   and `list t/A-Level t/Needs revision -summary`.<br>
+   Expected: Amy and Bob are displayed, with identical TOTAL/PAID counts for all three commands.
+3. Run `find Bob`, then try `list t/A-Level -summary -summary`, `list t/ -summary`,
+   `list -subjects -summary`, and `list -archived -summary`.<br>
+   Expected: Each command fails; Bob remains the displayed student and stored profiles are unchanged.
+
+### Combining subject and tag filters
+
+Use the three profiles from the preceding tag-list test in a disposable test copy.
+
+1. Run `find Nobody`, then `list s/Maths s/Physics t/A-Level t/Needs revision`.<br>
+   Expected: Amy and Bob appear once each; the GUI banner shows TOTAL 2 / PAID 2.
+   Untagged Cara does not match both categories.
+2. Run `list t/Needs revision s/Maths s/Physics`.<br>
+   Expected: Only Bob appears. Prefix order does not change the matching rule.
+3. Run `list -summary s/Maths t/Needs revision`.<br>
+   Expected: An empty list with TOTAL 0 / PAID 0. Cara and Amy have Maths but neither has the required tag.
+4. Run `sort n/desc`, then `list s/Maths s/Physics t/A-Level t/Needs revision`, and `view 1`.<br>
+   Expected: Bob appears before Amy, and View shows Bob. Listing retains the current sort order.
+5. Try `list s/Maths t/`, `list t/A-Level s/`, `list -archived s/Maths t/A-Level`, and
+   `list -subjects t/A-Level s/Maths`.<br>
+   Expected: Each fails without changing the displayed students, sort order, or stored profiles.
 
 ### Listing archived students
 
 Use a fresh test copy of the JAR in an empty writable folder.
 
-1. Add two students with different names, then archive the second by its full name.
+1. Add two students with different names, then archive the second with `archive 2`.
 2. Run `find Nobody`, then `list -archived`.<br>
-   Expected: only the archived student appears, with `Listed 1 contact.`.
+   Expected: only the archived student appears, with TOTAL 1. PAID is 1 if that student's outstanding
+   amount is zero, otherwise 0.
 3. Run `view 1`.<br>
    Expected: the archived student's details, not the first stored active student.
 4. Run `list`, `list s/Maths`, or `list t/A-Level` with suitable test data.<br>
@@ -718,14 +843,14 @@ Use a fresh test copy of the JAR in an empty writable folder.
 5. Run `list -archived`, then try `list -archived -summary` and `list t/A-Level -archived`.<br>
    Expected: both invalid combinations fail without changing the archived list or saved profiles.
 6. Restart the app, then run `list -archived`.<br>
-   Expected: the same archived student remains available. Unarchive the student and repeat
-   `list -archived`; expect an empty list with `No archived contacts.`.
+   Expected: the same archived student remains available. Run `unarchive 1` and repeat
+   `list -archived`; expect an empty list with TOTAL 0 / PAID 0.
 
 ### Editing a student profile
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear` in this test copy to remove sample profiles, then add two test profiles:
+1. Run `clear confirm` in this test copy to remove sample profiles, then add two test profiles:
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 o/20` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/600`.
 2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
@@ -750,7 +875,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 Use a fresh copy of the app in an empty folder. Inspect saved tags in `data/addressbook.json`
 after successful edits; these checks do not require changes to the profile-card display.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/Old notes/Keep note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 t/A-Level t/Needs revision t/a-level`.<br>
@@ -771,7 +896,7 @@ after successful edits; these checks do not require changes to the profile-card 
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Amy note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English day/TUE time/10:00 o/600 t/Needs revision notes/Bob note`.
 2. Run `find Bob`, then `edit 1 s/Physics day/WED time/15:30 s/H2 Chemistry day/FRI time/17:00`.<br>
@@ -787,11 +912,27 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 6. Run `edit 1 p/87654321`, then exit and restart from the same folder.<br>
    Expected: `view 2` shows Bob's updated phone and still lists both scheduled subjects, with his original notes.
 
+### Normalizing subject spaces
+
+Use a fresh copy of the app in an empty folder.
+
+1. Add `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug s/H2   Maths day/MON time/09:00`.<br>
+   Expected: `view 1` shows `H2 Maths (Mon 09:00)`. Both `list s/H2 Maths` and
+   `list s/h2   maths` find Amy.
+2. Run `edit 1 s/h2  maths day/MON time/09:00`.<br>
+   Expected: No changes are made, and the original capitalization is retained.
+3. Run `edit 1 s/H2 Maths day/MON time/09:00 s/h2   Maths day/TUE time/10:00`.<br>
+   Expected: Duplicate-subject error; Amy's original lesson remains intact.
+4. Add `add n/Bob Choo p/22222222 a/Block 2 d/19-Sep s/h2  maths day/TUE time/10:00`,
+   then run `list -subjects`.<br>
+   Expected: One subject heading contains both students with their different slots. Restart and check
+   their profiles; names have single spaces and both schedules are preserved.
+
 ### Editing student notes
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Original note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
@@ -821,12 +962,12 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 5. Resize help to its minimum size. Expect scrolling and the close button to remain usable.
 6. Select the matching pixel close button in the main window. Expect the application
    to exit and retain its window size and position on the next launch.
-   
+
 ### Sorting students
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/2 s/Maths day/MON time/09:00 s/Physics day/FRI time/10:00`
    and `add n/Bob Choo p/22222222 a/Block 2 d/01-Jan o/10 s/Maths day/TUE time/11:00`.
 2. Run `sort o/desc n/asc`.<br>
@@ -849,11 +990,11 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1, #01-01 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Revise "fractions"`
-   and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive s/Bob Choo`.
+   and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive 2`.
 2. Run `export` and note the file name in the result, for example `contacts-20261024-175424-176.csv`.
-3. Run `clear`, then `import contacts-20261024-175424-176.csv`.<br>
+3. Run `clear confirm`, then `import contacts-20261024-175424-176.csv`.<br>
    Expected: A preview names Amy Bee and Bob Choo, and the list is still empty.
 4. Run `import contacts-20261024-175424-176.csv confirm`.<br>
    Expected: `Imported 2 student(s) ...`. Amy is listed; `list -archived` shows Bob. `view 1` shows Amy's
@@ -866,10 +1007,50 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 7. Try `import missing.csv`, `import notes.txt` and `import` with no path.<br>
    Expected: Each command fails with a specific message.
 
+### Clearing all students
+
+1. Run `clear`.<br>
+   Expected: A message says how many students would be deleted. The list does not change.
+2. Run `clear 3` and `clear Confirm`.<br>
+   Expected: Both are rejected with the usage message. No student is deleted.
+3. Run `clear confirm`.<br>
+   Expected: `Deleted all N student(s) from TuteeDex.`, and `list` and `list -archived` are both empty.
+
+### Restoring the last view
+
+1. Run `list -subjects`, then close TuteeDex with `exit`. Open it again.<br>
+   Expected: The subject groups are shown, as after typing `list -subjects`.
+2. Run `find Alex`, close the window and open TuteeDex again.<br>
+   Expected: Only the students matching `Alex` are listed.
+3. Run `list -archived`, then `view 1`, then `exit`. Open TuteeDex again.<br>
+   Expected: The archived students are listed, because `view` does not change the saved view.
+4. Run `list -subjects`, then add any student with `add`, then `exit`. Open TuteeDex again.<br>
+   Expected: The normal list is shown.
+5. Close TuteeDex. In `preferences.json`, change `lastViewCommand` to `"delete 1"` and open TuteeDex.<br>
+   Expected: The normal list is shown, and no student is deleted.
+6. Run `sort o/desc n/asc`, then `list -subjects`, then `exit`. Open TuteeDex again.<br>
+   Expected: The subject groups are shown, with the largest balances first in each group.
+7. Run `sort reset`, then `exit`. Open TuteeDex again.<br>
+   Expected: Students are in the default order.
+8. Run `find` with the name of one student, then `delete 1`, then `exit`. Open TuteeDex again.<br>
+   Expected: No students are listed, and the result box says this is the view from when TuteeDex was last closed.
+
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+Use a disposable copy of the built JAR in an empty writable folder. Close the application before editing files.
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+1. Create `data/addressbook.json` containing only `null`, then launch the JAR.<br>
+   Expected: The application opens with an empty address book and logs that the data file could not be loaded,
+   rather than failing with an uncaught `NullPointerException`. Close the window using its close button,
+   without entering any commands, and check that the student-data file still contains `null`.
+2. Repeat with `{"persons":[null]}`, `{"persons":null}`, and `{}`.<br>
+   Expected: Each invalid file follows the same recovery path and is preserved during loading and shutdown.
+3. Start with a valid exported JSON student record, then insert `null` beside it in the `persons` array.<br>
+   Expected: The entire file is rejected; the valid student is not loaded on its own and the original file remains intact.
+4. Replace the file with `{"persons":[]}` and launch again.<br>
+   Expected: The valid empty address book loads without a data-loading warning.
+5. Move the student-data file out of the test folder and launch again.<br>
+   Expected: Missing-file behaviour is unchanged: the application shows its sample students.
 
-1. _{ more test cases … }_
+These checks stop before executing commands that save the address book; such commands can overwrite the data file.
+Keep a backup before editing or attempting to recover real student data.

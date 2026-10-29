@@ -68,6 +68,7 @@ public class ModelManager implements Model {
             invalidateRows();
         });
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
+        filteredPersons.setPredicate(PREDICATE_SHOW_ACTIVE_PERSONS);
         sortedPersons = new SortedList<>(filteredPersons);
         sortReference = LocalDateTime.now(clock);
     }
@@ -92,6 +93,28 @@ public class ModelManager implements Model {
     public void setGuiSettings(GuiSettings guiSettings) {
         requireNonNull(guiSettings);
         userPrefs.setGuiSettings(guiSettings);
+    }
+
+    @Override
+    public String getLastViewCommand() {
+        return userPrefs.getLastViewCommand();
+    }
+
+    @Override
+    public void setLastViewCommand(String lastViewCommand) {
+        requireNonNull(lastViewCommand);
+        userPrefs.setLastViewCommand(lastViewCommand);
+    }
+
+    @Override
+    public String getLastSortCommand() {
+        return userPrefs.getLastSortCommand();
+    }
+
+    @Override
+    public void setLastSortCommand(String lastSortCommand) {
+        requireNonNull(lastSortCommand);
+        userPrefs.setLastSortCommand(lastSortCommand);
     }
 
     //=========== AddressBook ================================================================================
@@ -122,7 +145,7 @@ public class ModelManager implements Model {
     @Override
     public void addPerson(Person person) {
         addressBook.addPerson(person);
-        updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
     }
 
     @Override
@@ -233,6 +256,11 @@ public class ModelManager implements Model {
         requireNonNull(predicate);
         filteredPersons.setPredicate(predicate);
         refreshSorting();
+    }
+
+    @Override
+    public Predicate<? super Person> getFilteredPersonListPredicate() {
+        return filteredPersons.getPredicate();
     }
 
     @Override

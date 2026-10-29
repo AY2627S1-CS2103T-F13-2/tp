@@ -83,7 +83,7 @@ title: "Home"
         <h3>Keep balances and records clear</h3>
         <p>See outstanding tuition amounts and total/paid student counts. Archive past students
           without deleting their profiles, and restore them when they return.</p>
-        <div class="landing-feature-example"><span>ARCHIVE A PAST STUDENT</span><code>archive s/Aisha Tan</code></div>
+        <div class="landing-feature-example"><span>ARCHIVE A PAST STUDENT</span><code>archive 1</code></div>
       </article>
       <article class="landing-feature" id="feature-data">
         <span class="landing-feature-number">006 / YOUR DATA</span>
@@ -101,6 +101,8 @@ title: "Home"
       <h2 id="landing-workflow-title">A focused view is<br>just a command away.</h2>
       <p>Type in the command box and press Enter. The student list updates in the same window;
         there is no need to work through a series of forms.</p>
+      <p>TuteeDex remembers your last list or find view and applied sort order when you close it,
+        so you can pick up where you left off.</p>
       <a class="landing-text-link" href="UserGuide.html#command-summary">Explore the commands <span aria-hidden="true">→</span></a>
     </div>
     <div class="landing-command-panel" aria-label="Example TuteeDex commands">

@@ -43,6 +43,11 @@ public class CommandResult {
         this.listPresentation = requireNonNull(listPresentation);
     }
 
+    /** Constructs a result with a list presentation and no help or exit action. */
+    public CommandResult(String feedbackToUser, ListPresentation listPresentation) {
+        this(feedbackToUser, false, false, listPresentation);
+    }
+
     /**
      * Constructs a {@code CommandResult} with the specified {@code feedbackToUser},
      * and other fields set to their default value.
@@ -61,10 +66,6 @@ public class CommandResult {
 
     public boolean isExit() {
         return exit;
-    }
-
-    public boolean isSubjectList() {
-        return listPresentation == ListPresentation.SUBJECT_GROUPS;
     }
 
     public ListPresentation getListPresentation() {

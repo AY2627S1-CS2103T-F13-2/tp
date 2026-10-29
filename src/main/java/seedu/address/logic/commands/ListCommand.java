@@ -13,7 +13,7 @@ import seedu.address.model.Model;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Person;
 
-/** Lists all students or students matching a subject or tag filter. */
+/** Lists students matching optional subject and tag filters. */
 public class ListCommand extends Command {
     public static final String COMMAND_WORD = "list";
     public static final String SUMMARY_FLAG = "-summary";
@@ -26,6 +26,7 @@ public class ListCommand extends Command {
     public static final String MESSAGE_NO_SUBJECT_MATCHES = "No contacts match the specified subjects.";
     public static final String MESSAGE_NO_SUBJECT_GROUPS = "No subjects found for the active contacts.";
     public static final String MESSAGE_NO_MATCHES = "No contacts match the specified tags.";
+    public static final String MESSAGE_NO_MIXED_MATCHES = "No contacts match the specified subjects and tags.";
     public static final String MESSAGE_SUMMARY_FORMAT = "%-24s%24s";
 
     private final Predicate<Person> predicate;
@@ -61,7 +62,8 @@ public class ListCommand extends Command {
         this(predicate, Set.of(), isSummary);
     }
 
-    private ListCommand(Predicate<Person> predicate, Set<String> subjectNames, boolean isSummary) {
+    /** Lists contacts matching both the supplied predicate and any requested subject, with optional summary output. */
+    public ListCommand(Predicate<Person> predicate, Set<String> subjectNames, boolean isSummary) {
         this(predicate, subjectNames, isSummary, false);
     }
 
@@ -94,9 +96,11 @@ public class ListCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        Predicate<Person> filter = subjectNames.isEmpty()
-                ? predicate : person -> person.getSubjects().stream()
-                        .anyMatch(subject -> subjectNames.stream().anyMatch(subject::hasName));
+        Predicate<Person> filter = predicate;
+        if (!subjectNames.isEmpty()) {
+            filter = filter.and(person -> person.getSubjects().stream()
+                    .anyMatch(subject -> subjectNames.stream().anyMatch(subject::hasName)));
+        }
         Predicate<Person> visibility = isArchivedOnly ? Person::isArchived : PREDICATE_SHOW_ACTIVE_PERSONS;
         model.updateFilteredPersonList(visibility.and(filter));
         int count = model.getFilteredPersonList().size();
@@ -118,7 +122,8 @@ public class ListCommand extends Command {
             return result(MESSAGE_NO_SUBJECT_GROUPS);
         }
         if (count == 0 && !subjectNames.isEmpty()) {
-            return result(MESSAGE_NO_SUBJECT_MATCHES);
+            return result(predicate == PREDICATE_SHOW_ALL_PERSONS
+                    ? MESSAGE_NO_SUBJECT_MATCHES : MESSAGE_NO_MIXED_MATCHES);
         }
         if (count == 0 && predicate != PREDICATE_SHOW_ALL_PERSONS) {
             return result(MESSAGE_NO_MATCHES);
@@ -127,7 +132,7 @@ public class ListCommand extends Command {
     }
 
     private CommandResult result(String feedback) {
-        return new CommandResult(feedback, false, false, isSubjectList
+        return new CommandResult(feedback, isSubjectList
                 ? CommandResult.ListPresentation.SUBJECT_GROUPS : CommandResult.ListPresentation.CONTACTS);
     }
 
@@ -139,6 +144,12 @@ public class ListCommand extends Command {
             return MESSAGE_SINGULAR;
         }
         return String.format(MESSAGE_PLURAL_FORMAT, count);
+    }
+
+    // Startup replays list/find, so they must not overwrite a data file that failed to load.
+    @Override
+    public boolean requiresAddressBookSave() {
+        return false;
     }
 
     @Override

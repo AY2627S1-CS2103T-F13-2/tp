@@ -18,6 +18,15 @@ public class SubjectTest {
         assertFalse(Subject.isValidSubject("A".repeat(51)));
         assertFalse(Subject.isValidSubject("---"));
         assertFalse(Subject.isValidSubject("Maths!"));
+        assertTrue(Subject.isValidSubject("C++"));
+        assertTrue(Subject.isValidSubject("Maths & Science"));
+        assertTrue(Subject.isValidSubject("Maths (H2)"));
+        assertTrue(Subject.isValidSubject("A. Maths"));
+        assertTrue(Subject.isValidSubject("O'Level English"));
+        assertFalse(Subject.isValidSubject("+&()"));
+        assertFalse(Subject.isValidSubject("Maths; Physics"));
+        assertFalse(Subject.isValidSubject("Maths, Physics"));
+        assertFalse(Subject.isValidSubject("Art/Design"));
     }
 
     @Test
@@ -32,6 +41,38 @@ public class SubjectTest {
         assertFalse(maths.equals(new Subject("Physics", mondayMorning)));
         assertFalse(maths.equals("Maths"));
         assertFalse(maths.equals(null));
+    }
+
+    @Test
+    public void constructor_repeatedSpaces_normalizesNameAndPreservesCaseAndSlot() {
+        LessonSlot slot = new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0));
+        Subject subject = new Subject("  H2   Maths  ", slot);
+
+        assertEquals("H2 Maths", subject.value);
+        assertEquals(slot, subject.getLessonSlot());
+        assertEquals(new Subject("h2 Maths", slot), subject);
+        assertEquals(new Subject("H2 Maths", slot).hashCode(), subject.hashCode());
+        assertEquals("H2 Maths (Mon 09:00)", subject.toString());
+    }
+
+    @Test
+    public void hasName_caseAndSpaceVariants_matchWholeName() {
+        Subject subject = new Subject("H2  Maths", new LessonSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0)));
+
+        assertTrue(subject.hasName(" h2   MATHS "));
+        assertTrue(subject.hasName("H2 Maths"));
+        assertFalse(subject.hasName("Maths"));
+        assertFalse(subject.hasName(null));
+    }
+
+    @Test
+    public void isValidSubject_normalizedLengthAndInternalTabs_preservesConstraints() {
+        assertTrue(Subject.isValidSubject("A".repeat(48) + "   B"));
+        assertFalse(Subject.isValidSubject("A".repeat(49) + " B"));
+        assertFalse(Subject.isValidSubject("   "));
+        assertFalse(Subject.isValidSubject("H2\tMaths"));
+        assertFalse(Subject.isValidSubject("H2\nMaths"));
+        assertFalse(Subject.isValidSubject("H2\r\nMaths"));
     }
 
     @Test

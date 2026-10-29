@@ -53,6 +53,15 @@ public class CsvPersonParserTest {
     }
 
     @Test
+    public void parsePerson_apostropheNotFollowedByFormulaPrefix_preservesApostrophe() throws Exception {
+        Person person = CsvPersonParser.parsePerson(withColumn(withColumn(VALID_ROW, 2, "'plain address"),
+                7, "'plain note"));
+
+        assertEquals("'plain address", person.getAddress().value);
+        assertEquals("'plain note", person.getNotes().value);
+    }
+
+    @Test
     public void parsePerson_wrongColumnCount_throwsParseException() {
         assertThrows(ParseException.class, String.format(CsvPersonParser.MESSAGE_WRONG_COLUMN_COUNT, 8), () ->
                 CsvPersonParser.parsePerson(VALID_ROW.subList(0, 8)));
@@ -75,6 +84,18 @@ public class CsvPersonParserTest {
         Set<Subject> subjects = CsvPersonParser.parseSubjects(" maths(mon 09:00) ;  Physics ( TUE  23:59 ) ");
         assertEquals(List.of(subject("maths", DayOfWeek.MONDAY, 9, 0), subject("Physics", DayOfWeek.TUESDAY, 23, 59)),
                 new ArrayList<>(subjects));
+
+        // A name with its own brackets still takes the day and time from the last pair
+        assertEquals(List.of(subject("Maths (H2)", DayOfWeek.MONDAY, 9, 0), subject("C++", DayOfWeek.FRIDAY, 18, 0)),
+                new ArrayList<>(CsvPersonParser.parseSubjects("Maths (H2) (Mon 09:00); C++ (Fri 18:00)")));
+    }
+
+    @Test
+    public void parseSubjects_repeatedSpaces_normalizesNamesAndRejectsCollisions() throws Exception {
+        assertEquals(Set.of(subject("H2 Maths", DayOfWeek.MONDAY, 9, 0)),
+                CsvPersonParser.parseSubjects("H2   Maths (Mon 09:00)"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_DUPLICATE_SUBJECT, () ->
+                CsvPersonParser.parseSubjects("H2 Maths (Mon 09:00); h2  Maths (Tue 10:00)"));
     }
 
     @Test
@@ -90,7 +111,7 @@ public class CsvPersonParserTest {
         assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_LESSON_TIME, () ->
                 CsvPersonParser.parseSubjects("Maths (Mon 9:00)"));
         assertThrows(ParseException.class, Subject.MESSAGE_CONSTRAINTS, () ->
-                CsvPersonParser.parseSubjects("C++ (Mon 09:00)"));
+                CsvPersonParser.parseSubjects("Maths! (Mon 09:00)"));
         assertThrows(ParseException.class, ParserUtil.MESSAGE_DUPLICATE_SUBJECT, () ->
                 CsvPersonParser.parseSubjects("Maths (Mon 09:00); MATHS (Tue 10:00)"));
     }
