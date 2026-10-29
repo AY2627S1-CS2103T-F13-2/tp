@@ -10,15 +10,17 @@
     -fx-background-color: black;
     -fx-border-color: #181818 transparent #94ef18 transparent;
     -fx-border-width: 3 0 3 0;
-    -fx-padding: 0 19;
-    -fx-min-height: 63;
-    -fx-pref-height: 63;
-    -fx-max-height: 63;
+    -fx-padding: 6.05 17 0 17;
+    -fx-min-height: 65;
+    -fx-pref-height: 65;
+    -fx-max-height: 65;
 }
 .app-title { -fx-text-fill: white; -fx-font-size: 48.4px; }
+.header-symbol { -fx-min-width: 24.2; -fx-pref-width: 24.2; -fx-max-width: 24.2; -fx-padding: 3.5 0 0 0; }
 .header-accent { -fx-text-fill: #94ef18; -fx-font-family: "Press Start 2P"; -fx-font-size: 32px; }
-.menu-bar { -fx-background-color: black; }
-.menu-bar .label { -fx-text-fill: white; -fx-font-family: "Monospaced"; -fx-font-size: 11px; }
+.header-date-time { -fx-spacing: 36; }
+.header-date { -fx-text-fill: #08b57b; -fx-font-size: 36.3px; }
+.header-time { -fx-text-fill: #94ef18; -fx-font-size: 36.3px; }
 .context-menu { -fx-background-color: #181818; }
 .result-container { -fx-background-color: #4a4a4a; }
 .result-panel { -fx-background-color: #4a4a4a; -fx-min-height: 62; -fx-pref-height: 62; }
@@ -98,7 +100,6 @@
     -fx-max-height: 37;
 }
 .person-card .label { -fx-text-fill: white; -fx-font-size: 29.24px; }
-/* Match the command-result tooltip: JavaFX applies 0.85em to its 39.3px font. */
 .person-card .tooltip { -fx-font-size: 33.4px; }
 .student-icon { -fx-background-color: #94ef18; -fx-min-width: 52; -fx-pref-width: 52;
     -fx-max-width: 52; -fx-min-height: 31; -fx-pref-height: 31; -fx-max-height: 31; }

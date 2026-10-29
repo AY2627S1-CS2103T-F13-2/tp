@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +47,7 @@ public class ResultDisplayTest extends FxTestSupport {
             layout(726);
             assertTrue(normal.isVisible());
             assertFalse(expanded.isVisible());
+            assertNull(normal.getTooltip());
 
             String message = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".repeat(4);
             display.setFeedbackToUser(message);
@@ -76,7 +78,7 @@ public class ResultDisplayTest extends FxTestSupport {
             display.setFeedbackToUser(message);
             layout(726);
             assertEquals(message.replaceAll("\\R", " | "), ((Label) expanded.getContent()).getText());
-            assertEquals(message, expanded.getTooltip().getText());
+            assertNull(expanded.getTooltip());
             assertTrue(expanded.getContent().getBoundsInLocal().getHeight()
                     > expanded.getViewportBounds().getHeight());
             ScrollBar vertical = (ScrollBar) expanded.lookup(".scroll-bar:vertical");

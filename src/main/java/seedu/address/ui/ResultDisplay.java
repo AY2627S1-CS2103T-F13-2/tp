@@ -7,7 +7,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -49,9 +48,6 @@ public class ResultDisplay extends UiPart<Region> {
         summary.setManaged(false);
         feedbackText.setText(feedbackToUser.replaceAll("\\R", " | "));
         wrappedFeedbackText.setText(feedbackText.getText());
-        Tooltip tooltip = new Tooltip(feedbackToUser);
-        resultDisplay.setTooltip(tooltip);
-        expandedResultDisplay.setTooltip(tooltip);
         expandedResultDisplay.setVvalue(0);
         updateDisplay();
     }

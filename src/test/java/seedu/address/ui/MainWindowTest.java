@@ -15,8 +15,11 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +38,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -82,21 +87,72 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
-    public void contactTooltips_matchCommandResultFontSize() throws Exception {
+    public void header_localClock_updatesDateAndTimeAcrossMidnight() throws Exception {
+        AtomicReference<Instant> now = new AtomicReference<>(Instant.parse("2026-12-31T15:59:00Z"));
+        CountDownLatch nextMinute = new CountDownLatch(1);
+        Clock clock = new Clock() {
+            @Override
+            public ZoneId getZone() {
+                return ZoneId.of("Asia/Singapore");
+            }
+
+            @Override
+            public Clock withZone(ZoneId zone) {
+                return Clock.fixed(now.get(), zone);
+            }
+
+            @Override
+            public Instant instant() {
+                return now.get();
+            }
+        };
+        runOnFxThread(() -> {
+            window.getPrimaryStage().hide();
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set, clock);
+            window.show();
+            root = window.getPrimaryStage().getScene().getRoot();
+            Label date = (Label) root.lookup("#headerDate");
+            Label time = (Label) root.lookup("#headerTime");
+            assertEquals("31  -  12", date.getText());
+            assertEquals("23  :  59", time.getText());
+            root.applyCss();
+            assertEquals(Color.web("#08b57b"), date.getTextFill());
+            assertEquals(Color.web("#94ef18"), time.getTextFill());
+            assertTrue(root.lookupAll(".menu-bar").isEmpty());
+            time.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue.equals("00  :  00")) {
+                    nextMinute.countDown();
+                }
+            });
+            now.set(Instant.parse("2026-12-31T16:00:00Z"));
+        });
+        assertTrue(nextMinute.await(10, TimeUnit.SECONDS), "The header should refresh without a command");
+        runOnFxThread(() -> {
+            assertEquals("01  -  01", ((Label) root.lookup("#headerDate")).getText());
+            assertEquals("00  :  00", ((Label) root.lookup("#headerTime")).getText());
+        });
+    }
+
+    @Test
+    public void helpShortcut_fromCommandInput_opensHelpWithoutMenu() throws Exception {
+        runOnFxThread(() -> {
+            input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
+                    false, false, false, false));
+            assertTrue(Window.getWindows().stream().filter(Stage.class::isInstance)
+                    .map(Stage.class::cast).anyMatch(stage -> stage.getTitle().equals("Help") && stage.isShowing()));
+        });
+    }
+
+    @Test
+    public void contactTooltips_useReadableFontSize() throws Exception {
         runOnFxThread(() -> {
             root.applyCss();
             enterCommand("view 1");
-            ScrollPane result = feedback();
-            Tooltip resultTooltip = result.getTooltip();
-            resultTooltip.show(result, 0, 0);
-            double expectedSize = resultTooltip.getFont().getSize();
-            resultTooltip.hide();
-
             for (String selector : List.of("#name", "#subjects")) {
                 Label label = (Label) root.lookup(selector);
                 Tooltip tooltip = label.getTooltip();
                 tooltip.show(label, 0, 0);
-                assertEquals(expectedSize, tooltip.getFont().getSize(), 0.001);
+                assertEquals(33.4, tooltip.getFont().getSize(), 0.001);
                 tooltip.hide();
             }
         });
@@ -429,7 +485,7 @@ public class MainWindowTest extends FxTestSupport {
             assertTrue(feedback().isVisible());
             assertFalse(root.lookup("#summary").isVisible());
             assertTrue(feedbackText().startsWith("Name: Alice Pauline | Phone:"));
-            assertTrue(feedback().getTooltip().getText().contains("\nPhone:"));
+            assertNull(feedback().getTooltip());
             assertEquals(ScrollPane.ScrollBarPolicy.AS_NEEDED, feedback().getVbarPolicy());
             assertEquals("", input.getText());
         });
@@ -444,7 +500,7 @@ public class MainWindowTest extends FxTestSupport {
             logic.model.setPerson(original, edited);
             enterCommand("view 1");
             assertTrue(feedbackText().contains("Tags: a-level, needs revision | Notes: Revise fractions & 中文!"));
-            assertTrue(feedback().getTooltip().getText().contains("\nTags: a-level, needs revision\nNotes:"));
+            assertNull(feedback().getTooltip());
         });
     }
 

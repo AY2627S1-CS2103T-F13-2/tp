@@ -45,6 +45,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 ## Features
 
+The header shows your computer's local date as `DD  -  MM` and its time as `HH  :  MM`
+in 24-hour format, updating automatically. Command results use one line when they fit;
+longer results wrap into a two-line display. Scroll vertically to read any remaining
+text. Result text has no hover tooltip.
+
 <box type="info" seamless>
 
 **Notes about the command format:**<br>
@@ -80,7 +85,7 @@ Opens a help window listing the command formats. Scroll to see every format,
 and hover over a row to read its full text in a tooltip.
 Select the blue `here` link to open the full user guide in your default browser.
 Close the help window with its pixel close button or press Escape.
-You can also open help through **Help > Help** or **F1**.
+You can also open help through **F1**.
 
 Format: `help`
 
@@ -578,7 +583,7 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 ## Known issues
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+2. **If you minimize the Help Window** and then run the `help` command (or use the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 3. **Data created before the student-profile schema change is not compatible.** Delete the old address-book JSON file before starting this version of TuteeDex.
 
 --------------------------------------------------------------------------------------------------------------------

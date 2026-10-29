@@ -75,12 +75,12 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 `MainWindow` assembles the TuteeDex interface:
 
-* The header contains the application title and the File and Help menus.
-* `ResultDisplay` shows either the TOTAL/PAID summary or command feedback. Feedback appears on a horizontally scrollable line, with line breaks replaced by ` | `; a tooltip preserves the original message.
+* The header contains the application title, the local date (`DD  -  MM`), and the local 24-hour time (`HH  :  MM`). A JavaFX `Timeline` refreshes the clock every second while the main window is shown and stops when it is hidden. The clock can be supplied in tests.
+* `ResultDisplay` shows either the TOTAL/PAID summary or command feedback, with line breaks replaced by ` | `. Feedback that exceeds the normal display width switches to a wrapping two-line display, with vertical scrolling for additional text. Resizing re-evaluates the available width. Result displays have no tooltip.
 * `PersonListPanel` displays the filtered `ObservableList<Person>` obtained from `Logic`. Its custom `PersonListViewCell` creates a `PersonCard` for each non-empty cell, so changes to the observable list update the displayed students.
 * `PersonCard` shows a three-digit, zero-padded list index, the student's name, and subjects. Long names and subject text are abbreviated; tooltips expose the full profile and subjects, and accessible text includes the profile details.
 * `CommandBox` accepts commands at the bottom of the window. The FIND button calls `prepareFind()`, which inserts `find ` only when the input is blank, then focuses the input and moves the caret to its end without executing a command.
-* The exit button and File > Exit close the application window. Help is available through the Help menu and F1, using a `HelpWindow` created with `MainWindow` and reused when requested.
+* The exit button and `exit` command close the application window. Help is available through the `help` command and F1, using a `HelpWindow` created with `MainWindow` and reused when requested.
 
 `MainWindow`, `CommandBox`, `ResultDisplay`, `PersonListPanel`, `PersonCard`, and `HelpWindow` inherit from the abstract `UiPart<T>` class. `UiPart` loads an FXML layout, sets the controller, and exposes the root JavaFX object through `getRoot()`. `StatusBarFooter` and its FXML file remain in the source tree, but the current `MainWindow` does not instantiate or display a status bar; it is omitted from the diagram above.
 
@@ -105,7 +105,7 @@ The following sequence diagram shows submission of a successful `list` command a
 
 1. When Enter is pressed, `CommandBox` ignores an empty string; otherwise, it passes the input to its `CommandExecutor`. `MainWindow` supplies this callback as `this::executeCommand`, keeping `CommandBox` independent of `Logic`.
 1. `MainWindow` calls `Logic.execute(commandText)` and displays the returned `CommandResult` feedback. For a successful `list` command, it then replaces that feedback with the TOTAL/PAID summary. `showListSummary()` reads the filtered list: TOTAL is its size, and PAID counts students whose outstanding amount equals `OutstandingAmount.ZERO`. The summary is calculated at startup and after successful `list` commands; it is not continuously bound to list changes.
-1. `MainWindow` also checks the result's help and exit flags. Help opens or focuses the existing `HelpWindow`; exit saves the current window size and position through `Logic.setGuiSettings()`, then hides the help and main windows. The menu and exit button use the same handlers.
+1. `MainWindow` also checks the result's help and exit flags. Help opens or focuses the existing `HelpWindow`; exit saves the current window size and position through `Logic.setGuiSettings()`, then hides the help and main windows. The exit button uses the same exit handler, and F1 uses the help handler.
 1. When execution succeeds, `CommandBox` clears the input. If `Logic` throws a `CommandException` or `ParseException`, `MainWindow` displays the exception message and rethrows it. `CommandBox` retains the input and applies its error style, which is removed when the text next changes.
 
 The sequence diagram omits error handling, help/exit flag handling, and the observable list's JavaFX cell updates for clarity.
@@ -953,7 +953,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 ### Viewing help
 
-1. Run `help`, or use **Help > Help** or **F1**. Expect the command-format window.
+1. Run `help`, or use **F1**. Expect the command-format window.
 2. Scroll to the last command and hover over a long format such as `add`.
    Expect all commands to be reachable and the full format to appear in a tooltip.
 3. Select the blue `here` link. Expect the online User Guide in the default browser.
@@ -962,6 +962,16 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 5. Resize help to its minimum size. Expect scrolling and the close button to remain usable.
 6. Select the matching pixel close button in the main window. Expect the application
    to exit and retain its window size and position on the next launch.
+
+### Header clock and command results
+
+1. Compare the header date and time with the computer's local clock. Expect a numeric
+   day/month and 24-hour time, with two spaces around the hyphen and colon.
+   Leave the app open across a minute boundary; the time should update without a command.
+2. Run `view 1` for an existing student. Expect long feedback to wrap into a two-line
+   display; scroll vertically to read the remainder. Hovering must not cover it with a tooltip.
+3. Resize the window. Feedback should switch between one line and the wrapping display
+   according to the available width. Run `list` to restore the TOTAL/PAID summary.
 
 ### Sorting students
 
