@@ -85,7 +85,7 @@ You can also open help through **Help > Help** or **F1**.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a student: `add`
 
 Adds a student profile to TuteeDex.
 
@@ -154,7 +154,7 @@ Each contact card displays the student's index, name, and subjects. Long names a
 subjects are shortened to fit the compact card. Hover over a card to see the
 remaining profile details, or use `view INDEX` to display the complete profile.
 
-### Exporting contacts: `export`
+### Exporting students: `export`
 
 Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
 
@@ -205,8 +205,8 @@ Examples:
 
 Shows active student profiles, or filters active profiles by one or more subjects
 or tags. Archived students are not shown.
-Each card displays the contact's name, phone, address, start date, outstanding
-amount, subjects, tags, and notes.
+Each card shows the student's index, name, and subjects. Use `view INDEX` to see
+the full profile.
 
 Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`
 
@@ -240,10 +240,8 @@ Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list 
 * Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
-* `-summary` is optional: the GUI already shows the counts without it. For example,
-  `list -summary`, `list -summary s/Maths`, or `list -summary t/A-Level`.
-  The flag must be entered exactly as shown.
-* Add `-summary` to display total and paid counts for the displayed students, for example
+* `-summary` is optional, since the GUI already shows the counts. Add it to display total and
+  paid counts for the displayed students in the result box, for example
   `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
   The flag must be entered exactly as shown, at most once, before the first filter,
   between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
@@ -350,7 +348,7 @@ Updates one or more fields of an existing student profile in TuteeDex.
 
 Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`
 
-* Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
+* Edits the student at the specified `INDEX`. The index refers to the index number shown in the displayed student list. The index **must be a positive integer** 1, 2, 3, ...
 * After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
@@ -434,7 +432,7 @@ Format: `charge INDEX AMOUNT`
 
 Example: `charge 1 50` adds SGD 50.00 to the first displayed student's balance.
 
-### Locating persons by name: `find`
+### Locating students by name: `find`
 
 Finds active students whose names contain any of the given keywords. Archived
 students are excluded, even when their names match. Searching does not change
@@ -447,7 +445,7 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search considers only names.
 * A keyword matches the start of any word in the name; for example, `Han` matches `Hans Gruber` and `Gru`
   matches it too, but `ans` does not.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Students matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
 * Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
 * No matches produce an empty list with `No contacts match the specified name keywords.`.
 * Each search replaces the previous filter. Plain `list` restores all active students.
@@ -455,10 +453,9 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 
 Examples:
 * `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+* `find alex david` returns `Alex Yeoh` and `David Li` from the sample data.
 
-### Deleting a contact: `delete`
+### Deleting a student: `delete`
 
 Permanently deletes the specified student contact from TuteeDex immediately, without a confirmation prompt. The displayed contact list refreshes and the remaining contacts are renumbered.
 
@@ -470,8 +467,8 @@ Format: `delete INDEX`
 * If `INDEX` is invalid, the app explains that it must be a positive integer. If it is larger than the displayed list, the app reports that no matching contact was found.
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd contact in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st contact in the results of the `find` command.
+* `list` followed by `delete 2` deletes the 2nd student in the displayed list.
+* `find Betsy` followed by `delete 1` deletes the 1st student in the results of the `find` command.
 
 ### Archiving a student: `archive`
 
@@ -505,7 +502,7 @@ Format: `unarchive INDEX`
 Example:
 * `list -archived` followed by `unarchive 1` restores the 1st archived student to the active student list.
 
-### Clearing all entries: `clear`
+### Clearing all students: `clear`
 
 Deletes every student, including archived students. There is no undo, so TuteeDex asks you to confirm first.
 
@@ -587,17 +584,19 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
-**Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
-**View**   | `view INDEX`<br> e.g., `view 1`
-**Clear**  | `clear`, then `clear confirm`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
-**Paid**   | `paid INDEX [AMOUNT]`<br> e.g., `paid 1 20.50`
-**Charge** | `charge INDEX AMOUNT`<br> e.g., `charge 1 50`
-**Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
-**Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
-**Archive** | `archive INDEX`<br> e.g., `archive 2`
+**Help**      | `help`
+**Add**       | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
+**View**      | `view INDEX`<br> e.g., `view 1`
+**Export**    | `export`
+**Import**    | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
+**List**      | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
+**Sort**      | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
+**Edit**      | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
+**Paid**      | `paid INDEX [AMOUNT]`<br> e.g., `paid 1 20.50`
+**Charge**    | `charge INDEX AMOUNT`<br> e.g., `charge 1 50`
+**Find**      | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Delete**    | `delete INDEX`<br> e.g., `delete 3`
+**Archive**   | `archive INDEX`<br> e.g., `archive 2`
 **Unarchive** | `unarchive INDEX`<br> e.g., `list -archived`, then `unarchive 1`
-**Help**   | `help`
+**Clear**     | `clear`, then `clear confirm`
+**Exit**      | `exit`
