@@ -20,6 +20,7 @@ import seedu.address.model.person.LessonSlot;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.OutstandingAmount;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.StartDate;
 import seedu.address.model.person.Subject;
 import seedu.address.model.tag.Tag;
 
@@ -39,6 +40,23 @@ public class ParserUtilTest {
     private static final String VALID_OUTSTANDING_AMOUNT = "20.50";
 
     private static final String WHITESPACE = " \t\r\n";
+
+    @Test
+    public void parseStartDate_invalidCalendarDate_throwsParseException() {
+        for (String invalid : List.of("31-Feb", "30-Feb", "31-Apr", "00-Jan", "32-Jan", "99-Abc", "10-Abc",
+                "1-Aug", "10-Aug-2026", "")) {
+            assertThrows(ParseException.class, StartDate.MESSAGE_CONSTRAINTS, () ->
+                    ParserUtil.parseStartDate(invalid));
+        }
+    }
+
+    @Test
+    public void parseStartDate_validCalendarDate_preservesCaseAndTrimsWhitespace() throws Exception {
+        for (String valid : List.of("01-Jan", "29-Feb", "28-Feb", "30-Apr", "31-Dec", "10-aUG")) {
+            assertEquals(new StartDate(valid), ParserUtil.parseStartDate(" " + valid + " "));
+        }
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseStartDate(null));
+    }
 
     @Test
     public void parseSubjectName_trimsAndCollapsesOrdinarySpaces() throws Exception {

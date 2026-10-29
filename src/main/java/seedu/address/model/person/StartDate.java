@@ -9,7 +9,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class StartDate {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Start date must be in the format DD-MMM, where DD are numbers and MMM are texts.(E.g. 19-Sep)";
+            "Start date must be a valid calendar date in DD-MMM format (e.g. 19-Sep). 29-Feb is allowed.";
     public static final String VALIDATION_REGEX = "\\d{2}-[A-Za-z]{3}";
 
     public final String value;
@@ -21,6 +21,7 @@ public class StartDate {
         value = startDate;
     }
 
+    /** Checks the stored format; parsers additionally validate calendar dates for new input. */
     public static boolean isValidStartDate(String test) {
         return test.matches(VALIDATION_REGEX);
     }

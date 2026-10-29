@@ -128,6 +128,28 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_impossibleStartDate_failure() {
+        for (String invalid : new String[] {"31-Feb", "31-Apr", "00-Jan", "99-Abc"}) {
+            assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
+                    + " d/" + invalid + SUBJECT, StartDate.MESSAGE_CONSTRAINTS);
+        }
+    }
+
+    @Test
+    public void parse_leapDay_success() {
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + " d/29-Feb" + SUBJECT,
+                new AddCommand(new PersonBuilder(BOB).withStartDate("29-Feb").withSubjects("Maths").build()));
+    }
+
+    @Test
+    public void parse_invalidLessonTime_failure() {
+        for (String invalid : new String[] {"24:00", "12:60", "-1:00", "9:00"}) {
+            assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB + START_DATE_DESC_BOB
+                    + " s/Maths day/MON time/" + invalid, ParserUtil.MESSAGE_INVALID_LESSON_TIME);
+        }
+    }
+
+    @Test
     public void parse_repeatedStartDate_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                         + START_DATE_DESC_BOB + START_DATE_DESC_BOB + SUBJECT,
