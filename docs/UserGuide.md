@@ -242,9 +242,10 @@ Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list 
 * Blank or invalid values, uppercase or unknown prefixes, and unprefixed arguments
   such as `list 3` are rejected. Invalid input leaves the displayed list and stored
   profiles unchanged. Listing never changes profile fields.
-* `-summary` is optional, since the GUI already shows the counts. Add it to display total and
-  paid counts for the displayed students in the result box, for example
-  `list -summary`, `list s/Maths -summary`, or `list t/A-Level -summary t/Needs revision`.
+* `-summary` is optional. The GUI shows the TOTAL and PAID counts after every successful `list`,
+  so adding `-summary` has no extra visible effect. It only changes the command's logged feedback.
+  For example, `list -summary`, `list s/Maths -summary`, and `list t/A-Level -summary t/Needs revision`
+  are all accepted.
   The flag must be entered exactly as shown, at most once, before the first filter,
   between filters, or after the last filter. It cannot be combined with `-archived` or `-subjects`.
   Text such as `t/Pre-summary` or `t/Needs -summary revision` remains part of the tag value;
@@ -255,7 +256,7 @@ Examples:
 * `list t/A-Level t/Needs revision` shows students having either tag.
 * `list s/Maths s/Physics t/A-Level t/Needs revision` shows students taking Maths or Physics
   who also have A-Level or Needs revision.
-* `list -summary t/A-Level s/Maths` summarizes active students matching both categories.
+* `list -summary t/A-Level s/Maths` shows active students matching both categories, the same as without `-summary`.
 * `find Nobody` followed by `list t/A-Level` still finds matching students in the full address book.
 * `list` shows every active student again.
 
