@@ -408,7 +408,7 @@ public class MainWindowTest extends FxTestSupport {
             assertFalse(root.lookup("#summary").isVisible());
             assertTrue(feedbackText().startsWith("Name: Alice Pauline | Phone:"));
             assertTrue(feedback().getTooltip().getText().contains("\nPhone:"));
-            assertEquals(ScrollPane.ScrollBarPolicy.NEVER, feedback().getVbarPolicy());
+            assertEquals(ScrollPane.ScrollBarPolicy.AS_NEEDED, feedback().getVbarPolicy());
             assertEquals("", input.getText());
         });
     }
@@ -703,7 +703,8 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     private ScrollPane feedback() {
-        return (ScrollPane) root.lookup("#resultDisplay");
+        ScrollPane expanded = (ScrollPane) root.lookup("#expandedResultDisplay");
+        return expanded.isVisible() ? expanded : (ScrollPane) root.lookup("#resultDisplay");
     }
 
     private String feedbackText() {
