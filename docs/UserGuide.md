@@ -35,7 +35,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
    * `add n/John Doe p/98765432 a/John street, block 123, #01-01 d/10-Aug s/Maths day/MON time/15:30 o/20` : Adds a student profile named `John Doe` to TuteeDex.
 
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
+   * `delete 3` then `delete confirm` : Previews and deletes the 3rd contact shown in the current list.
 
    * `clear confirm` : Deletes all contacts.
 
@@ -465,18 +465,21 @@ Examples:
 
 ### Deleting a student: `delete`
 
-Permanently deletes the specified student contact from TuteeDex immediately, without a confirmation prompt. The displayed contact list refreshes and the remaining contacts are renumbered.
+Previews the specified student before permanent deletion. Check the displayed details, then type `delete confirm` as your next command. There is no undo. After confirmation, the contact list refreshes and the remaining contacts are renumbered.
 
-Format: `delete INDEX`
+Format: `delete INDEX`, then `delete confirm`
 
 * `INDEX` is the one-based position in the currently displayed contact list, including search results.
-* `INDEX` must be one positive integer, such as `1`, `2`, or `3`; no other parameters are accepted.
+* `INDEX` must be one positive integer, such as `1`, `2`, or `3`.
+* The preview does not change or save student data. Any other command, including an invalid command, cancels it. For example, use `list` to cancel. After a filter or sort change, run `delete INDEX` again to check the target.
+* `delete confirm` requires a preview immediately beforehand; `delete INDEX confirm` is rejected. A preview is not retained after restart.
+* If saving a confirmed deletion fails, the student is restored in memory and an error is shown. Preview and confirm again to retry.
 * A successful command displays `Deleted person: <contact details>`.
 * If `INDEX` is invalid, the app explains that it must be a positive integer. If it is larger than the displayed list, the app reports that no matching contact was found.
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd student in the displayed list.
-* `find Betsy` followed by `delete 1` deletes the 1st student in the results of the `find` command.
+* `list` followed by `delete 2` and `delete confirm` deletes the 2nd student in the displayed list.
+* `find Betsy` followed by `delete 1` and `delete confirm` deletes the 1st student in the results of the `find` command.
 
 ### Archiving a student: `archive`
 
@@ -542,9 +545,9 @@ first.
 * `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
 * `sort reset` clears the remembered order, so TuteeDex opens in the default order.
 * `delete`, and an `edit` that changes nothing, keep the students you were looking at, so TuteeDex still opens on
-  that view. For example, after `find Alex` and `delete 1`, TuteeDex opens on `find Alex` again.
+  that view. For example, after `find Alex`, `delete 1`, and `delete confirm`, TuteeDex opens on `find Alex` again.
 * Commands that switch back to the normal list, such as `add`, `edit`, `archive` or `import`, make TuteeDex open on
-  the normal list next time. So does a `delete` from the subject groups, which shows the normal list afterwards.
+  the normal list next time. So does a confirmed `delete` from the subject groups, which shows the normal list afterwards.
   The sort order is kept.
 * When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
   Type `list` to see all students.
@@ -601,7 +604,7 @@ Action     | Format, Examples
 **Paid**      | `paid INDEX [AMOUNT]`<br> e.g., `paid 1 20.50`
 **Charge**    | `charge INDEX AMOUNT`<br> e.g., `charge 1 50`
 **Find**      | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**Delete**    | `delete INDEX`<br> e.g., `delete 3`
+**Delete**    | `delete INDEX`, then `delete confirm`<br> e.g., `delete 3`, then `delete confirm`
 **Archive**   | `archive INDEX`<br> e.g., `archive 2`
 **Unarchive** | `unarchive INDEX`<br> e.g., `list -archived`, then `unarchive 1`
 **Clear**     | `clear`, then `clear confirm`

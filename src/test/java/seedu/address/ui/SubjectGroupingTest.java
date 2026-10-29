@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.AddressBook;
@@ -113,7 +114,10 @@ public class SubjectGroupingTest {
         AddressBookParser parser = new AddressBookParser();
         assertTrue(parser.parseCommand("view " + physicsEntry.displayedIndex()).execute(model)
                 .getFeedbackToUser().startsWith("Name: Zed Student\n"));
-        parser.parseCommand("delete " + physicsEntry.displayedIndex()).execute(model);
+        DeleteCommand deleteCommand =
+                (DeleteCommand) parser.parseCommand("delete " + physicsEntry.displayedIndex());
+        deleteCommand.execute(model);
+        deleteCommand.confirmed(model).execute(model);
         assertEquals(List.of(archived, subjectless, alice), model.getAddressBook().getPersonList());
     }
 

@@ -69,6 +69,80 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_deletePreviewAndCancellation_doNotSave() throws Exception {
+        model.addPerson(AMY);
+        logic.execute("delete 1");
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        logic.execute("list");
+        assertThrows(CommandException.class, DeleteCommand.MESSAGE_NO_PREVIEW, () -> logic.execute("delete confirm"));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_interveningCommands_cancelDeletePreview() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        for (String command : List.of("sort n/desc", "find Bob", "list -archived", "list",
+                "delete 99", "unknown", "delete 1 confirm", "delete confirm extra")) {
+            logic.execute("list");
+            logic.execute("delete 1");
+            try {
+                logic.execute(command);
+            } catch (CommandException | ParseException expected) {
+                // Failed commands also cancel a pending deletion.
+            }
+            assertThrows(CommandException.class, DeleteCommand.MESSAGE_NO_PREVIEW, () ->
+                    logic.execute("delete confirm"));
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+        }
+    }
+
+    @Test
+    public void execute_confirmDelete_persistsAndCannotRepeatOrSurviveRestart() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        storage.saveAddressBook(model.getAddressBook());
+        String savedBefore = Files.readString(storage.getAddressBookFilePath());
+        logic.execute("delete 1");
+        assertEquals(savedBefore, Files.readString(storage.getAddressBookFilePath()));
+        Logic restartedLogic = new LogicManager(model, storage);
+        assertThrows(CommandException.class, () -> restartedLogic.execute("delete confirm"));
+        assertEquals(List.of(AMY, BOB), storage.readAddressBook().orElseThrow().getPersonList());
+        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(AMY)),
+                logic.execute("delete confirm").getFeedbackToUser());
+        assertEquals(List.of(BOB), storage.readAddressBook().orElseThrow().getPersonList());
+        assertCommandException("delete confirm", DeleteCommand.MESSAGE_NO_PREVIEW);
+    }
+
+    @Test
+    public void execute_confirmDeleteSaveFailure_restoresStudentAndAllowsRetry() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        for (IOException failure : List.of(DUMMY_IO_EXCEPTION, DUMMY_AD_EXCEPTION)) {
+            JsonAddressBookStorage failingStorage = new JsonAddressBookStorage(storage.getAddressBookFilePath()) {
+                @Override
+                public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                    throw failure;
+                }
+            };
+            Logic failingLogic = new LogicManager(model, new StorageManager(failingStorage,
+                    new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+            failingLogic.execute("find Amy");
+            failingLogic.execute("delete 1");
+            assertThrows(CommandException.class, () -> failingLogic.execute("delete confirm"));
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+            assertEquals(List.of(AMY), model.getFilteredPersonList());
+            assertEquals("find Amy", model.getLastViewCommand());
+            assertThrows(CommandException.class, DeleteCommand.MESSAGE_NO_PREVIEW, () ->
+                    failingLogic.execute("delete confirm"));
+        }
+        logic.execute("delete 1");
+        logic.execute("delete confirm");
+        assertEquals(List.of(BOB), storage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
         assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
@@ -109,6 +183,7 @@ public class LogicManagerTest {
         model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").build());
         logic.execute("list -subjects");
         logic.execute("delete 1");
+        logic.execute("delete confirm");
         assertEquals("", model.getLastViewCommand());
     }
 
@@ -119,6 +194,7 @@ public class LogicManagerTest {
         logic.execute("find Amy");
         logic.execute("edit 1 n/" + VALID_NAME_AMY);
         logic.execute("delete 1");
+        logic.execute("delete confirm");
         assertEquals("find Amy", model.getLastViewCommand());
     }
 
@@ -128,6 +204,7 @@ public class LogicManagerTest {
         model.addPerson(BOB);
         logic.execute("find Amy");
         logic.execute("delete 1");
+        logic.execute("delete confirm");
         List<Person> shownBeforeClosing = List.copyOf(model.getFilteredPersonList());
 
         // Reopen with the same data and preferences, then run the saved view again as MainWindow does on startup.
@@ -258,6 +335,7 @@ public class LogicManagerTest {
         assertEquals("Name: Cara Tutor", logic.execute("view 2").getFeedbackToUser().split("\\n")[0]);
 
         logic.execute("delete 2");
+        logic.execute("delete confirm");
         assertEquals("Listed 2 contacts.", logic.execute("list").getFeedbackToUser());
         assertEquals(List.of("Anna Tutor", "Ben Tutor"), logic.getFilteredPersonList().stream()
                 .map(person -> person.getName().toString()).toList());

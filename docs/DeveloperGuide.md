@@ -605,8 +605,10 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. Tutor requests to list all students or search for a student by name.
 2. TuteeDex displays the matching students.
 3. Tutor requests to delete a student using the index shown in the displayed list.
-4. TuteeDex permanently deletes the selected profile without a confirmation prompt.
-5. TuteeDex refreshes and re-numbers the displayed list, then confirms the deletion.
+4. TuteeDex previews the selected student's details without changing or saving data.
+5. Tutor enters `delete confirm` immediately next. Any other command cancels the pending deletion.
+6. TuteeDex deletes exactly the previewed profile, saves, refreshes and re-numbers the displayed list.
+   If saving fails, the profile is restored and an error is shown.
 
     Use case ends.
 
@@ -679,7 +681,22 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all active students using the `list` command, with multiple students in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first student is deleted from the list. The status message shows the deleted student's details.
+      Expected: The first student's details and a confirmation prompt appear. The list and data file are unchanged.
+
+   1. Test case: `delete confirm` immediately after the preview<br>
+      Expected: Only the previewed student is deleted. Restart and check that the deletion persisted.
+
+   1. Test case: `delete 1`, then `sort n/desc`, then `delete confirm`<br>
+      Expected: Confirmation is rejected; no student is deleted. Repeat with `find`, `list -archived`,
+      `list`, an invalid command, or `delete 1 confirm` between preview and confirmation.
+
+   1. Test case: Preview and confirm from a filtered, sorted, or archived list<br>
+      Expected: The preview identifies the student at the displayed index; confirmation deletes only that student.
+      Restart after a preview alone and try `delete confirm`: it is rejected.
+
+   1. Test case: Make the data path unwritable after a preview, then `delete confirm`<br>
+      Expected: A save error appears and the student remains. Restore write access, preview and confirm again;
+      restart and check that only that student was deleted.
 
    1. Test case: `delete 0`<br>
       Expected: No student is deleted. The status message shows error details.
@@ -990,7 +1007,7 @@ Use a fresh copy of the app in an empty folder.
    Expected: The subject groups are shown, with the largest balances first in each group.
 7. Run `sort reset`, then `exit`. Open TuteeDex again.<br>
    Expected: Students are in the default order.
-8. Run `find` with the name of one student, then `delete 1`, then `exit`. Open TuteeDex again.<br>
+8. Run `find` with the name of one student, then `delete 1`, then `delete confirm`, then `exit`. Open TuteeDex again.<br>
    Expected: No students are listed, and the result box says this is the view from when TuteeDex was last closed.
 
 ### Saving data
@@ -1012,3 +1029,13 @@ Use a disposable copy of the built JAR in an empty writable folder. Close the ap
 
 These checks stop before executing commands that save the address book; such commands can overwrite the data file.
 Keep a backup before editing or attempting to recover real student data.
+
+### Single-student deletion confirmation
+
+`DeleteCommand` previews with `ListPresentation.UNCHANGED` and does not require a save.
+After a successful preview, `LogicManager` holds a confirmation bound to the exact immutable `Person`.
+Only an immediately following `delete confirm` uses it. Every command attempt clears the pending
+confirmation before parsing, so filter/sort changes, malformed input, and failures cancel it.
+Pending confirmations exist only in memory. Confirmed deletion uses the normal save path;
+`LogicManager` restores the address book snapshot on a save error and updates the saved view only
+on success. This rollback is scoped to deletion; general transactional saving is tracked separately.

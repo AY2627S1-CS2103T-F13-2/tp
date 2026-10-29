@@ -12,12 +12,14 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.ListPresentation;
+import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 import seedu.address.model.sort.LessonRow;
@@ -38,6 +40,7 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
+    private DeleteCommand pendingDelete;
     private boolean isShowingSubjectGroups = false;
 
     /**
@@ -53,20 +56,39 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
+        DeleteCommand previousPreview = pendingDelete;
+        pendingDelete = null;
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        if (command instanceof DeleteCommand deleteCommand && deleteCommand.isConfirmation()) {
+            if (previousPreview == null) {
+                throw new CommandException(DeleteCommand.MESSAGE_NO_PREVIEW);
+            }
+            command = previousPreview;
+        }
+        AddressBook beforeDelete = command instanceof DeleteCommand && command.requiresAddressBookSave()
+                ? new AddressBook(model.getAddressBook()) : null;
         Predicate<? super Person> filterBeforeCommand = model.getFilteredPersonListPredicate();
         model.beginCommand();
         try {
             commandResult = command.execute(model);
+            if (command instanceof DeleteCommand deleteCommand && !deleteCommand.isConfirmation()) {
+                pendingDelete = deleteCommand.confirmed(model);
+            }
         } finally {
             model.endCommand();
         }
-        saveLastView(command, commandText, commandResult, filterBeforeCommand);
-
         if (command.requiresAddressBookSave()) {
-            saveAddressBook();
+            try {
+                saveAddressBook();
+            } catch (CommandException e) {
+                if (beforeDelete != null) {
+                    model.setAddressBook(beforeDelete);
+                }
+                throw e;
+            }
         }
+        saveLastView(command, commandText, commandResult, filterBeforeCommand);
         return commandResult;
     }
 
