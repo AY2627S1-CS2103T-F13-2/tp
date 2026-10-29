@@ -20,9 +20,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103T-F13-2/tp/releases).
 
-1. Copy the file to the folder you want to use as the _home folder_ for TuteeDex.
+1. Copy the file to the folder you want to use as the _home folder_ for TuteeDex.<br>
+   Use a folder where you can create files, such as one inside your Documents folder. TuteeDex saves its data there and does not work properly in a write-protected folder.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar TuteeDex.jar`.<br>
+1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar "TuteeDex.jar"`.<br>
+   Use this command rather than double-clicking the JAR file, which might not work on some computers.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
