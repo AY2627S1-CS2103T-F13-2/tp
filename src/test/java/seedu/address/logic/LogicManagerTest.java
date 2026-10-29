@@ -382,13 +382,46 @@ public class LogicManagerTest {
     @Test
     public void execute_storageThrowsIoException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_IO_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage())
+                + LogicManager.MESSAGE_CHANGES_UNDONE);
     }
 
     @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage())
+                + LogicManager.MESSAGE_CHANGES_UNDONE);
+    }
+
+    @Test
+    public void execute_retryAfterFailedSave_chargesOnce() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withOutstandingAmount("10").build());
+        boolean[] isSaveFailing = {true};
+        logic = new LogicManager(model, storageWithSave(addressBook -> {
+            if (isSaveFailing[0]) {
+                throw DUMMY_IO_EXCEPTION;
+            }
+        }));
+
+        assertThrows(CommandException.class, () -> logic.execute("charge 1 5"));
+        assertEquals(new OutstandingAmount("10"), model.getFilteredPersonList().get(0).getOutstandingAmount());
+
+        isSaveFailing[0] = false;
+        logic.execute("charge 1 5");
+        assertEquals(new OutstandingAmount("15"), model.getFilteredPersonList().get(0).getOutstandingAmount());
+    }
+
+    @Test
+    public void execute_commandsThatOnlyShowInformation_doNotSave() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").build());
+        logic = new LogicManager(model, storageWithSave(addressBook -> {
+            throw DUMMY_IO_EXCEPTION;
+        }));
+
+        // Saving would fail, and would overwrite a data file that could not be loaded
+        logic.execute("help");
+        logic.execute("view 1");
+        logic.execute("exit");
     }
 
     @Test
@@ -449,6 +482,23 @@ public class LogicManagerTest {
         assertEquals(expectedModel, model);
     }
 
+    /** Functional interface for a stubbed save that may throw. */
+    private interface SaveAction {
+        void save(ReadOnlyAddressBook addressBook) throws IOException;
+    }
+
+    private StorageManager storageWithSave(SaveAction saveAction) {
+        JsonAddressBookStorage addressBookStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("StubAddressBook.json")) {
+                    @Override
+                    public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                        saveAction.save(addressBook);
+                    }
+                };
+        return new StorageManager(addressBookStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("StubUserPrefs.json")));
+    }
+
     /**
      * Tests the Logic component's handling of an {@code IOException} thrown by the Storage component.
      *
@@ -472,12 +522,9 @@ public class LogicManagerTest {
 
         logic = new LogicManager(model, storage);
 
-        // Triggers the saveAddressBook method by executing an add command
+        // Triggers the saveAddressBook method by executing an add command, which is undone when saving fails
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
                 + ADDRESS_DESC_AMY + START_DATE_DESC_AMY + " s/Maths day/MON time/09:00";
-        Person expectedPerson = new PersonBuilder(AMY).withSubjects("Maths").build();
-        ModelManager expectedModel = new ModelManager();
-        expectedModel.addPerson(expectedPerson);
-        assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
+        assertCommandFailure(addCommand, CommandException.class, expectedMessage, new ModelManager());
     }
 }

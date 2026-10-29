@@ -60,6 +60,12 @@ public class ExportCommand extends Command {
                 CommandResult.ListPresentation.UNCHANGED);
     }
 
+    // Only writes the CSV file, so it must not overwrite a data file that failed to load.
+    @Override
+    public boolean requiresAddressBookSave() {
+        return false;
+    }
+
     @Override
     public boolean equals(Object other) {
         return other instanceof ExportCommand;

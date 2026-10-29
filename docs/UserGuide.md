@@ -530,7 +530,9 @@ Format: `exit`
 
 ### Saving the data
 
-TuteeDex automatically saves data after every command. You do not need to save manually.
+TuteeDex automatically saves your students after every command that changes them. You do not need to save manually.
+If a change cannot be saved, for example because the data file is read-only, TuteeDex shows an error and undoes
+that change, so you can fix the problem and try the same command again.
 
 ### Reopening where you left off
 
@@ -567,7 +569,7 @@ student entry is invalid and triggers the loading recovery described below.
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, TuteeDex starts with an empty address book at the next run. The invalid file remains on disk until you run a command (TuteeDex saves after every command). Still, we recommend backing up the file before editing it.<br>
+If your changes make the data file invalid, TuteeDex starts with an empty address book at the next run. The invalid file stays on disk until you run a command that changes your students, such as `add` or `edit`. Commands that only show information, such as `list`, `find`, `view`, `help` and `export`, leave it untouched. Still, we recommend backing up the file before editing it.<br>
 Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 

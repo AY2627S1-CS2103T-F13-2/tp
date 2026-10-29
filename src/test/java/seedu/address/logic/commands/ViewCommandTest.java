@@ -92,6 +92,11 @@ public class ViewCommandTest {
         assertFalse(command.equals(new DeleteCommand(INDEX_FIRST_PERSON)));
     }
 
+    @Test
+    public void requiresAddressBookSave_returnsFalse() {
+        assertFalse(new ViewCommand(INDEX_FIRST_PERSON).requiresAddressBookSave());
+    }
+
     private CommandResult expectedDetails(Person person) {
         return new CommandResult("Name: " + person.getName() + "\nPhone: " + person.getPhone()
                 + "\nAddress: " + person.getAddress()
