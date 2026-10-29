@@ -30,6 +30,42 @@ public class CsvExporterTest {
     }
 
     @Test
+    public void format_multilineNotes_quotesLineFeedsAndCarriageReturns() throws Exception {
+        String notes = "Line one\n\nLine three\r\nLine five\rLine six";
+        Person person = new PersonBuilder().withNotes(notes).build();
+
+        List<List<String>> rows = CsvReader.read(CsvExporter.format(List.of(person)));
+
+        assertEquals(2, rows.size());
+        assertEquals(notes, rows.get(1).get(7));
+    }
+
+    @Test
+    public void format_notesWithEachCsvDelimiter_quotesEverySpecialValue() throws Exception {
+        List<String> notesValues = List.of("comma,value", "quote\"value", "line\nvalue", "carriage\rvalue",
+                "windows\r\nline");
+        List<Person> persons = notesValues.stream().map(notes -> new PersonBuilder().withNotes(notes).build())
+                .toList();
+
+        List<List<String>> rows = CsvReader.read(CsvExporter.format(persons));
+
+        assertEquals(notesValues.size() + 1, rows.size());
+        for (int i = 0; i < notesValues.size(); i++) {
+            assertEquals(notesValues.get(i), rows.get(i + 1).get(7));
+        }
+    }
+
+    @Test
+    public void format_plainFields_doesNotQuoteUnnecessaryFields() throws Exception {
+        String notes = "Plain note";
+        Person person = new PersonBuilder().withNotes(notes).build();
+
+        List<List<String>> rows = CsvReader.read(CsvExporter.format(List.of(person)));
+
+        assertEquals(notes, rows.get(1).get(7));
+    }
+
+    @Test
     public void format_emptyList_returnsHeaderOnly() {
         assertEquals("Name,Phone,Address,Start Date,Outstanding Amount,Subjects,Tags,Notes,Archived\n",
                 CsvExporter.format(List.of()));
