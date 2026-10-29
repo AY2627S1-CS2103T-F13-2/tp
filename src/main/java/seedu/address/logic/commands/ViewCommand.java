@@ -46,7 +46,7 @@ public class ViewCommand extends Command {
                 personToDisplay.getName(), personToDisplay.getPhone(), personToDisplay.getAddress(),
                 personToDisplay.getStartDate(), personToDisplay.getOutstandingAmount().toCurrencyString(),
                 Messages.formatSubjects(personToDisplay), Messages.formatTags(personToDisplay),
-                personToDisplay.getNotes()), false, false, CommandResult.ListPresentation.UNCHANGED);
+                personToDisplay.getNotes()), CommandResult.ListPresentation.UNCHANGED);
     }
 
     @Override

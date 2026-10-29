@@ -275,9 +275,13 @@ If no active student has a subject, the group area shows `No subjects found for 
 the banner still reports the active-student counts.
 
 `view`, `help`, and `export` preserve the current grouping and scroll position. Failed
-commands also leave the displayed list unchanged. Find and other List options switch
-back to the normal contact list for their results. Applying or resetting `sort` keeps the
-current grouped or ungrouped presentation; bare `sort` also preserves scroll position.
+commands also leave the displayed list unchanged. Commands that change student records
+switch back to the normal contact list, as do successful `find` commands and all `list`
+options except `list -subjects`. This also applies when
+`edit` makes no changes or `import` only previews students or finds nothing new.
+`exit` closes the application.
+Applying or resetting `sort` keeps the current grouped or ungrouped presentation;
+bare `sort` also preserves scroll position.
 
 #### Listing archived students
 

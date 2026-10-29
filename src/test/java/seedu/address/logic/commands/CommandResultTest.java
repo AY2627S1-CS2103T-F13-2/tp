@@ -72,11 +72,23 @@ public class CommandResultTest {
         assertNotEquals(contacts, grouped);
         assertNotEquals(contacts, unchanged);
         assertNotEquals(grouped, unchanged);
-        assertTrue(grouped.isSubjectList());
-        assertFalse(unchanged.isSubjectList());
+        assertEquals(CommandResult.ListPresentation.SUBJECT_GROUPS, grouped.getListPresentation());
+        assertEquals(CommandResult.ListPresentation.UNCHANGED, unchanged.getListPresentation());
         CommandResult sameGrouped = new CommandResult("feedback", false, false,
                 CommandResult.ListPresentation.SUBJECT_GROUPS);
         assertEquals(grouped, sameGrouped);
         assertEquals(grouped.hashCode(), sameGrouped.hashCode());
+    }
+
+    @Test
+    public void constructor_presentationOnly_preservesModeWithoutHelpOrExit() {
+        for (CommandResult.ListPresentation presentation : CommandResult.ListPresentation.values()) {
+            CommandResult result = new CommandResult("feedback", presentation);
+            assertEquals("feedback", result.getFeedbackToUser());
+            assertEquals(presentation, result.getListPresentation());
+            assertFalse(result.isShowHelp());
+            assertFalse(result.isExit());
+            assertEquals(new CommandResult("feedback", false, false, presentation), result);
+        }
     }
 }

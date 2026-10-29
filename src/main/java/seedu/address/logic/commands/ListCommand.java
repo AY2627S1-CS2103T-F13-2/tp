@@ -132,7 +132,7 @@ public class ListCommand extends Command {
     }
 
     private CommandResult result(String feedback) {
-        return new CommandResult(feedback, false, false, isSubjectList
+        return new CommandResult(feedback, isSubjectList
                 ? CommandResult.ListPresentation.SUBJECT_GROUPS : CommandResult.ListPresentation.CONTACTS);
     }
 
