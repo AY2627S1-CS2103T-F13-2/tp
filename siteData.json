@@ -7,8 +7,8 @@
       "headings": {
         "about-us": "About Us",
         "project-team": "Project team",
-        "nay-min-thar": "Nay Min Thar",
         "hein-lin-htet": "Hein Lin Htet",
+        "nay-min-thar": "Nay Min Thar",
         "alpha": "Alpha",
         "that-li": "That Li",
         "jimmy-li": "Jimmy Li"
@@ -158,11 +158,22 @@
     },
     {
       "src": "index.md",
-      "title": "",
+      "title": "Home",
       "headings": {
-        "tuteedex": "TuteeDex",
-        "features": "Features",
-        "documentation": "Documentation"
+        "landing-title": "Less admin.More teaching.",
+        "landing-features-title": "Keep the details. Find the overview.",
+        "know-each-student": "Know each student",
+        "see-who-you-teach-and-when": "See who you teach, and when",
+        "find-the-right-students": "Find the right students",
+        "put-your-next-lesson-first": "Put your next lesson first",
+        "keep-balances-and-records-clear": "Keep balances and records clear",
+        "bring-your-records-with-you": "Bring your records with you",
+        "landing-workflow-title": "A focused view isjust a command away.",
+        "landing-start-title": "Set up your tutoring desk.",
+        "get-java-25-ready": "Get Java 25 ready",
+        "download-the-app": "Download the app",
+        "launch-and-explore": "Launch and explore",
+        "landing-contribute-title": "Meet the people behind TuteeDex."
       },
       "headingKeywords": {}
     },
