@@ -1,19 +1,25 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import javafx.event.ActionEvent;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextInputControl;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
@@ -27,7 +33,7 @@ import seedu.address.model.sort.SortOrder;
 
 /**
  * The Main Window. Provides the basic application layout containing
- * a menu bar and space where other JavaFX elements can be placed.
+ * a date/time header and space where other JavaFX elements can be placed.
  */
 public class MainWindow extends UiPart<Stage> {
 
@@ -35,6 +41,8 @@ public class MainWindow extends UiPart<Stage> {
             "Showing the same view as when you last closed TuteeDex. Type list to see all students.";
 
     private static final String FXML = "MainWindow.fxml";
+    private static final DateTimeFormatter HEADER_DATE = DateTimeFormatter.ofPattern("dd  -  MM", Locale.ENGLISH);
+    private static final DateTimeFormatter HEADER_TIME = DateTimeFormatter.ofPattern("HH  :  mm", Locale.ENGLISH);
     /** Height of the window title bar that must be visible for the saved position to be reused. */
     private static final double TITLE_BAR_HEIGHT = 30;
 
@@ -42,6 +50,8 @@ public class MainWindow extends UiPart<Stage> {
 
     private Stage primaryStage;
     private Logic logic;
+    private final Clock clock;
+    private final Timeline headerClock;
 
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
@@ -54,7 +64,10 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane commandBoxPlaceholder;
 
     @FXML
-    private MenuItem helpMenuItem;
+    private Label headerDate;
+
+    @FXML
+    private Label headerTime;
 
     @FXML
     private StackPane personListPanelPlaceholder;
@@ -67,6 +80,11 @@ public class MainWindow extends UiPart<Stage> {
      * The data file path parameter is retained for compatibility with existing callers.
      */
     public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath, Consumer<String> openBrowser) {
+        this(primaryStage, logic, dataFilePath, openBrowser, Clock.systemDefaultZone());
+    }
+
+    /** Creates a window with a supplied clock for its local date and time display. */
+    MainWindow(Stage primaryStage, Logic logic, Path dataFilePath, Consumer<String> openBrowser, Clock clock) {
         super(FXML, primaryStage);
 
         Font.loadFont(MainWindow.class.getResource("/fonts/pokemon_pixel_font.ttf").toExternalForm(), 24);
@@ -75,6 +93,7 @@ public class MainWindow extends UiPart<Stage> {
         // Set dependencies
         this.primaryStage = primaryStage;
         this.logic = logic;
+        this.clock = clock;
 
         // Configure the UI
         setWindowDefaultSize(logic.getGuiSettings());
@@ -82,6 +101,17 @@ public class MainWindow extends UiPart<Stage> {
         setAccelerators();
 
         helpWindow = new HelpWindow(new Stage(), openBrowser);
+        headerClock = new Timeline(new KeyFrame(Duration.seconds(1), event -> updateHeaderClock()));
+        headerClock.setCycleCount(Animation.INDEFINITE);
+        updateHeaderClock();
+        primaryStage.showingProperty().addListener((observable, wasShowing, isShowing) -> {
+            if (isShowing) {
+                updateHeaderClock();
+                headerClock.play();
+            } else {
+                headerClock.stop();
+            }
+        });
     }
 
     public Stage getPrimaryStage() {
@@ -89,37 +119,20 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void setAccelerators() {
-        setAccelerator(helpMenuItem, KeyCombination.valueOf("F1"));
-    }
-
-    /**
-     * Sets the accelerator of a MenuItem.
-     * @param keyCombination the KeyCombination value of the accelerator
-     */
-    private void setAccelerator(MenuItem menuItem, KeyCombination keyCombination) {
-        menuItem.setAccelerator(keyCombination);
-
-        /*
-         * TODO: the code below can be removed once the bug reported here
-         * https://bugs.openjdk.java.net/browse/JDK-8131666
-         * is fixed in a later version of the SDK.
-         *
-         * According to the bug report, TextInputControl (TextField, TextArea) will
-         * consume function-key events. Because CommandBox contains a TextField and
-         * ResultDisplay contains a TextArea, some accelerators (e.g., F1) will
-         * not work when the focus is in them because the key event is consumed by
-         * the TextInputControl(s).
-         *
-         * For now, we add the following event filter to capture such key events and open
-         * the help window purposely so as to support accelerators even when focus is
-         * in CommandBox or ResultDisplay.
-         */
+        KeyCombination helpKey = KeyCombination.valueOf("F1");
+        // Handle F1 before text controls can consume it.
         getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
-                menuItem.getOnAction().handle(new ActionEvent());
+            if (helpKey.match(event)) {
+                handleHelp();
                 event.consume();
             }
         });
+    }
+
+    private void updateHeaderClock() {
+        LocalDateTime now = LocalDateTime.now(clock);
+        headerDate.setText(now.format(HEADER_DATE));
+        headerTime.setText(now.format(HEADER_TIME));
     }
 
     /**

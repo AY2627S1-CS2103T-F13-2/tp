@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -8,6 +9,7 @@
 <?import javafx.scene.layout.StackPane?>
 <StackPane styleClass="result-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
   <GridPane fx:id="summary" styleClass="summary">
+    <StackPane.margin><Insets top="10" right="20" bottom="10" left="20" /></StackPane.margin>
     <columnConstraints>
       <ColumnConstraints percentWidth="47" />
       <ColumnConstraints percentWidth="53" />
@@ -23,8 +25,18 @@
       </HBox>
     </HBox>
   </GridPane>
-  <ScrollPane fx:id="resultDisplay" fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED"
+  <ScrollPane fx:id="resultDisplay" fitToHeight="true" fitToWidth="true" vbarPolicy="NEVER" hbarPolicy="NEVER"
               visible="false" managed="false" styleClass="result-display">
+    <StackPane.margin><Insets top="10" right="20" bottom="10" left="20" /></StackPane.margin>
     <content><Label fx:id="feedbackText" minWidth="-Infinity" styleClass="feedback-text" /></content>
+  </ScrollPane>
+  <ScrollPane fx:id="expandedResultDisplay" fitToWidth="true"
+              vbarPolicy="AS_NEEDED" hbarPolicy="NEVER" visible="false" managed="false"
+              styleClass="result-display, expanded-result-display">
+    <StackPane.margin><Insets top="4" bottom="4" /></StackPane.margin>
+    <content>
+      <Label fx:id="wrappedFeedbackText" minWidth="0" minHeight="-Infinity" maxWidth="Infinity"
+             maxHeight="Infinity" wrapText="true" styleClass="wrapped-feedback-text" />
+    </content>
   </ScrollPane>
 </StackPane>

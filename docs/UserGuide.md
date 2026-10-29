@@ -47,6 +47,11 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
 ## Features
 
+The header shows your computer's local date as `DD  -  MM` and its time as `HH  :  MM`
+in 24-hour format, updating automatically. Command results use one line when they fit;
+longer results wrap into a two-line display. Scroll vertically to read any remaining
+text. Result text has no hover tooltip.
+
 <box type="info" seamless>
 
 **Notes about the command format:**<br>
@@ -82,7 +87,7 @@ Opens a help window listing the command formats. Scroll to see every format,
 and hover over a row to read its full text in a tooltip.
 Select the blue `here` link to open the full user guide in your default browser.
 Close the help window with its pixel close button or press Escape.
-You can also open help through **Help > Help** or **F1**.
+You can also open help through **F1**.
 
 Format: `help`
 
