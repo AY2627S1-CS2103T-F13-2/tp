@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -38,6 +39,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import seedu.address.commons.core.GuiSettings;
@@ -457,6 +459,47 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals(width, logic.getGuiSettings().getWindowWidth());
             assertEquals(height, logic.getGuiSettings().getWindowHeight());
             assertNotNull(logic.getGuiSettings().getWindowCoordinates());
+        });
+    }
+
+    @Test
+    public void startup_savedPositionOffScreen_ignoresSavedPosition() throws Exception {
+        runOnFxThread(() -> {
+            window.getPrimaryStage().hide();
+            logic.setGuiSettings(new GuiSettings(740, 600, -100000, -100000));
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+            // Unset (NaN) coordinates let JavaFX centre the window on the primary screen
+            assertTrue(Double.isNaN(window.getPrimaryStage().getX()));
+            assertTrue(Double.isNaN(window.getPrimaryStage().getY()));
+        });
+    }
+
+    @Test
+    public void startup_savedPositionOnScreen_usesSavedPosition() throws Exception {
+        runOnFxThread(() -> {
+            window.getPrimaryStage().hide();
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            int x = (int) bounds.getMinX() + 10;
+            int y = (int) bounds.getMinY() + 10;
+            logic.setGuiSettings(new GuiSettings(740, 600, x, y));
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+            assertEquals(x, window.getPrimaryStage().getX());
+            assertEquals(y, window.getPrimaryStage().getY());
+        });
+    }
+
+    @Test
+    public void startup_titleBarAboveScreen_ignoresSavedPosition() throws Exception {
+        runOnFxThread(() -> {
+            window.getPrimaryStage().hide();
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            // Only the bottom 10 pixels of the window overlap the screen, so the title bar is unreachable
+            int x = (int) bounds.getMinX() + 40;
+            int y = (int) bounds.getMinY() - 590;
+            logic.setGuiSettings(new GuiSettings(740, 600, x, y));
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+            assertTrue(Double.isNaN(window.getPrimaryStage().getX()));
+            assertTrue(Double.isNaN(window.getPrimaryStage().getY()));
         });
     }
 
