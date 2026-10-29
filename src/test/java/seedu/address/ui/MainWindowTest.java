@@ -460,6 +460,18 @@ public class MainWindowTest extends FxTestSupport {
         });
     }
 
+    @Test
+    public void startup_savedPositionOffScreen_ignoresSavedPosition() throws Exception {
+        runOnFxThread(() -> {
+            window.getPrimaryStage().hide();
+            logic.setGuiSettings(new GuiSettings(740, 600, -100000, -100000));
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+            // Unset (NaN) coordinates let JavaFX centre the window on the primary screen
+            assertTrue(Double.isNaN(window.getPrimaryStage().getX()));
+            assertTrue(Double.isNaN(window.getPrimaryStage().getY()));
+        });
+    }
+
     private void enterCommand(String text) {
         input.setText(text);
         input.fireEvent(new ActionEvent());
