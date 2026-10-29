@@ -323,7 +323,7 @@ returns to original stored order; the subject-grouped display returns to alphabe
   time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
 * Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
   the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
-  Sorting is currently session-only and resets on restart; preference persistence is a separate feature.
+  TuteeDex remembers the last applied sort when you close it (see [Reopening where you left off](#reopening-where-you-left-off)).
 
 Examples:
 
@@ -512,6 +512,25 @@ Format: `exit`
 ### Saving the data
 
 TuteeDex automatically saves data after every command. You do not need to save manually.
+
+### Reopening where you left off
+
+TuteeDex remembers which students you were looking at and in what order. When you open it again, it runs the
+last `sort` you applied and then the last `list` or `find` you entered, so the same view comes back. For example,
+if you close TuteeDex after `sort o/desc` and `list -subjects`, it opens with the subject groups, largest balances
+first.
+
+* `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
+* `sort reset` clears the remembered order, so TuteeDex opens in the default order.
+* `delete`, and an `edit` that changes nothing, keep the students you were looking at, so TuteeDex still opens on
+  that view. For example, after `find Alex` and `delete 1`, TuteeDex opens on `find Alex` again.
+* Commands that switch back to the normal list, such as `add`, `edit`, `archive` or `import`, make TuteeDex open on
+  the normal list next time. So does a `delete` from the subject groups, which shows the normal list afterwards.
+  The sort order is kept.
+* When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
+  Type `list` to see all students.
+* The view and order are saved in `preferences.json`, next to the JAR file, when you close TuteeDex. If that file
+  is edited so that a saved command is not a valid `list`, `find` or `sort` command, TuteeDex ignores it.
 
 ### Editing the data file
 

@@ -1,11 +1,14 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 import static seedu.address.testutil.TypicalPersons.BOB;
@@ -53,6 +56,7 @@ public class LogicManagerTest {
     public Path temporaryFolder;
 
     private Model model = new ModelManager();
+    private StorageManager storage;
     private Logic logic;
 
     @BeforeEach
@@ -60,7 +64,7 @@ public class LogicManagerTest {
         JsonAddressBookStorage addressBookStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        storage = new StorageManager(addressBookStorage, userPrefsStorage);
         logic = new LogicManager(model, storage);
     }
 
@@ -81,6 +85,119 @@ public class LogicManagerTest {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand,
                 ListCommand.getMessageForContactCount(model.getFilteredPersonList().size()), model);
+    }
+
+    @Test
+    public void execute_listAndFindCommands_savedAsLastView() throws Exception {
+        logic.execute("list -archived");
+        assertEquals("list -archived", model.getLastViewCommand());
+
+        logic.execute("  find Alice  ");
+        assertEquals("find Alice", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_commandThatChangesFilter_clearsLastView() throws Exception {
+        model.addPerson(AMY);
+        logic.execute("find Amy");
+        logic.execute("edit 1 p/" + VALID_PHONE_BOB);
+        assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_commandLeavingSubjectGroups_clearsLastView() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").build());
+        logic.execute("list -subjects");
+        logic.execute("delete 1");
+        assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_commandKeepingFilter_keepsLastView() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        logic.execute("find Amy");
+        logic.execute("edit 1 n/" + VALID_NAME_AMY);
+        logic.execute("delete 1");
+        assertEquals("find Amy", model.getLastViewCommand());
+    }
+
+    @Test
+    public void reopen_afterFindAndDelete_showsSameStudents() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        logic.execute("find Amy");
+        logic.execute("delete 1");
+        List<Person> shownBeforeClosing = List.copyOf(model.getFilteredPersonList());
+
+        // Reopen with the same data and preferences, then run the saved view again as MainWindow does on startup.
+        Model reopenedModel = new ModelManager(model.getAddressBook(), model.getUserPrefs());
+        Logic reopenedLogic = new LogicManager(reopenedModel, storage);
+        reopenedLogic.execute(reopenedLogic.getLastViewCommand());
+        assertEquals(shownBeforeClosing, reopenedLogic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_helpExitAndFailedCommands_keepLastView() throws Exception {
+        logic.execute("list -subjects");
+        logic.execute("help");
+        logic.execute("exit");
+        assertThrows(CommandException.class, () -> logic.execute("delete 9"));
+        assertThrows(ParseException.class, () -> logic.execute("list -unknown"));
+        assertEquals("list -subjects", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_listAndFind_doNotSaveAddressBook() throws Exception {
+        logic.execute("list");
+        logic.execute("find Alice");
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_sortCommands_saveLastSortAndKeepView() throws Exception {
+        logic.execute("list -subjects");
+        logic.execute(" sort o/desc n/asc ");
+        assertEquals("sort o/desc n/asc", model.getLastSortCommand());
+        assertEquals("list -subjects", model.getLastViewCommand());
+
+        logic.execute("sort");
+        assertEquals("sort o/desc n/asc", model.getLastSortCommand());
+
+        assertThrows(ParseException.class, () -> logic.execute("sort n/up"));
+        assertEquals("sort o/desc n/asc", model.getLastSortCommand());
+
+        logic.execute("sort reset");
+        assertEquals("", model.getLastSortCommand());
+        assertEquals("list -subjects", model.getLastViewCommand());
+    }
+
+    @Test
+    public void getLastSortCommand_savedSortOrOther_onlySortReturned() {
+        assertEquals("", logic.getLastSortCommand());
+        model.setLastSortCommand("sort slot/asc n/asc");
+        assertEquals("sort slot/asc n/asc", logic.getLastSortCommand());
+        for (String savedCommand : new String[] {"list", "clear", "sort n/up", "not a command"}) {
+            model.setLastSortCommand(savedCommand);
+            assertEquals("", logic.getLastSortCommand());
+        }
+    }
+
+    @Test
+    public void getLastViewCommand_savedListOrFind_returned() {
+        assertEquals("", logic.getLastViewCommand());
+        model.setLastViewCommand("list t/Sec 4");
+        assertEquals("list t/Sec 4", logic.getLastViewCommand());
+        model.setLastViewCommand("find Alice");
+        assertEquals("find Alice", logic.getLastViewCommand());
+    }
+
+    @Test
+    public void getLastViewCommand_otherOrInvalidCommand_ignored() {
+        for (String savedCommand : new String[] {"clear", "delete 1", "sort n/asc", "list -unknown", "not a command"}) {
+            model.setLastViewCommand(savedCommand);
+            assertEquals("", logic.getLastViewCommand());
+        }
     }
 
     @Test
@@ -229,6 +346,7 @@ public class LogicManagerTest {
     public void execute_partialEdit_savesPreservedFieldsAndNotifiesDisplayedList() throws Exception {
         Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
         model.addPerson(original);
+        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
         Person updated = new PersonBuilder(original).withPhone("91234567").build();
         List<Person> displayedUpdates = new ArrayList<>();
         logic.getFilteredPersonList().addListener((ListChangeListener<Person>) change -> {
@@ -250,8 +368,8 @@ public class LogicManagerTest {
     public void execute_invalidEdit_preservesSavedData() throws Exception {
         Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
         model.addPerson(original);
-        logic.execute("list");
         Path savedPath = temporaryFolder.resolve("addressBook.json");
+        new JsonAddressBookStorage(savedPath).saveAddressBook(model.getAddressBook());
         String originalJson = Files.readString(savedPath);
         String invalidCommand = "edit 1 p/91234567 o/-1";
 

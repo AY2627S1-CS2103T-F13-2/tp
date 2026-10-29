@@ -45,6 +45,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -275,6 +276,62 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals("Physics", ((Label) root.lookup(".subject-group-heading")).getText());
             assertEquals("002", ((Label) root.lookup(".subject-group-panel").lookup("#id")).getText());
         });
+    }
+
+    @Test
+    public void startup_savedGroupedView_showsSubjectGroups() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            reopenWithSavedView("", "list -subjects");
+            assertNotNull(root.lookup(".subject-group-panel"));
+            assertSummary("2", "1");
+        });
+    }
+
+    @Test
+    public void startup_savedSortAndView_showsViewInSavedOrder() throws Exception {
+        runOnFxThread(() -> {
+            addScheduledSubjects();
+            reopenWithSavedView("sort o/desc", "list -subjects");
+            // Benson owes more, so the saved descending order puts Benson before Alice.
+            assertEquals(List.of(BENSON.getName(), ALICE.getName()),
+                    logic.getFilteredPersonList().stream().map(Person::getName).toList());
+            assertNotNull(root.lookup(".subject-group-panel"));
+        });
+    }
+
+    @Test
+    public void startup_savedFindView_showsMatchingStudents() throws Exception {
+        runOnFxThread(() -> {
+            reopenWithSavedView("", "find Alice");
+            assertEquals(List.of(ALICE.getName()),
+                    logic.getFilteredPersonList().stream().map(Person::getName).toList());
+            assertTrue(root.lookup(".subject-group-panel") == null);
+            assertEquals(MainWindow.MESSAGE_LAST_VIEW_RESTORED + " | " + FindCommand.MESSAGE_SINGULAR,
+                    feedbackText());
+        });
+    }
+
+    @Test
+    public void startup_savedFindWithNoMatches_explainsEmptyList() throws Exception {
+        runOnFxThread(() -> {
+            reopenWithSavedView("", "find Zed");
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+            assertEquals(MainWindow.MESSAGE_LAST_VIEW_RESTORED + " | " + FindCommand.MESSAGE_NO_MATCHES,
+                    feedbackText());
+        });
+    }
+
+    /** Opens a new window, as on the next launch, with the sort and view commands saved by the last session. */
+    private void reopenWithSavedView(String lastSortCommand, String lastViewCommand) {
+        window.getPrimaryStage().hide();
+        logic.lastSortCommand = lastSortCommand;
+        logic.lastViewCommand = lastViewCommand;
+        window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+        window.show();
+        window.fillInnerParts();
+        root = window.getPrimaryStage().getScene().getRoot();
+        input = (TextField) root.lookup("#commandTextField");
     }
 
     private void addScheduledSubjects() {
@@ -598,6 +655,8 @@ public class MainWindowTest extends FxTestSupport {
         private final ModelManager model = new ModelManager(new AddressBook(), new UserPrefs(),
                 Clock.fixed(Instant.parse("2026-10-22T14:00:00Z"), ZoneOffset.UTC));
         private final AddressBookParser parser = new AddressBookParser();
+        private String lastViewCommand = "";
+        private String lastSortCommand = "";
 
         InMemoryLogic() {
             model.addPerson(new PersonBuilder(ALICE).withOutstandingAmount("0").build());
@@ -643,6 +702,16 @@ public class MainWindowTest extends FxTestSupport {
         @Override
         public void setGuiSettings(GuiSettings guiSettings) {
             model.setGuiSettings(guiSettings);
+        }
+
+        @Override
+        public String getLastViewCommand() {
+            return lastViewCommand;
+        }
+
+        @Override
+        public String getLastSortCommand() {
+            return lastSortCommand;
         }
     }
 }

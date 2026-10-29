@@ -23,6 +23,8 @@ title: ""
 * Edit a tutee
 * Delete a tutee
 * Find a tutee by name
+* Import tutees from a CSV file exported by TuteeDex
+* Reopen in the same list view and sort order you closed with
 * Exit the application
 
 ### Documentation
