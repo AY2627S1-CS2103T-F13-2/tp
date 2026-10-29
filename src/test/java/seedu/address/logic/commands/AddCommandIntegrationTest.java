@@ -51,6 +51,39 @@ public class AddCommandIntegrationTest {
     }
 
     @Test
+    public void execute_newPersonAfterArchive_keepsArchivedPersonHidden() throws Exception {
+        Person toArchive = model.getFilteredPersonList().getFirst();
+        new ArchiveCommand(toArchive.getName().fullName).execute(model);
+        Person archived = toArchive.withArchived(true);
+        List<Person> activePersons = new ArrayList<>(model.getFilteredPersonList());
+        Person newPerson = new PersonBuilder().build();
+        activePersons.add(newPerson);
+
+        CommandResult result = new AddCommand(newPerson).execute(model);
+
+        assertEquals(String.format(AddCommand.MESSAGE_SUCCESS, newPerson.getName()), result.getFeedbackToUser());
+        assertEquals(activePersons, model.getFilteredPersonList());
+        assertEquals(archived, model.getAddressBook().getPersonList().getFirst());
+        ListCommand.forArchivedStudents().execute(model);
+        assertEquals(List.of(archived), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_newPersonFromArchivedList_restoresActiveList() throws Exception {
+        Person toArchive = model.getFilteredPersonList().getFirst();
+        new ArchiveCommand(toArchive.getName().fullName).execute(model);
+        List<Person> activePersons = new ArrayList<>(model.getFilteredPersonList());
+        ListCommand.forArchivedStudents().execute(model);
+        Person newPerson = new PersonBuilder().build();
+        activePersons.add(newPerson);
+
+        new AddCommand(newPerson).execute(model);
+
+        assertEquals(activePersons, model.getFilteredPersonList());
+        assertEquals(toArchive.withArchived(true), model.getAddressBook().getPersonList().getFirst());
+    }
+
+    @Test
     public void execute_duplicatePerson_throwsCommandException() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
         assertCommandFailure(new AddCommand(personInList), model,

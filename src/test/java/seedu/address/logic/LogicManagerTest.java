@@ -346,6 +346,7 @@ public class LogicManagerTest {
     public void execute_partialEdit_savesPreservedFieldsAndNotifiesDisplayedList() throws Exception {
         Person original = new PersonBuilder(AMY).withOutstandingAmount("600").build();
         model.addPerson(original);
+        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
         Person updated = new PersonBuilder(original).withPhone("91234567").build();
         List<Person> displayedUpdates = new ArrayList<>();
         logic.getFilteredPersonList().addListener((ListChangeListener<Person>) change -> {

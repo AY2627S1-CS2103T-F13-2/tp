@@ -74,6 +74,7 @@ public interface Model {
     /**
      * Adds the given person.
      * {@code person} must not already exist in the address book.
+     * Resets the displayed list to all active persons.
      */
     void addPerson(Person person);
 
