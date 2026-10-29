@@ -67,6 +67,13 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
 
+<box type="tip" seamless>
+
+**Tip:** Press <kbd>Up</kbd> in the command box to bring back the commands you entered earlier, newest first, and
+<kbd>Down</kbd> to move forward again. This is handy for fixing a typo in a long `add` or `edit` command. Going down
+past the newest command gives back whatever you were typing. The history is kept until you close TuteeDex.
+</box>
+
 ### Viewing help: `help`
 
 Opens a help window listing the command formats. Scroll to see every format,
@@ -286,7 +293,7 @@ cannot be included as a separate word within a tag or subject filter value.
 Plain `list` returns to active students; subject/tag lists and summaries also
 continue to exclude archived students. For example:
 
-* `archive s/Bob Choo`, then `list -archived`, shows Bob in the archived list.
+* `archive 2` (where Bob is 2nd in the list), then `list -archived`, shows Bob in the archived list.
 * `view 1` shows the first student in that displayed archived list.
 * `list` returns to the active list without restoring archived students.
 
@@ -465,31 +472,33 @@ Examples:
 
 Archives a student without deleting the student profile. Archived students are hidden from `list` and are excluded from its summary counts, but their data remains saved in TuteeDex.
 
-Format: `archive s/STUDENT_NAME`
+Format: `archive INDEX`
 
-* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
-* The name must match the student's full name exactly, ignoring letter case. For example, `archive s/john doe` can archive a student named `John Doe`.
-* A successful command displays `Student archived.` and refreshes the active student list.
-* If no student with the specified name exists, the command displays `Student cannot be found.`
-* If the student is already archived, the command displays `Student already archived.`
+* Archives the student at the specified `INDEX`. The index refers to the index number shown in the displayed student list, like `view`, `edit` and `delete`.
+* The index **must be a positive integer** 1, 2, 3, …
+* Students who share a name can each be archived, because the index picks one profile.
+* A successful command displays `Archived <name>.` and refreshes the active student list.
+* If the index is larger than the displayed list, the command displays `No matching contact found at the specified index.`
+* If the student is already archived, for example `archive 1` after `list -archived`, the command displays `<name> is already archived.`
 
-Example:
-* `archive s/John Doe` archives John Doe and removes the student from the active list.
+Examples:
+* `list` followed by `archive 2` archives the 2nd student and removes them from the active list.
+* `find John` followed by `archive 1` archives the 1st student in the results of the `find` command.
 
 ### Unarchiving a student: `unarchive`
 
 Restores an archived student to the active student list. Unarchiving does not change the student's profile details.
 
-Format: `unarchive s/STUDENT_NAME`
+Format: `unarchive INDEX`
 
-* `STUDENT_NAME` must contain letters and spaces and must begin with a letter.
-* The name must match the student's full name exactly, ignoring letter case.
-* A successful command displays `Student unarchived.` and makes the student appear in `list` again.
-* If no student with the specified name exists, the command displays `Student cannot be found.`
-* If the student is already active, the command displays `Student already active.`
+* Restores the student at the specified `INDEX` in the displayed list. Use `list -archived` first to see archived students and their indexes.
+* The index **must be a positive integer** 1, 2, 3, …
+* A successful command displays `Unarchived <name>.`, returns to the active student list and makes the student appear in `list` again.
+* If the index is larger than the displayed list, the command displays `No matching contact found at the specified index.`
+* If the student is already active, the command displays `<name> is already active.`
 
 Example:
-* `unarchive s/John Doe` restores John Doe to the active student list.
+* `list -archived` followed by `unarchive 1` restores the 1st archived student to the active student list.
 
 ### Clearing all entries: `clear`
 
@@ -584,6 +593,6 @@ Action     | Format, Examples
 **Import** | `import FILE_PATH [confirm]`<br> e.g., `import contacts.csv confirm`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list -subjects`<br> e.g., `list -summary s/Maths t/A-Level`
-**Archive** | `archive s/STUDENT_NAME`<br> e.g., `archive s/James Ho`
-**Unarchive** | `unarchive s/STUDENT_NAME`<br> e.g., `unarchive s/James Ho`
+**Archive** | `archive INDEX`<br> e.g., `archive 2`
+**Unarchive** | `unarchive INDEX`<br> e.g., `list -archived`, then `unarchive 1`
 **Help**   | `help`

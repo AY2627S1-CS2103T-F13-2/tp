@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -137,6 +139,58 @@ public class CommandBoxTest extends FxTestSupport {
         runOnFxThread(() -> assertFailure(command -> {
             throw new ParseException("Invalid command");
         }));
+    }
+
+    @Test
+    public void history_upAndDown_recallCommandsAndKeepDraft() throws Exception {
+        runOnFxThread(() -> {
+            CommandBox box = new CommandBox(command -> {
+                if (command.startsWith("bad")) {
+                    throw new ParseException("Invalid command");
+                }
+                return new CommandResult("Success");
+            });
+            TextField input = inputOf(box);
+            enter(input, "list");
+            enter(input, "list");
+            enter(input, "bad command");
+            input.setText("half typed");
+
+            press(input, KeyCode.UP);
+            assertEquals("bad command", input.getText());
+            assertEquals(input.getLength(), input.getCaretPosition());
+            press(input, KeyCode.UP);
+            assertEquals("list", input.getText());
+            press(input, KeyCode.UP);
+            assertEquals("list", input.getText(), "repeated commands are stored once, so Up stops at the oldest");
+            press(input, KeyCode.DOWN);
+            assertEquals("bad command", input.getText());
+            press(input, KeyCode.DOWN);
+            assertEquals("half typed", input.getText());
+            press(input, KeyCode.DOWN);
+            assertEquals("half typed", input.getText());
+        });
+    }
+
+    @Test
+    public void history_noCommandsYet_leavesInputUnchanged() throws Exception {
+        runOnFxThread(() -> {
+            CommandBox box = new CommandBox(command -> new CommandResult("Success"));
+            TextField input = inputOf(box);
+            input.setText("draft");
+            press(input, KeyCode.UP);
+            press(input, KeyCode.DOWN);
+            assertEquals("draft", input.getText());
+        });
+    }
+
+    private void enter(TextField input, String command) {
+        input.setText(command);
+        input.fireEvent(new ActionEvent());
+    }
+
+    private void press(TextField input, KeyCode key) {
+        input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", key, false, false, false, false));
     }
 
     private TextField inputOf(CommandBox box) {

@@ -46,7 +46,7 @@ public class ListArchivedIntegrationTest {
 
     @Test
     public void execute_archivedList_replacesPreviousFiltersAndPreservesData() throws Exception {
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 2");
         List<Person> stored = List.copyOf(model.getAddressBook().getPersonList());
         String json = Files.readString(storage.getAddressBookFilePath());
         for (String previous : List.of("find Nobody", "list s/Physics", "list t/A-Level", "list")) {
@@ -61,7 +61,7 @@ public class ListArchivedIntegrationTest {
 
     @Test
     public void execute_activeOptionsAfterArchivedList_excludeArchivedStudents() throws Exception {
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 2");
         List<Person> stored = List.copyOf(model.getAddressBook().getPersonList());
         logic.execute("list -archived");
         logic.execute("list");
@@ -89,8 +89,9 @@ public class ListArchivedIntegrationTest {
 
     @Test
     public void execute_archivedOnlyBook_listsEachStudentOnceInStoredOrder() throws Exception {
-        for (String name : List.of("Amy Bee", "Bob Choo", "Cara Dee")) {
-            logic.execute("archive s/" + name);
+        // Each archive hides that student, so the next active student moves up to index 1.
+        for (int i = 0; i < 3; i++) {
+            logic.execute("archive 1");
         }
         assertEquals("Listed 3 contacts.", logic.execute("list -archived").getFeedbackToUser());
         assertEquals(model.getAddressBook().getPersonList(), model.getFilteredPersonList());
@@ -98,12 +99,12 @@ public class ListArchivedIntegrationTest {
 
     @Test
     public void execute_reloadAndUnarchive_updateArchivedResults() throws Exception {
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 2");
         Model reloaded = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
         Logic reloadedLogic = createLogic(reloaded);
         reloadedLogic.execute("list -archived");
         assertEquals("Bob Choo", reloaded.getFilteredPersonList().getFirst().getName().fullName);
-        reloadedLogic.execute("unarchive s/Bob Choo");
+        reloadedLogic.execute("unarchive 1");
         assertEquals(ListCommand.MESSAGE_NO_ARCHIVED_CONTACTS,
                 reloadedLogic.execute("list -archived").getFeedbackToUser());
         reloadedLogic.execute("list");
@@ -113,7 +114,7 @@ public class ListArchivedIntegrationTest {
 
     @Test
     public void execute_deleteArchivedIndex_targetsDisplayedStudent() throws Exception {
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 2");
         logic.execute("list -archived");
         logic.execute("delete 1");
         assertEquals(List.of("Amy Bee", "Cara Dee"), storage.readAddressBook().orElseThrow().getPersonList()
@@ -122,7 +123,7 @@ public class ListArchivedIntegrationTest {
 
     @Test
     public void execute_invalidCombinations_preserveFilterAndStoredData() throws Exception {
-        logic.execute("archive s/Bob Choo");
+        logic.execute("archive 2");
         logic.execute("list -archived");
         List<Person> displayed = List.copyOf(model.getFilteredPersonList());
         List<Person> stored = List.copyOf(model.getAddressBook().getPersonList());

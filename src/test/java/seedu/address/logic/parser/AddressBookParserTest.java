@@ -118,8 +118,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_archiveAndUnarchive() throws Exception {
-        assertEquals(new ArchiveCommand("Alice Pauline"), parser.parseCommand("archive s/Alice Pauline"));
-        assertEquals(new UnarchiveCommand("Alice Pauline"), parser.parseCommand("unarchive s/Alice Pauline"));
+        assertEquals(new ArchiveCommand(INDEX_FIRST_PERSON), parser.parseCommand("archive 1"));
+        assertEquals(new UnarchiveCommand(INDEX_FIRST_PERSON), parser.parseCommand("unarchive 1"));
     }
 
     @Test
