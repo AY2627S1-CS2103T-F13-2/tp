@@ -16,6 +16,9 @@ Person -up-> "*" Tag
 
 Person *--> Name
 Person *--> Phone
-Person *--> Email
+Person *--> StartDate
+Person *--> OutstandingAmount
+Person *--> Notes
+Person *--> "*" Subject
 Person *--> Address
 @enduml
