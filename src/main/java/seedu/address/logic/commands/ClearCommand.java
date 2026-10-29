@@ -20,6 +20,7 @@ public class ClearCommand extends Command {
     public static final String MESSAGE_CONFIRM = "This will permanently delete all %1$d student(s), including "
             + "archived students. There is no undo. Type '" + COMMAND_WORD + " " + CONFIRM_WORD + "' to continue.";
     public static final String MESSAGE_SUCCESS = "Deleted all %1$d student(s) from TuteeDex.";
+    public static final String MESSAGE_NO_STUDENTS = "There are no students to delete.";
 
     private final boolean isConfirmed;
 
@@ -34,6 +35,9 @@ public class ClearCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         int studentCount = model.getAddressBook().getPersonList().size();
+        if (studentCount == 0) {
+            return new CommandResult(MESSAGE_NO_STUDENTS, false, false, CommandResult.ListPresentation.UNCHANGED);
+        }
         if (!isConfirmed) {
             return new CommandResult(String.format(MESSAGE_CONFIRM, studentCount), false, false,
                     CommandResult.ListPresentation.UNCHANGED);

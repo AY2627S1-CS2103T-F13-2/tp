@@ -11,18 +11,17 @@ import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
 /**
- * Displays the details of a person identified using its
- * displayed index from the contact list.
+ * Displays the full profile of the student at a displayed index.
  */
 public class ViewCommand extends Command {
 
     public static final String COMMAND_WORD = "view";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Displays the details of the person identified by the index number "
-            + "used in the displayed person list.\n"
+            + ": Displays the full profile of the student at the given index in the displayed list.\n"
             + "Parameters: INDEX (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
+    public static final String MESSAGE_CONTACT_NOT_FOUND = "No matching contact found at the specified index.";
 
     private final Index targetIndex;
 
@@ -36,7 +35,7 @@ public class ViewCommand extends Command {
         List<Person> lastShownList = model.getFilteredPersonList();
 
         if (targetIndex.getZeroBased() >= lastShownList.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(MESSAGE_CONTACT_NOT_FOUND);
         }
 
         Person personToDisplay = lastShownList.get(targetIndex.getZeroBased());
