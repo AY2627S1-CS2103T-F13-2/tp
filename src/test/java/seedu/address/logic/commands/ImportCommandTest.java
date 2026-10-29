@@ -257,7 +257,7 @@ public class ImportCommandTest {
         assertNotEquals(command, new ImportCommand(Path.of("a.csv"), true));
         assertNotEquals(command, new ImportCommand(Path.of("a.csv"), false, temporaryFolder));
         assertNotEquals(command, null);
-        assertNotEquals(command, new ClearCommand());
+        assertNotEquals(command, new ClearCommand(true));
     }
 
     @Test

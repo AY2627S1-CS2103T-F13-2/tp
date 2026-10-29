@@ -9,8 +9,10 @@ import java.util.Objects;
 /** A subject taught to a student. */
 public final class Subject {
     public static final String MESSAGE_CONSTRAINTS = "Subject must be 1 to 50 characters long, contain only "
-            + "English letters, digits, spaces or hyphens, and include at least one letter or digit.";
-    private static final String VALIDATION_REGEX = "(?=.{1,50}$)(?=.*[A-Za-z0-9])[A-Za-z0-9 -]+";
+            + "English letters, digits, spaces and the symbols + & ( ) . ' -, "
+            + "and include at least one letter or digit.";
+    // Semicolons, commas and slashes stay out: they separate subjects in exports, lists and command prefixes.
+    private static final String VALIDATION_REGEX = "(?=.{1,50}$)(?=.*[A-Za-z0-9])[A-Za-z0-9 +&().'-]+";
 
     public final String value;
     private final LessonSlot lessonSlot;

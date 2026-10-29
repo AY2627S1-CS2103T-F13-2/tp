@@ -35,7 +35,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
-   * `clear` : Deletes all contacts.
+   * `clear confirm` : Deletes all contacts.
 
    * `exit` : Exits the app.
 
@@ -61,7 +61,7 @@ TuteeDex is a **desktop application for private tutors to manage student profile
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for `help` and `clear` are ignored.<br>
+* Extraneous parameters for `help` are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -96,9 +96,10 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 `HH:mm` format, such as `09:00` or `15:30`. Each subject has exactly one weekly lesson.
 Repeat the complete triplet for multiple subjects. Subject names must be 1–50 characters after
 trimming surrounding whitespace and collapsing repeated ordinary spaces into one. Names may contain
-English letters, digits, spaces, and hyphens, including at least one letter or digit; internal tabs
-and line breaks are invalid. Capitalization is preserved. A student cannot have two subjects with
-the same normalized name, ignoring case, even if their lesson times differ.
+English letters, digits, spaces, and the symbols `+ & ( ) . ' -`, including at least one letter or digit,
+for example `C++`, `Maths & Science` or `Maths (H2)`. Semicolons, commas, slashes, internal tabs and line
+breaks are not allowed. Capitalization is preserved. A student cannot have two subjects with the same
+normalized name, ignoring case, even if their lesson times differ.
 For example, `H2  Maths` is stored as `H2 Maths` and counts as the same name as `h2 maths`.
 Comma-separated subjects are not supported.
 
@@ -432,7 +433,8 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * The search is case-insensitive; for example, `hans` matches `Hans`.
 * Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
+* A keyword matches the start of any word in the name; for example, `Han` matches `Hans Gruber` and `Gru`
+  matches it too, but `ans` does not.
 * Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
 * Matching contacts appear once. Feedback shows `Found 1 contact.` or `Found N contacts.`.
 * No matches produce an empty list with `No contacts match the specified name keywords.`.
@@ -491,9 +493,15 @@ Example:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Deletes every student, including archived students. There is no undo, so TuteeDex asks you to confirm first.
 
-Format: `clear`
+Format: `clear` or `clear confirm`
+
+* `clear` only shows how many students would be deleted, for example `This will permanently delete all 6
+  student(s), including archived students. There is no undo. Type 'clear confirm' to continue.` Nothing changes.
+* `clear confirm` deletes them and shows `Deleted all 6 student(s) from TuteeDex.`
+* Anything else after `clear`, such as `clear 3` or `clear Confirm`, is rejected without deleting anything.
+* Consider running `export` first, so you keep a copy of your students.
 
 ### Exiting the program: `exit`
 
@@ -568,7 +576,7 @@ Action     | Format, Examples
 **Sort**   | `sort FIELD/DIRECTION [FIELD/DIRECTION]...`, `sort`, or `sort reset`<br> e.g., `sort o/desc n/asc`
 **Add**    | `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]` <br> e.g., `add n/James Ho a/123, Clementi Rd, 123466 p/22224444 d/10-Aug s/Maths day/MON time/15:30 o/20 t/A-Level notes/Revise algebra`
 **View**   | `view INDEX`<br> e.g., `view 1`
-**Clear**  | `clear`
+**Clear**  | `clear`, then `clear confirm`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`<br> e.g., `edit 2 n/James Lee d/19-Sep o/20 s/Maths day/MON time/15:30 t/A-Level notes/Revise algebra`
 **Paid**   | `paid INDEX [AMOUNT]`<br> e.g., `paid 1 20.50`

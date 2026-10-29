@@ -18,6 +18,15 @@ public class SubjectTest {
         assertFalse(Subject.isValidSubject("A".repeat(51)));
         assertFalse(Subject.isValidSubject("---"));
         assertFalse(Subject.isValidSubject("Maths!"));
+        assertTrue(Subject.isValidSubject("C++"));
+        assertTrue(Subject.isValidSubject("Maths & Science"));
+        assertTrue(Subject.isValidSubject("Maths (H2)"));
+        assertTrue(Subject.isValidSubject("A. Maths"));
+        assertTrue(Subject.isValidSubject("O'Level English"));
+        assertFalse(Subject.isValidSubject("+&()"));
+        assertFalse(Subject.isValidSubject("Maths; Physics"));
+        assertFalse(Subject.isValidSubject("Maths, Physics"));
+        assertFalse(Subject.isValidSubject("Art/Design"));
     }
 
     @Test

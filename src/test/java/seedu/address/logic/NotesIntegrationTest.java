@@ -95,7 +95,7 @@ public class NotesIntegrationTest {
     @Test
     public void execute_notesOmittedOrBlank_savesEmptyNotes() throws Exception {
         for (String suffix : new String[] {"", " notes/", " notes/   "}) {
-            logic.execute("clear");
+            logic.execute("clear confirm");
             logic.execute(ADD_STUDENT + suffix);
             assertEquals(Notes.EMPTY, model.getFilteredPersonList().get(0).getNotes());
             assertEquals(Notes.EMPTY, addressStorage.readAddressBook().orElseThrow()

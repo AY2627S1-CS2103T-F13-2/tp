@@ -76,12 +76,14 @@ public class FindIntegrationTest {
     }
 
     @Test
-    public void execute_caseInsensitiveWholeWords_matchesAnyKeywordOnce() throws Exception {
+    public void execute_caseInsensitiveWordStarts_matchesAnyKeywordOnce() throws Exception {
         assertEquals("Found 1 contact.", logic.execute("find ALICE alice").getFeedbackToUser());
         assertEquals(List.of(students.get(0)), logic.getFilteredPersonList());
         assertEquals("Found 2 contacts.", logic.execute("find tan LEE").getFeedbackToUser());
         assertEquals(students, logic.getFilteredPersonList());
-        assertEquals(FindCommand.MESSAGE_NO_MATCHES, logic.execute("find Ali").getFeedbackToUser());
+        assertEquals("Found 1 contact.", logic.execute("find Ali").getFeedbackToUser());
+        assertEquals(List.of(students.get(0)), logic.getFilteredPersonList());
+        assertEquals(FindCommand.MESSAGE_NO_MATCHES, logic.execute("find lic").getFeedbackToUser());
         assertTrue(logic.getFilteredPersonList().isEmpty());
         assertDataUnchanged();
     }

@@ -160,7 +160,7 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 
 How the parsing works:
 * `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `FindCommandParser`, `ListCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, and `ViewCommandParser`.
-* Commands without arguments (`clear`, `exit`, and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
+* Commands without arguments (`exit` and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
 * The command parsers implement the generic `Parser<T extends Command>` interface. Prefix-based parsers use `CliSyntax` and `Prefix` to identify fields, `ArgumentTokenizer` to split the input, and `ArgumentMultimap` to collect repeated values. `ParserUtil` validates and converts values such as indexes, subjects, tags, notes, names, and contact fields before the command is created.
 * Invalid command words, malformed arguments, unsupported prefixes, duplicate fields, and invalid field values result in a `ParseException`; the command is not executed.
 
@@ -770,7 +770,7 @@ testers are expected to do more *exploratory* testing.
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear` in this test copy, then add three profiles:
+1. Run `clear confirm` in this test copy, then add three profiles:
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level`,
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 t/Needs revision`, and
    `add n/Cara Dee a/Block 3 p/33333333 d/20-Oct s/Maths day/WED time/11:00`.
@@ -850,7 +850,7 @@ Use a fresh test copy of the JAR in an empty writable folder.
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear` in this test copy to remove sample profiles, then add two test profiles:
+1. Run `clear confirm` in this test copy to remove sample profiles, then add two test profiles:
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 o/20` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/600`.
 2. Run `find Bob`, then `edit 1 p/91234567 o/20.50`.<br>
@@ -875,7 +875,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 Use a fresh copy of the app in an empty folder. Inspect saved tags in `data/addressbook.json`
 after successful edits; these checks do not require changes to the profile-card display.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/Old notes/Keep note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 t/A-Level t/Needs revision t/a-level`.<br>
@@ -896,7 +896,7 @@ after successful edits; these checks do not require changes to the profile-card 
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Amy note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/English day/TUE time/10:00 o/600 t/Needs revision notes/Bob note`.
 2. Run `find Bob`, then `edit 1 s/Physics day/WED time/15:30 s/H2 Chemistry day/FRI time/17:00`.<br>
@@ -932,7 +932,7 @@ Use a fresh copy of the app in an empty folder.
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Original note` and
    `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00`.
 2. Run `find Amy`, then `edit 1 notes/Revise fractions, graphs & 中文!`.<br>
@@ -967,7 +967,7 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee p/11111111 a/Block 1 d/10-Aug o/2 s/Maths day/MON time/09:00 s/Physics day/FRI time/10:00`
    and `add n/Bob Choo p/22222222 a/Block 2 d/01-Jan o/10 s/Maths day/TUE time/11:00`.
 2. Run `sort o/desc n/asc`.<br>
@@ -990,11 +990,11 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 Use a fresh copy of the app in an empty folder so these checks do not affect real student records.
 
-1. Run `clear`, then add
+1. Run `clear confirm`, then add
    `add n/Amy Bee a/Block 1, #01-01 p/11111111 d/10-Aug s/Maths day/MON time/09:00 t/A-Level notes/Revise "fractions"`
    and `add n/Bob Choo a/Block 2 p/22222222 d/19-Sep s/Physics day/TUE time/10:00 o/120.50`. Run `archive s/Bob Choo`.
 2. Run `export` and note the file name in the result, for example `contacts-20261024-175424-176.csv`.
-3. Run `clear`, then `import contacts-20261024-175424-176.csv`.<br>
+3. Run `clear confirm`, then `import contacts-20261024-175424-176.csv`.<br>
    Expected: A preview names Amy Bee and Bob Choo, and the list is still empty.
 4. Run `import contacts-20261024-175424-176.csv confirm`.<br>
    Expected: `Imported 2 student(s) ...`. Amy is listed; `list -archived` shows Bob. `view 1` shows Amy's
@@ -1006,6 +1006,15 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: Two numbered row errors, and no student is added.
 7. Try `import missing.csv`, `import notes.txt` and `import` with no path.<br>
    Expected: Each command fails with a specific message.
+
+### Clearing all students
+
+1. Run `clear`.<br>
+   Expected: A message says how many students would be deleted. The list does not change.
+2. Run `clear 3` and `clear Confirm`.<br>
+   Expected: Both are rejected with the usage message. No student is deleted.
+3. Run `clear confirm`.<br>
+   Expected: `Deleted all N student(s) from TuteeDex.`, and `list` and `list -archived` are both empty.
 
 ### Restoring the last view
 

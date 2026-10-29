@@ -84,6 +84,10 @@ public class CsvPersonParserTest {
         Set<Subject> subjects = CsvPersonParser.parseSubjects(" maths(mon 09:00) ;  Physics ( TUE  23:59 ) ");
         assertEquals(List.of(subject("maths", DayOfWeek.MONDAY, 9, 0), subject("Physics", DayOfWeek.TUESDAY, 23, 59)),
                 new ArrayList<>(subjects));
+
+        // A name with its own brackets still takes the day and time from the last pair
+        assertEquals(List.of(subject("Maths (H2)", DayOfWeek.MONDAY, 9, 0), subject("C++", DayOfWeek.FRIDAY, 18, 0)),
+                new ArrayList<>(CsvPersonParser.parseSubjects("Maths (H2) (Mon 09:00); C++ (Fri 18:00)")));
     }
 
     @Test
@@ -107,7 +111,7 @@ public class CsvPersonParserTest {
         assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_LESSON_TIME, () ->
                 CsvPersonParser.parseSubjects("Maths (Mon 9:00)"));
         assertThrows(ParseException.class, Subject.MESSAGE_CONSTRAINTS, () ->
-                CsvPersonParser.parseSubjects("C++ (Mon 09:00)"));
+                CsvPersonParser.parseSubjects("Maths! (Mon 09:00)"));
         assertThrows(ParseException.class, ParserUtil.MESSAGE_DUPLICATE_SUBJECT, () ->
                 CsvPersonParser.parseSubjects("Maths (Mon 09:00); MATHS (Tue 10:00)"));
     }
