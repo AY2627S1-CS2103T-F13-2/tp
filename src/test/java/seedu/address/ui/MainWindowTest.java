@@ -488,6 +488,21 @@ public class MainWindowTest extends FxTestSupport {
         });
     }
 
+    @Test
+    public void startup_titleBarAboveScreen_ignoresSavedPosition() throws Exception {
+        runOnFxThread(() -> {
+            window.getPrimaryStage().hide();
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            // Only the bottom 10 pixels of the window overlap the screen, so the title bar is unreachable
+            int x = (int) bounds.getMinX() + 40;
+            int y = (int) bounds.getMinY() - 590;
+            logic.setGuiSettings(new GuiSettings(740, 600, x, y));
+            window = new MainWindow(new Stage(), logic, Path.of("test-addressbook.json"), openedUrl::set);
+            assertTrue(Double.isNaN(window.getPrimaryStage().getX()));
+            assertTrue(Double.isNaN(window.getPrimaryStage().getY()));
+        });
+    }
+
     private void enterCommand(String text) {
         input.setText(text);
         input.fireEvent(new ActionEvent());

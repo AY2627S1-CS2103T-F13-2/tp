@@ -35,6 +35,8 @@ public class MainWindow extends UiPart<Stage> {
             "Showing the same view as when you last closed TuteeDex. Type list to see all students.";
 
     private static final String FXML = "MainWindow.fxml";
+    /** Height of the window title bar that must be visible for the saved position to be reused. */
+    private static final double TITLE_BAR_HEIGHT = 30;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -171,7 +173,8 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Sets the default size based on {@code guiSettings}.
-     * The saved position is only used if it is still on a connected screen.
+     * The saved position is only used if the window's title bar would be on a connected screen,
+     * so the user can always see and drag the window.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
         primaryStage.setHeight(guiSettings.getWindowHeight());
@@ -179,8 +182,10 @@ public class MainWindow extends UiPart<Stage> {
         if (guiSettings.getWindowCoordinates() != null) {
             double x = guiSettings.getWindowCoordinates().getX();
             double y = guiSettings.getWindowCoordinates().getY();
-            if (!Screen.getScreensForRectangle(x, y, guiSettings.getWindowWidth(),
-                    guiSettings.getWindowHeight()).isEmpty()) {
+            double titleBarMiddleX = x + guiSettings.getWindowWidth() / 2;
+            boolean isTitleBarOnScreen = Screen.getScreens().stream()
+                    .anyMatch(screen -> screen.getVisualBounds().contains(titleBarMiddleX, y, 1, TITLE_BAR_HEIGHT));
+            if (isTitleBarOnScreen) {
                 primaryStage.setX(x);
                 primaryStage.setY(y);
             }
