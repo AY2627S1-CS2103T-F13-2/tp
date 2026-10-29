@@ -364,6 +364,16 @@ repeated tags, and produces an empty set when no tags are supplied. The shared c
 `LogicManagerTest` verifies Add with real temporary JSON storage: normalized tags survive loading into
 a new model, and invalid tags or duplicate profiles leave saved data and search results unchanged.
 
+### Student name validation
+
+Names must start with a Unicode letter and may contain Unicode letters, combining marks, ordinary spaces, hyphens (`-`), and straight or curly apostrophes (`'`, `’`). Examples: `Anne-Marie`, `O'Connor`, `O’Connor`, `José` (including a combining accent), and `张伟`. Digits, control characters, and other punctuation are rejected. Spelling is preserved; surrounding whitespace is trimmed by Add, Edit, and CSV import.
+
+`Name.isValidName` is shared by `ParserUtil.parseName` (Add, Edit and CSV import) and
+`JsonAdaptedPerson` (JSON loading). No Unicode normalization is applied. Duplicate equality
+continues to compare the supplied spelling; Find continues to match case-insensitive word
+prefixes split on whitespace, without transliteration or accent folding. Name sorting keeps
+its existing case-insensitive lexical comparison rather than locale collation.
+
 ### CSV import
 
 `import FILE_PATH [confirm]` reads the CSV format written by `export`, so a file exported from one copy of

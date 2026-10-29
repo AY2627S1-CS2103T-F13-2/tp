@@ -31,6 +31,17 @@ public class JsonAddressBookStorageTest {
     public Path testFolder;
 
     @Test
+    public void saveAndRead_internationalNames_preservesSpelling() throws Exception {
+        AddressBook book = new AddressBook();
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            book.addPerson(new PersonBuilder().withName(name).build());
+        }
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("names.json"));
+        storage.saveAddressBook(book);
+        assertEquals(book, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
     public void readAddressBook_nullFilePath_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> readAddressBook(null));
     }

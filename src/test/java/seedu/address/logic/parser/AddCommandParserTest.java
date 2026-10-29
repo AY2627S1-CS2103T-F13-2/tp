@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.person.OutstandingAmount;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.StartDate;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
@@ -27,6 +28,16 @@ import seedu.address.testutil.PersonBuilder;
 public class AddCommandParserTest {
     private static final String SUBJECT = " s/Maths day/MON time/09:00";
     private final AddCommandParser parser = new AddCommandParser();
+
+    @Test
+    public void parse_internationalNames_success() {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            Person expected = new PersonBuilder().withName(name).withPhone("91234567")
+                    .withAddress("Block 1").withStartDate("29-Feb").withSubjects("Maths").build();
+            assertParseSuccess(parser, " n/" + name
+                    + " p/91234567 a/Block 1 d/29-Feb s/Maths day/MON time/09:00", new AddCommand(expected));
+        }
+    }
 
     @Test
     public void parse_notesPresent_preservesFreeText() {

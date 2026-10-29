@@ -5,12 +5,27 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.testutil.PersonBuilder;
 
 public class NameContainsKeywordsPredicateTest {
+
+    @Test
+    public void test_internationalNames_keepsWordPrefixSemantics() {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            assertTrue(new NameContainsKeywordsPredicate(List.of(name.toUpperCase(Locale.ROOT)))
+                    .test(new PersonBuilder().withName(name).build()));
+        }
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Marie"))
+                .test(new PersonBuilder().withName("Anne-Marie").build()));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Jose"))
+                .test(new PersonBuilder().withName("José").build()));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("José"))
+                .test(new PersonBuilder().withName("Jose\u0301").build()));
+    }
 
     @Test
     public void equals() {
