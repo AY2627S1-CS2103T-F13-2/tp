@@ -137,6 +137,7 @@ public class EditCommandIntegrationTest {
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedModel.setPerson(target, updated);
         showPersonAtIndex(model, INDEX_SECOND_PERSON);
+        expectedModel.updateFilteredPersonList(model.getFilteredPersonListPredicate()::test);
 
         Command command = parser.parseCommand("edit 1 o/600");
 
@@ -163,6 +164,7 @@ public class EditCommandIntegrationTest {
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedModel.setPerson(target, updated);
         showPersonAtIndex(model, INDEX_SECOND_PERSON);
+        expectedModel.updateFilteredPersonList(model.getFilteredPersonListPredicate()::test);
 
         Command command = parser.parseCommand("edit 1 p/91234567");
 
@@ -178,6 +180,7 @@ public class EditCommandIntegrationTest {
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         Person updated = new PersonBuilder(archived).withPhone("91234567").build().withArchived(true);
         expectedModel.setPerson(archived, updated);
+        expectedModel.updateFilteredPersonList(Person::isArchived);
 
         Command command = parser.parseCommand("edit 1 p/91234567");
 

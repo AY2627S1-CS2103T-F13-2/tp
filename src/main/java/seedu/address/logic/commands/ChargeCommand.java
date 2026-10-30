@@ -17,6 +17,8 @@ public class ChargeCommand extends Command {
     public static final String MESSAGE_USAGE = "Usage: charge INDEX AMOUNT";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "No matching contact found at the specified index.";
     public static final String MESSAGE_SUCCESS = "%1$s's outstanding balance is now %2$s.";
+    public static final String MESSAGE_BALANCE_TOO_LARGE =
+            "This charge would make the balance more than SGD 1,000,000.00, which is not allowed.";
 
     private final Index index;
     private final OutstandingAmount amount;
@@ -35,6 +37,9 @@ public class ChargeCommand extends Command {
         }
         Person person = people.get(index.getZeroBased());
         OutstandingAmount updatedAmount = person.getOutstandingAmount().add(amount);
+        if (updatedAmount.isGreaterThan(OutstandingAmount.MAXIMUM)) {
+            throw new CommandException(MESSAGE_BALANCE_TOO_LARGE);
+        }
         Person updated = new Person(person.getName(), person.getPhone(), person.getAddress(), person.getStartDate(),
                 updatedAmount, person.getTags(), person.getNotes(), person.getSubjects(), person.isArchived());
         model.setPerson(person, updated);

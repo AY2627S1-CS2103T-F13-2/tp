@@ -124,6 +124,12 @@ public class ImportCommand extends Command {
                 + formatSkipped(storedStudents));
     }
 
+    // A preview changes no students, so only a confirmed import saves the data file.
+    @Override
+    public boolean requiresAddressBookSave() {
+        return isConfirmed;
+    }
+
     /**
      * Returns the students in the data rows, each with its row number.
      * Invalid rows, and rows for the same student as an earlier row but with different details, are added to

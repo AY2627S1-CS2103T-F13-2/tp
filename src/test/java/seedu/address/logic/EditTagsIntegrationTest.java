@@ -54,9 +54,9 @@ public class EditTagsIntegrationTest {
         assertEquals("Edited contact: Bob Choo",
                 logic.execute("edit 1 t/A-Level t/Needs revision t/a-level").getFeedbackToUser());
         Person updated = new PersonBuilder(bob).withTags("a-level", "needs revision").build();
-        assertEquals(List.of(amy, updated), model.getFilteredPersonList());
+        assertEquals(List.of(updated), model.getFilteredPersonList());
         assertEquals(List.of(amy, updated), storage.readAddressBook().orElseThrow().getPersonList());
-        assertTrue(logic.execute("view 2").getFeedbackToUser()
+        assertTrue(logic.execute("view 1").getFeedbackToUser()
                 .endsWith("Subjects: Physics (Mon 09:00)"
                         + "\nTags: a-level, needs revision\nNotes: Bob note"));
 

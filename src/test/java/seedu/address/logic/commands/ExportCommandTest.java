@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
@@ -91,6 +92,11 @@ public class ExportCommandTest {
         Files.deleteIfExists(existing);
         Files.deleteIfExists(output);
         Files.deleteIfExists(directory);
+    }
+
+    @Test
+    public void requiresAddressBookSave_returnsFalse() {
+        assertFalse(new ExportCommand().requiresAddressBookSave());
     }
 
     private static AddressBook addressBookWithContacts() {

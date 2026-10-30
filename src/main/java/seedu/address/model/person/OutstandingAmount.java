@@ -14,6 +14,9 @@ public class OutstandingAmount {
             "Outstanding amount must be a nonnegative number with at most two decimal places.";
     public static final String VALIDATION_REGEX = "\\d+(?:\\.\\d{1,2})?";
     public static final OutstandingAmount ZERO = new OutstandingAmount("0");
+    /** Largest amount a user can enter or reach by a charge. Stored data is not limited, so older files load. */
+    public static final OutstandingAmount MAXIMUM = new OutstandingAmount("1000000");
+    public static final String MESSAGE_TOO_LARGE = "Amounts cannot be more than SGD 1,000,000.00.";
 
     private final BigDecimal value;
 

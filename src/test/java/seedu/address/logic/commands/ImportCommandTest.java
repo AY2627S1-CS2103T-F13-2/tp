@@ -1,7 +1,9 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 
@@ -292,6 +294,12 @@ public class ImportCommandTest {
         Path file = temporaryFolder.resolve(name);
         Files.writeString(file, content);
         return file;
+    }
+
+    @Test
+    public void requiresAddressBookSave_onlyWhenConfirmed() {
+        assertTrue(new ImportCommand(Path.of("students.csv"), true).requiresAddressBookSave());
+        assertFalse(new ImportCommand(Path.of("students.csv"), false).requiresAddressBookSave());
     }
 
     private static Model copyOf(Model model) {

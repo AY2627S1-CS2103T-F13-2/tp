@@ -54,6 +54,17 @@ public class BalanceCommandTest {
     }
 
     @Test
+    public void chargeAboveMaximum_throwsCommandException() throws Exception {
+        Model model = modelWithStudent();
+        Assert.assertThrows(CommandException.class, ChargeCommand.MESSAGE_BALANCE_TOO_LARGE, () ->
+                new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("999950.01")).execute(model));
+        assertEquals("50", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+
+        new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("999950")).execute(model);
+        assertEquals(OutstandingAmount.MAXIMUM, model.getFilteredPersonList().get(0).getOutstandingAmount());
+    }
+
+    @Test
     public void paidConvergingBalances_keepsDistinctStudents() throws Exception {
         Model model = modelWithStudentAndMatchingBalance("20.00");
         new PaidCommand(INDEX_FIRST_PERSON, new OutstandingAmount("30.00")).execute(model);

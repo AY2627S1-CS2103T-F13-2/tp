@@ -18,4 +18,10 @@ public class HelpCommand extends Command {
     public CommandResult execute(Model model) {
         return new CommandResult(SHOWING_HELP_MESSAGE, true, false, CommandResult.ListPresentation.UNCHANGED);
     }
+
+    // Only shows information, so it must not overwrite a data file that failed to load.
+    @Override
+    public boolean requiresAddressBookSave() {
+        return false;
+    }
 }

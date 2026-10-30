@@ -30,6 +30,13 @@ public class CsvPersonParserTest {
             "Weak at \"moles\", needs practice", "true");
 
     @Test
+    public void parsePerson_internationalNames_preservesSpelling() throws Exception {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            assertEquals(name, CsvPersonParser.parsePerson(withColumn(VALID_ROW, 0, name)).getName().fullName);
+        }
+    }
+
+    @Test
     public void parsePerson_validRow_returnsMatchingPerson() throws Exception {
         Person expected = new PersonBuilder().withName("Bob Choo").withPhone("22222222")
                 .withAddress("Blk 2, #02-03").withStartDate("19-Sep").withOutstandingAmount("120.5")

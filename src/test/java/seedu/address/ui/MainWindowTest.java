@@ -295,6 +295,27 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void searchedEdit_keepsCardsAndNextChargeTarget() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("sort n/asc");
+            enterCommand("find Benson");
+            Person original = logic.getFilteredPersonList().getFirst();
+            Person alice = logic.model.getAddressBook().getPersonList().getFirst();
+            enterCommand("edit 1 notes/Updated");
+            Person updated = new PersonBuilder(original).withNotes("Updated").build();
+            assertContactCards(List.of(updated));
+            enterCommand("charge 1 5");
+            assertTrue(feedbackText().startsWith("Benson Meier's outstanding balance"));
+            assertEquals(alice, logic.model.getAddressBook().getPersonList().getFirst());
+            enterCommand("edit 1 n/Zed Test");
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+            assertTrue(feedbackText().contains("Displayed indexes have changed"));
+            enterCommand("charge 1 5");
+            assertTrue(feedbackText().contains("No matching contact found"));
+        });
+    }
+
+    @Test
     public void groupedList_successfulEdit_reusesContactPanelWithUpdatedCards() throws Exception {
         runOnFxThread(() -> {
             addScheduledSubjects();
@@ -330,6 +351,7 @@ public class MainWindowTest extends FxTestSupport {
             assertNotNull(root.lookup(".subject-group-panel"));
 
             enterCommand("delete 2");
+            enterCommand("delete confirm");
 
             assertNull(root.lookup(".subject-group-panel"));
             assertSame(contactPanel, window.getPersonListPanel());
@@ -337,6 +359,7 @@ public class MainWindowTest extends FxTestSupport {
             enterCommand("view 2");
             assertTrue(feedbackText().startsWith("Name: Cara Student | Phone:"));
             enterCommand("delete 2");
+            enterCommand("delete confirm");
             assertContactCards(List.of(alice));
         });
     }
@@ -723,6 +746,7 @@ public class MainWindowTest extends FxTestSupport {
             assertEquals("Review algebra", logic.getFilteredPersonList().get(1).getNotes().value);
             enterCommand("list -subjects");
             enterCommand("delete 2");
+            enterCommand("delete confirm");
             assertEquals(1, root.lookupAll(".lesson-row").size());
             enterCommand("list -subjects");
             assertEquals(List.of("Alice Pauline"), groupedNames("Maths"));
@@ -795,6 +819,7 @@ public class MainWindowTest extends FxTestSupport {
                     .filter(label -> label.getText().equals("001")).count());
             enterCommand("list");
             enterCommand("delete 1");
+            enterCommand("delete confirm");
             assertEquals(1, root.lookupAll(".lesson-row").size());
             assertEquals("Alice Pauline", logic.getFilteredPersonList().getFirst().getName().fullName);
         });
@@ -859,6 +884,7 @@ public class MainWindowTest extends FxTestSupport {
         private final ModelManager model = new ModelManager(new AddressBook(), new UserPrefs(),
                 Clock.fixed(Instant.parse("2026-10-22T14:00:00Z"), ZoneOffset.UTC));
         private final AddressBookParser parser = new AddressBookParser();
+        private DeleteCommand pendingDelete;
         private String lastViewCommand = "";
         private String lastSortCommand = "";
 
@@ -869,10 +895,22 @@ public class MainWindowTest extends FxTestSupport {
 
         @Override
         public CommandResult execute(String commandText) throws CommandException, ParseException {
+            DeleteCommand previousPreview = pendingDelete;
+            pendingDelete = null;
             Command command = parser.parseCommand(commandText);
+            if (command instanceof DeleteCommand deleteCommand && deleteCommand.isConfirmation()) {
+                if (previousPreview == null) {
+                    throw new CommandException(DeleteCommand.MESSAGE_NO_PREVIEW);
+                }
+                command = previousPreview;
+            }
             model.beginCommand();
             try {
-                return command.execute(model);
+                CommandResult result = command.execute(model);
+                if (command instanceof DeleteCommand deleteCommand && !deleteCommand.isConfirmation()) {
+                    pendingDelete = deleteCommand.confirmed(model);
+                }
+                return result;
             } finally {
                 model.endCommand();
             }

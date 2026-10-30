@@ -25,12 +25,19 @@ public class BalanceCommandParser {
         }
 
         Index index = ParserUtil.parseIndex(tokens.get(0));
-        OutstandingAmount amount = tokens.size() == 2
-                ? ParserUtil.parseOutstandingAmount(tokens.get(1)) : null;
+        OutstandingAmount amount = tokens.size() == 2 ? parseAmount(tokens.get(1)) : null;
         if (amount != null && amount.equals(OutstandingAmount.ZERO)) {
             throw new ParseException(BalanceCommand.MESSAGE_AMOUNT_MUST_BE_POSITIVE);
         }
         return new ParsedBalanceArguments(index, amount);
+    }
+
+    // A payment or charge gets its own message, since the outstanding-amount message describes the balance.
+    private static OutstandingAmount parseAmount(String amount) throws ParseException {
+        if (!OutstandingAmount.isValidOutstandingAmount(amount)) {
+            throw new ParseException(BalanceCommand.MESSAGE_INVALID_AMOUNT);
+        }
+        return ParserUtil.parseOutstandingAmount(amount);
     }
 
     /** Parsed balance command arguments. */

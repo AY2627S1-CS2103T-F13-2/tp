@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -7,6 +8,23 @@ import static seedu.address.testutil.Assert.assertThrows;
 import org.junit.jupiter.api.Test;
 
 public class NameTest {
+
+    @Test
+    public void constructor_internationalNames_preservesSpelling() {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            assertTrue(Name.isValidName(name));
+            assertEquals(name, new Name(name).fullName);
+        }
+        assertFalse(new Name("José").equals(new Name("Jose\u0301")));
+    }
+
+    @Test
+    public void isValidName_invalidCharacters_returnsFalse() {
+        for (String name : new String[] {"-’'", "\u0301", "\u0301Jose", " Anne", "Anne\nMarie",
+            "Anne\tMarie", "Anne\u0000Marie", "Anne_Marie", "Anne2", "Anne😀"}) {
+            assertFalse(Name.isValidName(name), name);
+        }
+    }
 
     @Test
     public void constructor_null_throwsNullPointerException() {

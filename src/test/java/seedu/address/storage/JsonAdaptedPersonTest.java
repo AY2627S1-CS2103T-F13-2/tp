@@ -38,6 +38,14 @@ public class JsonAdaptedPersonTest {
     private static final String VALID_OUTSTANDING_AMOUNT = BENSON.getOutstandingAmount().toString();
 
     @Test
+    public void toModelType_internationalNames_roundTrips() throws Exception {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            Person person = new PersonBuilder(BENSON).withName(name).build();
+            assertEquals(person, new JsonAdaptedPerson(person).toModelType());
+        }
+    }
+
+    @Test
     public void toModelType_notes_roundTrips() throws Exception {
         Person withNotes = new PersonBuilder(BENSON).withNotes("Needs  revision: fractions!").build();
         assertEquals(withNotes, new JsonAdaptedPerson(withNotes).toModelType());

@@ -16,4 +16,10 @@ public class ExitCommand extends Command {
         return new CommandResult(MESSAGE_EXIT_ACKNOWLEDGEMENT, false, true);
     }
 
+    // Exiting changes no students, so it must not overwrite a data file that failed to load.
+    @Override
+    public boolean requiresAddressBookSave() {
+        return false;
+    }
+
 }

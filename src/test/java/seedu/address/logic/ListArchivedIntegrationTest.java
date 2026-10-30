@@ -117,6 +117,7 @@ public class ListArchivedIntegrationTest {
         logic.execute("archive 2");
         logic.execute("list -archived");
         logic.execute("delete 1");
+        logic.execute("delete confirm");
         assertEquals(List.of("Amy Bee", "Cara Dee"), storage.readAddressBook().orElseThrow().getPersonList()
                 .stream().map(person -> person.getName().fullName).toList());
     }

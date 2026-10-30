@@ -18,6 +18,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -28,7 +29,7 @@ public class DeleteCommandTest {
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
-    public void execute_validIndexUnfilteredList_success() {
+    public void execute_validIndexUnfilteredList_success() throws Exception {
         Person personToDelete = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PERSON);
 
@@ -38,7 +39,12 @@ public class DeleteCommandTest {
         ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.deletePerson(personToDelete);
 
-        assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
+        assertEquals(String.format(DeleteCommand.MESSAGE_CONFIRM, Messages.format(personToDelete)),
+                deleteCommand.execute(model).getFeedbackToUser());
+        assertTrue(model.hasPerson(personToDelete));
+        assertFalse(deleteCommand.requiresAddressBookSave());
+        assertTrue(deleteCommand.confirmed(model).requiresAddressBookSave());
+        assertCommandSuccess(deleteCommand.confirmed(model), model, expectedMessage, expectedModel);
     }
 
     @Test
@@ -50,7 +56,7 @@ public class DeleteCommandTest {
     }
 
     @Test
-    public void execute_validIndexFilteredList_success() {
+    public void execute_validIndexFilteredList_success() throws Exception {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
 
         Person personToDelete = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -63,7 +69,12 @@ public class DeleteCommandTest {
         expectedModel.deletePerson(personToDelete);
         showNoPerson(expectedModel);
 
-        assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
+        assertEquals(String.format(DeleteCommand.MESSAGE_CONFIRM, Messages.format(personToDelete)),
+                deleteCommand.execute(model).getFeedbackToUser());
+        assertTrue(model.hasPerson(personToDelete));
+        assertFalse(deleteCommand.requiresAddressBookSave());
+        assertTrue(deleteCommand.confirmed(model).requiresAddressBookSave());
+        assertCommandSuccess(deleteCommand.confirmed(model), model, expectedMessage, expectedModel);
     }
 
     @Test
@@ -77,6 +88,24 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(outOfBoundIndex);
 
         assertCommandFailure(deleteCommand, model, DeleteCommand.MESSAGE_CONTACT_NOT_FOUND);
+    }
+
+    @Test
+    public void execute_preview_keepsPresentationAndDoesNotSave() throws Exception {
+        DeleteCommand command = new DeleteCommand(INDEX_FIRST_PERSON);
+        assertEquals(CommandResult.ListPresentation.UNCHANGED, command.execute(model).getListPresentation());
+        assertFalse(command.requiresAddressBookSave());
+        assertCommandFailure(new DeleteCommand(), model, DeleteCommand.MESSAGE_NO_PREVIEW);
+    }
+
+    @Test
+    public void execute_confirmedStudentChanged_rejectsConfirmation() throws Exception {
+        DeleteCommand preview = new DeleteCommand(INDEX_FIRST_PERSON);
+        preview.execute(model);
+        DeleteCommand confirmation = preview.confirmed(model);
+        Person target = model.getFilteredPersonList().getFirst();
+        model.setPerson(target, new PersonBuilder(target).withName("Changed Name").build());
+        assertCommandFailure(confirmation, model, DeleteCommand.MESSAGE_NO_PREVIEW);
     }
 
     @Test

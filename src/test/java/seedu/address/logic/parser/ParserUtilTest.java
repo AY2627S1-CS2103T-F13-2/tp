@@ -42,6 +42,13 @@ public class ParserUtilTest {
     private static final String WHITESPACE = " \t\r\n";
 
     @Test
+    public void parseName_internationalNames_preservesSpelling() throws Exception {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            assertEquals(name, ParserUtil.parseName(name).fullName);
+        }
+    }
+
+    @Test
     public void parseStartDate_invalidCalendarDate_throwsParseException() {
         for (String invalid : List.of("31-Feb", "30-Feb", "31-Apr", "00-Jan", "32-Jan", "99-Abc", "10-Abc",
                 "1-Aug", "10-Aug-2026", "")) {
@@ -239,6 +246,13 @@ public class ParserUtilTest {
     @Test
     public void parseOutstandingAmount_invalidValue_throwsParseException() {
         assertThrows(ParseException.class, () -> ParserUtil.parseOutstandingAmount("-1"));
+    }
+
+    @Test
+    public void parseOutstandingAmount_aboveMaximum_throwsParseException() throws Exception {
+        assertEquals(OutstandingAmount.MAXIMUM, ParserUtil.parseOutstandingAmount("1000000.00"));
+        assertThrows(ParseException.class, OutstandingAmount.MESSAGE_TOO_LARGE, () ->
+                ParserUtil.parseOutstandingAmount("1000000.01"));
     }
 
     @Test

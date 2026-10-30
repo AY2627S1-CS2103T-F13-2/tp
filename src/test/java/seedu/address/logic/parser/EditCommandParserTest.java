@@ -40,6 +40,14 @@ public class EditCommandParserTest {
     private final EditCommandParser parser = new EditCommandParser();
 
     @Test
+    public void parse_internationalNames_success() {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(name).build();
+            assertParseSuccess(parser, "1 n/" + name, new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        }
+    }
+
+    @Test
     public void parse_notesSpecified_preservesFreeTextAndUrls() {
         String notes = "Revise  fractions, graphs & 中文! See https://example.com";
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withNotes(notes).build();

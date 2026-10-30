@@ -23,6 +23,16 @@ public class SortComparatorsTest {
     private static final LocalDateTime THURSDAY = LocalDateTime.of(2026, 10, 22, 14, 0);
 
     @Test
+    public void students_internationalNames_keepsCaseInsensitiveLexicalOrder() {
+        List<Person> expected = List.of("Anne-Marie", "Jose\u0301", "José", "O'Connor", "O’Connor", "张伟")
+                .stream().map(name -> person(name, "0", "10-Aug")).toList();
+        assertEquals(expected, sorted(expected.reversed(), SortComparators.students(
+                order(new Criterion(Field.NAME, Direction.ASCENDING)), THURSDAY)));
+        assertEquals(expected.reversed(), sorted(expected, SortComparators.students(
+                order(new Criterion(Field.NAME, Direction.DESCENDING)), THURSDAY)));
+    }
+
+    @Test
     public void students_mixedPriorities_comparesAmountsNumericallyAndNamesIgnoringCase() {
         Person amy = person("amy", "10", "10-Aug");
         Person bob = person("Bob", "10.00", "10-Aug");
