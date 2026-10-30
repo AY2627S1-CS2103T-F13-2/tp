@@ -15,6 +15,15 @@ import seedu.address.testutil.PersonBuilder;
 public class CsvExporterTest {
 
     @Test
+    public void format_internationalNames_roundTrips() throws Exception {
+        for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+            Person person = new PersonBuilder().withName(name).withSubjects("Maths").build();
+            List<List<String>> rows = CsvReader.read(CsvExporter.format(List.of(person)));
+            assertEquals(person, CsvPersonParser.parsePerson(rows.get(1)));
+        }
+    }
+
+    @Test
     public void format_contactWithAllFields_quotesAndFormatsFields() {
         Person person = new PersonBuilder().withName("Amy Bee").withAddress("Block 1, #02-03")
                 .withSubjects("Maths", "Physics").withTags("z-tag", "a-tag")

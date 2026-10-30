@@ -108,6 +108,8 @@ TuteeDex does not invent schedules or add subjects to them. Use, for example,
 `edit 1 s/Maths day/MON time/15:30` to supply a real lesson schedule. Profiles without
 subjects remain in the normal list and TOTAL/PAID counts but have no entry in `list -subjects`.
 
+Names must start with a Unicode letter and may contain Unicode letters, combining marks, ordinary spaces, hyphens (`-`), and straight or curly apostrophes (`'`, `’`). Examples: `Anne-Marie`, `O'Connor`, `O’Connor`, `José` (including a combining accent), and `张伟`. Digits, control characters, and other punctuation are rejected. Spelling is preserved; surrounding whitespace is trimmed by Add, Edit, and CSV import.
+
 Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]`
 
 <box type="tip" seamless>
@@ -385,7 +387,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   Surrounding whitespace is trimmed; internal spacing, punctuation, display case, and Unicode text are preserved.
   Specify `notes/` only once. The prefix rules below also apply inside notes: a recognized field prefix starts
   another field, while an unknown prefix-shaped token is rejected. URLs such as `https://example.com` remain note text.
-* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places and at most `1000000`.
+* Field values use the same validation rules as `add`: names follow the Unicode name policy documented under `add`, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places and at most `1000000`.
 * Use `o/0` to reset the outstanding amount to zero. Blank values for the five scalar fields, including `o/`, are invalid.
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.

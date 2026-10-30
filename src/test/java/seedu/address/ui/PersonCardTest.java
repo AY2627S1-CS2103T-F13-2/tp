@@ -17,6 +17,18 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonCardTest extends FxTestSupport {
 
     @Test
+    public void constructor_internationalNames_preservesDisplayAndProfile() throws Exception {
+        runOnFxThread(() -> {
+            for (String name : new String[] {"Anne-Marie", "O'Connor", "O’Connor", "José", "Jose\u0301", "张伟"}) {
+                PersonCard card = new PersonCard(new PersonBuilder().withName(name).build(), 1);
+                Label label = (Label) card.getRoot().lookup("#name");
+                assertEquals(name, label.getText());
+                assertTrue(label.getTooltip().getText().startsWith(name + "; Phone: "));
+            }
+        });
+    }
+
+    @Test
     public void constructor_displaysSubjectsAndLegacyFallback() throws Exception {
         runOnFxThread(() -> {
             assertSubjectsText(ALICE, "Not specified");
