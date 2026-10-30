@@ -153,7 +153,9 @@ How the `Logic` component works:
 
 Invalid command syntax produces a `ParseException`; an out-of-range Delete index produces a `CommandException`
 before any student is deleted. These failure paths are omitted from the success sequence. A storage failure
-also becomes a `CommandException`, but occurs after command execution and does not roll back its model changes.
+also becomes a `CommandException`. Before running a command that saves, `LogicManager` copies the address book,
+and if saving fails it puts that copy back with `Model#setAddressBook()`. The students shown then match the saved
+file, and retrying a command such as `charge 1 5` does not apply it twice.
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
@@ -437,7 +439,8 @@ A restored `find` can show no students, for example after its only match was del
 of the result box, so it needs no message.
 Like `sort`, `list` and `find` override `Command#requiresAddressBookSave()` to return `false`, because they
 only change the display. Otherwise, if the data file failed to load and the app started empty, replaying the
-saved view would write that empty address book over the user's file.
+saved view would write that empty address book over the user's file. `help`, `view`, `export`, `exit`, an
+`import` preview and a `clear` preview do the same, because they change no students either.
 
 **Alternatives considered.** Saving the filter itself is not practical, because the filters are `Predicate`
 objects built from lambdas and cannot be written to JSON without a separate data form for every kind of filter.
