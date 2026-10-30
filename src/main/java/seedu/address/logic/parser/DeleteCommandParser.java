@@ -18,6 +18,9 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
      */
     public DeleteCommand parse(String args) throws ParseException {
         String trimmedArgs = args.trim();
+        if (trimmedArgs.equals("confirm")) {
+            return new DeleteCommand();
+        }
         if (trimmedArgs.isEmpty() || trimmedArgs.matches(".*\\s+.*")) {
             throw new ParseException(DeleteCommand.MESSAGE_INVALID_COMMAND_FORMAT);
         }

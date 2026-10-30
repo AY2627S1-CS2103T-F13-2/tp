@@ -103,6 +103,7 @@ public class ListMixedFiltersIntegrationTest {
         assertEquals(order, model.getSortOrder());
         assertTrue(logic.execute("view 1").getFeedbackToUser().startsWith("Name: Bob Choo\n"));
         logic.execute("delete 1");
+        logic.execute("delete confirm");
         assertTrue(storage.readAddressBook().orElseThrow().getPersonList().stream()
                 .noneMatch(person -> person.getName().fullName.equals("Bob Choo")));
         assertTrue(model.getAddressBook().getPersonList().contains(stored.get(6)));

@@ -47,6 +47,8 @@ public class HelpWindowTest extends FxTestSupport {
             assertFalse(rows.getChildren().isEmpty());
             assertTrue(rows.getChildren().stream().map(Label.class::cast)
                     .anyMatch(row -> row.getText().startsWith("sort")));
+            assertTrue(rows.getChildren().stream().map(Label.class::cast)
+                    .anyMatch(row -> row.getText().equals("delete confirm")));
             rows.getChildren().forEach(node -> {
                 Label row = (Label) node;
                 assertFalse(row.getText().isBlank());

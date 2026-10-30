@@ -12,6 +12,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.ListPresentation;
+import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
@@ -42,6 +43,7 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
+    private DeleteCommand pendingDelete;
     private boolean isShowingSubjectGroups = false;
 
     /**
@@ -57,8 +59,16 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
+        DeleteCommand previousPreview = pendingDelete;
+        pendingDelete = null;
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        if (command instanceof DeleteCommand deleteCommand && deleteCommand.isConfirmation()) {
+            if (previousPreview == null) {
+                throw new CommandException(DeleteCommand.MESSAGE_NO_PREVIEW);
+            }
+            command = previousPreview;
+        }
         Predicate<? super Person> filterBeforeCommand = model.getFilteredPersonListPredicate();
         // Kept so that a change which cannot be saved can be undone
         ReadOnlyAddressBook addressBookBeforeCommand = command.requiresAddressBookSave()
@@ -67,6 +77,9 @@ public class LogicManager implements Logic {
         model.beginCommand();
         try {
             commandResult = command.execute(model);
+            if (command instanceof DeleteCommand deleteCommand && !deleteCommand.isConfirmation()) {
+                pendingDelete = deleteCommand.confirmed(model);
+            }
         } finally {
             model.endCommand();
         }

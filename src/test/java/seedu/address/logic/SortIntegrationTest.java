@@ -140,6 +140,7 @@ public class SortIntegrationTest {
         logic.execute("edit 1 n/Cara Dee");
         assertEquals(List.of("Cara Dee", "Amy Bee"), names());
         logic.execute("delete 1");
+        logic.execute("delete confirm");
         assertEquals(List.of("Amy Bee"), names());
         assertEquals("Amy Bee", storage.readAddressBook().orElseThrow().getPersonList().getFirst().getName().fullName);
     }
@@ -172,6 +173,7 @@ public class SortIntegrationTest {
         assertEquals(2, storage.readAddressBook().orElseThrow().getPersonList().size());
         assertThrows(UnsupportedOperationException.class, () -> rows.clear());
         logic.execute("delete 1"); // Bob is first in the unique-student order and has one lesson.
+        logic.execute("delete confirm");
         assertEquals(List.of("Amy Bee"), names());
         assertEquals(2, logic.getLessonRows().size());
     }
