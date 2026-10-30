@@ -65,11 +65,11 @@ public class BalanceCommandTest {
     }
 
     @Test
-    public void paidResultingInDuplicate_throwsCommandException() {
+    public void paidConvergingBalances_keepsDistinctStudents() throws Exception {
         Model model = modelWithStudentAndMatchingBalance("20.00");
-        Assert.assertThrows(CommandException.class, PaidCommand.MESSAGE_DUPLICATE_PERSON, () ->
-                new PaidCommand(INDEX_FIRST_PERSON, new OutstandingAmount("30.00")).execute(model));
-        assertEquals("50", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+        new PaidCommand(INDEX_FIRST_PERSON, new OutstandingAmount("30.00")).execute(model);
+        assertEquals("20", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+        assertEquals("20", model.getFilteredPersonList().get(1).getOutstandingAmount().toPlainString());
     }
 
     @Test
@@ -80,11 +80,11 @@ public class BalanceCommandTest {
     }
 
     @Test
-    public void chargeResultingInDuplicate_throwsCommandException() {
+    public void chargeConvergingBalances_keepsDistinctStudents() throws Exception {
         Model model = modelWithStudentAndMatchingBalance("62.50");
-        Assert.assertThrows(CommandException.class, ChargeCommand.MESSAGE_DUPLICATE_PERSON, () ->
-                new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("12.50")).execute(model));
-        assertEquals("50", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+        new ChargeCommand(INDEX_FIRST_PERSON, new OutstandingAmount("12.50")).execute(model);
+        assertEquals("62.5", model.getFilteredPersonList().get(0).getOutstandingAmount().toPlainString());
+        assertEquals("62.5", model.getFilteredPersonList().get(1).getOutstandingAmount().toPlainString());
     }
 
     @Test
@@ -143,7 +143,8 @@ public class BalanceCommandTest {
     private Model modelWithStudentAndMatchingBalance(String matchingBalance) {
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(student);
-        addressBook.addPerson(new PersonBuilder(student).withOutstandingAmount(matchingBalance).build());
+        addressBook.addPerson(new PersonBuilder(student).withPhone("91234567")
+                .withOutstandingAmount(matchingBalance).build());
         return new ModelManager(addressBook, new UserPrefs());
     }
 }

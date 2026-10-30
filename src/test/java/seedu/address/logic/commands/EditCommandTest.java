@@ -39,6 +39,25 @@ public class EditCommandTest {
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
+    public void execute_balanceEdit_preservesIdentityAndOtherFields() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person updated = new PersonBuilder(original).withOutstandingAmount("25").build();
+        Model expected = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expected.setPerson(original, updated);
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withOutstandingAmount("25").build()), model,
+                String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, updated.getName()), expected);
+    }
+
+    @Test
+    public void execute_identityEditWithDifferentBalance_rejectedWithoutChanges() {
+        Person first = model.getFilteredPersonList().get(0);
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(first).withOutstandingAmount("25").build();
+        assertCommandFailure(new EditCommand(INDEX_SECOND_PERSON, descriptor), model,
+                EditCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
+    @Test
     public void execute_activeStudent_keepsArchivedStudentsHidden() throws Exception {
         Person archivedPerson = model.getFilteredPersonList().get(0).withArchived(true);
         model.setPerson(model.getFilteredPersonList().get(0), archivedPerson);

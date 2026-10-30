@@ -99,27 +99,27 @@ public class EditCommandIntegrationTest {
     }
 
     @Test
-    public void execute_amountCreatesDuplicateOutsideFilteredList_preservesDataAndFilter() throws Exception {
+    public void execute_identityCreatesDuplicateOutsideFilteredList_preservesDataAndFilter() throws Exception {
         Person original = model.getFilteredPersonList().get(0);
         Person existing = new PersonBuilder(original).withOutstandingAmount("20").build();
         model.setPerson(original, existing);
         Person secondPerson = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
-        Person target = new PersonBuilder(existing).withOutstandingAmount("600").build();
+        Person target = new PersonBuilder(existing).withPhone("91234567").withOutstandingAmount("600").build();
         model.setPerson(secondPerson, target);
         // Both profiles have the same name, so filter by the complete profile to hide the duplicate.
         model.updateFilteredPersonList(person -> person.equals(target));
         assertEquals(List.of(target), model.getFilteredPersonList());
 
-        Command command = parser.parseCommand("edit 1 o/20.00");
+        Command command = parser.parseCommand("edit 1 p/" + existing.getPhone().value);
 
         assertCommandFailure(command, model, EditCommand.MESSAGE_DUPLICATE_PERSON);
     }
 
     @Test
-    public void execute_profilesDifferOnlyInAmount_success() throws Exception {
+    public void execute_sameNameDifferentPhone_amountEditSucceeds() throws Exception {
         Person target = model.getFilteredPersonList().get(0);
         Person secondPerson = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
-        Person existing = new PersonBuilder(target).withOutstandingAmount("600").build();
+        Person existing = new PersonBuilder(target).withPhone("91234567").withOutstandingAmount("600").build();
         model.setPerson(secondPerson, existing);
         Person updated = new PersonBuilder(target).withOutstandingAmount("20").build();
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());

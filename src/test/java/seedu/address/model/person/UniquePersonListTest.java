@@ -22,6 +22,22 @@ public class UniquePersonListTest {
     private final UniquePersonList uniquePersonList = new UniquePersonList();
 
     @Test
+    public void balanceOnlyDuplicate_rejectedWithoutChangingList() {
+        uniquePersonList.add(ALICE);
+        Person duplicate = new PersonBuilder(ALICE).withOutstandingAmount("25").build();
+        assertTrue(uniquePersonList.contains(duplicate));
+        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.add(duplicate));
+        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.setPersons(List.of(ALICE, duplicate)));
+        assertEquals(List.of(ALICE), uniquePersonList.asUnmodifiableObservableList());
+
+        uniquePersonList.add(BOB);
+        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.setPerson(BOB, duplicate));
+        assertEquals(List.of(ALICE, BOB), uniquePersonList.asUnmodifiableObservableList());
+        uniquePersonList.setPerson(ALICE, duplicate);
+        assertEquals(List.of(duplicate, BOB), uniquePersonList.asUnmodifiableObservableList());
+    }
+
+    @Test
     public void contains_nullPerson_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> uniquePersonList.contains(null));
     }

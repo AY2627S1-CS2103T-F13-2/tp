@@ -141,14 +141,10 @@ public class AddCommandIntegrationTest {
     }
 
     @Test
-    public void execute_sameProfileWithDifferentOutstandingAmount_success() {
+    public void execute_sameProfileWithDifferentOutstandingAmount_rejected() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
         Person personWithDifferentAmount = new PersonBuilder(personInList).withOutstandingAmount("20").build();
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.addPerson(personWithDifferentAmount);
-
-        assertCommandSuccess(new AddCommand(personWithDifferentAmount), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, personWithDifferentAmount.getName()), expectedModel);
+        assertCommandFailure(new AddCommand(personWithDifferentAmount), model, AddCommand.MESSAGE_DUPLICATE_PERSON);
     }
 
     @Test

@@ -77,10 +77,10 @@ public class AddressBookTest {
     }
 
     @Test
-    public void hasPerson_personWithDifferentOutstandingAmountInAddressBook_returnsFalse() {
+    public void hasPerson_personWithDifferentOutstandingAmountInAddressBook_returnsTrue() {
         addressBook.addPerson(ALICE);
         Person editedAlice = new PersonBuilder(ALICE).withOutstandingAmount("20").build();
-        assertFalse(addressBook.hasPerson(editedAlice));
+        assertTrue(addressBook.hasPerson(editedAlice));
     }
 
     @Test

@@ -30,6 +30,19 @@ public class AddCommandTest {
     private static final String EXPECTED_DUPLICATE_MESSAGE = "This contact already exists in TuteeDex";
 
     @Test
+    public void execute_balanceOnlyDuplicate_rejectedWithoutChangingModel() throws Exception {
+        ModelStubAcceptingPersonAdded model = new ModelStubAcceptingPersonAdded();
+        Person student = new PersonBuilder().withName("Twin Student").withPhone("91234567")
+                .withAddress("Block 1").withStartDate("29-Feb").withSubjects("Maths")
+                .withOutstandingAmount("10").build();
+        new AddCommand(student).execute(model);
+        Person duplicate = new PersonBuilder(student).withOutstandingAmount("20").build();
+        assertThrows(CommandException.class, EXPECTED_DUPLICATE_MESSAGE, () ->
+                new AddCommand(duplicate).execute(model));
+        assertEquals(List.of(student), model.personsAdded);
+    }
+
+    @Test
     public void constructor_nullPerson_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new AddCommand(null));
     }

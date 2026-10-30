@@ -19,8 +19,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.JsonUtil;
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.AddressBook;
+import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -39,6 +43,60 @@ public class JsonAddressBookStorageTest {
         JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("names.json"));
         storage.saveAddressBook(book);
         assertEquals(book, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void legacyBalanceDuplicates_recoveredThenPaymentsAndEditsRoundTrip() throws Exception {
+        Person first = new PersonBuilder().withName("Twin Student").withPhone("91234567").withAddress("Block 1")
+                .withStartDate("29-Feb").withSubjects("Maths").withOutstandingAmount("10").build();
+        Person second = new PersonBuilder(first).withOutstandingAmount("20").build();
+        Path file = testFolder.resolve("legacy.json");
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(
+                List.of(new JsonAdaptedPerson(first), new JsonAdaptedPerson(second))), file);
+        String originalJson = Files.readString(file);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        Model model = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
+        Person recovered = new PersonBuilder(second).withName("Twin Student Recovered").build();
+        assertEquals(List.of(first, recovered), model.getAddressBook().getPersonList());
+        assertEquals(originalJson, Files.readString(file));
+        AddressBookParser parser = new AddressBookParser();
+
+        // Partial payments, charges and edit can converge without changing either student's identity.
+        parser.parseCommand("paid 2 10").execute(model);
+        assertEquals(new PersonBuilder(recovered).withOutstandingAmount("10").build(),
+                model.getAddressBook().getPersonList().get(1));
+        parser.parseCommand("charge 1 10").execute(model);
+        parser.parseCommand("charge 2 10").execute(model);
+        parser.parseCommand("edit 1 o/10").execute(model);
+        parser.parseCommand("edit 2 o/10").execute(model);
+        parser.parseCommand("find Twin").execute(model);
+        parser.parseCommand("paid 1").execute(model);
+        parser.parseCommand("paid 2").execute(model);
+        assertEquals(List.of(new PersonBuilder(first).withOutstandingAmount("0").build(),
+                new PersonBuilder(recovered).withOutstandingAmount("0").build()),
+                model.getAddressBook().getPersonList());
+        storage.saveAddressBook(model.getAddressBook());
+        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void legacyRecovery_avoidsExistingNamesAndPreservesArchivedDetails() throws Exception {
+        Person first = new PersonBuilder(ALICE).withOutstandingAmount("10").build();
+        Person second = new PersonBuilder(first).withOutstandingAmount("20").withTags("review")
+                .withSubjects("Maths").withNotes("Keep both balances").build().withArchived(true);
+        Person existingName = new PersonBuilder(first).withName(first.getName() + " Recovered").build();
+        Person third = new PersonBuilder(first).withOutstandingAmount("30").build();
+        JsonSerializableAddressBook legacy = new JsonSerializableAddressBook(List.of(new JsonAdaptedPerson(first),
+                new JsonAdaptedPerson(second), new JsonAdaptedPerson(existingName), new JsonAdaptedPerson(third)));
+        Person recoveredSecond = new PersonBuilder(second).withName(first.getName() + " Recovered Recovered")
+                .build().withArchived(true);
+        Person recoveredThird = new PersonBuilder(third).withName(first.getName() + " Recovered Recovered Recovered")
+                .build();
+        AddressBook loaded = legacy.toModelType();
+        assertEquals(List.of(first, recoveredSecond, existingName, recoveredThird), loaded.getPersonList());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("recovered.json"));
+        storage.saveAddressBook(loaded);
+        assertEquals(loaded, storage.readAddressBook().orElseThrow());
     }
 
     @Test
