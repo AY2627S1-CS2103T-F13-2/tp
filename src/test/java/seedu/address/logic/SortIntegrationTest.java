@@ -270,7 +270,7 @@ public class SortIntegrationTest {
         int reads = clock.reads;
 
         clockedLogic.execute("edit 1 notes/Before the lesson");
-        assertEquals(reads + 1, clock.reads, "The profile update and filter reset share one clock reading");
+        assertEquals(reads + 1, clock.reads, "The profile update captures one clock reading");
         assertEquals(today, clocked.getStudentRows().getFirst().subject());
         List<LessonRow> rows = clocked.getLessonRows();
         clockedLogic.execute("sort");
