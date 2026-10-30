@@ -130,7 +130,11 @@ public class ParserUtil {
         if (!OutstandingAmount.isValidOutstandingAmount(trimmedOutstandingAmount)) {
             throw new ParseException(OutstandingAmount.MESSAGE_CONSTRAINTS);
         }
-        return new OutstandingAmount(trimmedOutstandingAmount);
+        OutstandingAmount amount = new OutstandingAmount(trimmedOutstandingAmount);
+        if (amount.isGreaterThan(OutstandingAmount.MAXIMUM)) {
+            throw new ParseException(OutstandingAmount.MESSAGE_TOO_LARGE);
+        }
+        return amount;
     }
 
     /**
