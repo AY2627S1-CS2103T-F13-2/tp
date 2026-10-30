@@ -87,7 +87,8 @@
         "archiving-students-2": "Archiving students",
         "clearing-all-students": "Clearing all students",
         "restoring-the-last-view-2": "Restoring the last view",
-        "saving-data": "Saving data"
+        "saving-data": "Saving data",
+        "single-student-deletion-confirmation": "Single-student deletion confirmation"
       },
       "headingKeywords": {}
     },
