@@ -242,6 +242,13 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseOutstandingAmount_aboveMaximum_throwsParseException() throws Exception {
+        assertEquals(OutstandingAmount.MAXIMUM, ParserUtil.parseOutstandingAmount("1000000.00"));
+        assertThrows(ParseException.class, OutstandingAmount.MESSAGE_TOO_LARGE, () ->
+                ParserUtil.parseOutstandingAmount("1000000.01"));
+    }
+
+    @Test
     public void parseOutstandingAmount_validValue_returnsNormalizedAmount() throws Exception {
         OutstandingAmount expectedAmount = new OutstandingAmount(VALID_OUTSTANDING_AMOUNT);
         assertEquals(expectedAmount, ParserUtil.parseOutstandingAmount("  " + VALID_OUTSTANDING_AMOUNT + "  "));

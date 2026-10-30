@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
-import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -65,21 +64,21 @@ public class ViewCommandTest {
     @Test
     public void execute_invalidIndexUnfilteredList_throwsCommandException() {
         Index index = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
-        assertCommandFailure(new ViewCommand(index), model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(new ViewCommand(index), model, ViewCommand.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_invalidIndexFilteredList_throwsCommandException() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
         assertCommandFailure(new ViewCommand(INDEX_SECOND_PERSON), model,
-                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+                ViewCommand.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_emptyList_throwsCommandException() {
         model.updateFilteredPersonList(person -> false);
         assertCommandFailure(new ViewCommand(INDEX_FIRST_PERSON), model,
-                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+                ViewCommand.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test

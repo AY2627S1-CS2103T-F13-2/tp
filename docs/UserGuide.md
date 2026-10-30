@@ -103,7 +103,7 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 **Note:** `START_DATE` must be a valid calendar date in `DD-MMM` format, for example `10-Aug`.
 Month names are case-insensitive. `29-Feb` is allowed because no year is specified; `31-Feb` and unknown months are rejected.
 
-**Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
+**Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places, and at most `1000000` (SGD 1,000,000.00). Do not include a currency symbol, sign, separator, or exponent.
 
 **Note:** At least one subject lesson is required for new profiles. Enter each lesson as
 `s/SUBJECT day/DAY time/TIME`, in that order. `DAY` is one of `MON`, `TUE`, `WED`, `THU`,
@@ -373,7 +373,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   Surrounding whitespace is trimmed; internal spacing, punctuation, display case, and Unicode text are preserved.
   Specify `notes/` only once. The prefix rules below also apply inside notes: a recognized field prefix starts
   another field, while an unknown prefix-shaped token is rejected. URLs such as `https://example.com` remain note text.
-* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places.
+* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places and at most `1000000`.
 * Use `o/0` to reset the outstanding amount to zero. Blank values for the five scalar fields, including `o/`, are invalid.
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.
@@ -420,6 +420,7 @@ Format: `paid INDEX [AMOUNT]`
 
 * `paid INDEX` clears the student's outstanding balance.
 * `paid INDEX AMOUNT` reduces the balance by `AMOUNT`. The amount must be positive and have at most two decimal places.
+  Otherwise TuteeDex shows `Amount must be a positive number with at most two decimal places, such as 50 or 20.50.`
 * A payment larger than the current balance is rejected, and the profile is unchanged.
 * The index refers to the currently displayed student list.
 
@@ -435,7 +436,9 @@ Adds a charge to a student's outstanding balance.
 Format: `charge INDEX AMOUNT`
 
 * `AMOUNT` is required, must be positive, and may have at most two decimal places.
-* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly.
+* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly, for example with
+  `Amount must be a positive number with at most two decimal places, such as 50 or 20.50.`
+* A balance cannot go above SGD 1,000,000.00. A charge that would do so is rejected and the balance is unchanged.
 * The index refers to the currently displayed student list.
 
 Example: `charge 1 50` adds SGD 50.00 to the first displayed student's balance.
@@ -519,6 +522,7 @@ Format: `clear` or `clear confirm`
 * `clear` only shows how many students would be deleted, for example `This will permanently delete all 6
   student(s), including archived students. There is no undo. Type 'clear confirm' to continue.` Nothing changes.
 * `clear confirm` deletes them and shows `Deleted all 6 student(s) from TuteeDex.`
+* If there are no students, both `clear` and `clear confirm` show `There are no students to delete.`
 * Anything else after `clear`, such as `clear 3` or `clear Confirm`, is rejected without deleting anything.
 * Consider running `export` first, so you keep a copy of your students.
 

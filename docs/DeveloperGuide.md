@@ -472,6 +472,12 @@ is performed by the immutable `OutstandingAmount` value object, so balances rema
 decimal places. Payments greater than the current balance are rejected with a command error before the profile
 is modified.
 
+`ParserUtil#parseOutstandingAmount()` rejects any entered amount above `OutstandingAmount.MAXIMUM`
+(SGD 1,000,000.00), and `ChargeCommand` rejects a charge whose result would go above it. The limit is checked only
+on input, not when loading the data file, so a file with a larger balance from an older version still loads.
+`BalanceCommandParser` checks the format of a payment or charge amount itself, so its error talks about the amount
+rather than the stored balance.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Documentation, logging, testing, dev-ops**
