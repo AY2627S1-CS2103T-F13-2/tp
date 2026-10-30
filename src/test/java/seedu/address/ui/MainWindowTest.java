@@ -295,6 +295,27 @@ public class MainWindowTest extends FxTestSupport {
     }
 
     @Test
+    public void searchedEdit_keepsCardsAndNextChargeTarget() throws Exception {
+        runOnFxThread(() -> {
+            enterCommand("sort n/asc");
+            enterCommand("find Benson");
+            Person original = logic.getFilteredPersonList().getFirst();
+            Person alice = logic.model.getAddressBook().getPersonList().getFirst();
+            enterCommand("edit 1 notes/Updated");
+            Person updated = new PersonBuilder(original).withNotes("Updated").build();
+            assertContactCards(List.of(updated));
+            enterCommand("charge 1 5");
+            assertTrue(feedbackText().startsWith("Benson Meier's outstanding balance"));
+            assertEquals(alice, logic.model.getAddressBook().getPersonList().getFirst());
+            enterCommand("edit 1 n/Zed Test");
+            assertTrue(logic.getFilteredPersonList().isEmpty());
+            assertTrue(feedbackText().contains("Displayed indexes have changed"));
+            enterCommand("charge 1 5");
+            assertTrue(feedbackText().contains("No matching contact found"));
+        });
+    }
+
+    @Test
     public void groupedList_successfulEdit_reusesContactPanelWithUpdatedCards() throws Exception {
         runOnFxThread(() -> {
             addScheduledSubjects();

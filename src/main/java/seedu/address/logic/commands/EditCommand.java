@@ -12,7 +12,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_START_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_SUBJECT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
-import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -61,6 +60,8 @@ public class EditCommand extends Command {
             + PREFIX_START_DATE + "10-Aug";
 
     public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited contact: %1$s";
+    public static final String MESSAGE_INDEXES_CHANGED =
+            "\nDisplayed indexes have changed; check the list before your next command.";
     public static final String MESSAGE_NO_CHANGES = "No changes made to contact: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field must be provided to edit.";
     public static final String MESSAGE_DUPLICATE_PERSON = "This contact already exists in TuteeDex.";
@@ -106,8 +107,11 @@ public class EditCommand extends Command {
         }
 
         model.setPerson(personToEdit, editedPerson);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
-        return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, editedPerson.getName()));
+        String feedback = String.format(MESSAGE_EDIT_PERSON_SUCCESS, editedPerson.getName());
+        if (model.getFilteredPersonList().indexOf(editedPerson) != index.getZeroBased()) {
+            feedback += MESSAGE_INDEXES_CHANGED;
+        }
+        return new CommandResult(feedback);
     }
 
     /**

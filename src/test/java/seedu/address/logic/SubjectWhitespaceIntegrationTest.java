@@ -58,6 +58,8 @@ public class SubjectWhitespaceIntegrationTest {
         assertEquals(model.getAddressBook().getPersonList(), List.of(updated));
         assertEquals(original.getPhone(), updated.getPhone());
         assertEquals("Keep  spaces", updated.getNotes().value);
+        assertEquals(List.of(), model.getFilteredPersonList());
+        logic.execute("list");
         assertTrue(logic.execute("view 1").getFeedbackToUser().contains("Subjects: H2 Physics (Tue 10:30)"));
         assertTrue(Files.readString(storage.getAddressBookFilePath()).contains("H2 Physics"));
     }

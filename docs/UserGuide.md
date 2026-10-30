@@ -28,6 +28,12 @@ TuteeDex is a **desktop application for private tutors to manage student profile
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
+   On a first launch without a data file, six fictional sample students demonstrate weekly
+   Maths, English and Science lessons, tags, notes and mixed balances (**TOTAL 6 / PAID 3**).
+   Try `view 1` for Alex's Monday 15:30 Maths lesson, note and SGD 120.00 balance, or
+   `list -subjects` to see two students in each subject group. Existing data files,
+   including empty address books, load as saved and do not receive sample students.
+
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
@@ -96,6 +102,12 @@ Format: `help`
 
 Adds a student profile to TuteeDex.
 
+New profiles require at least one subject with a weekly lesson day and time. Older saved
+profiles may have no subjects and display `Not specified`. They remain usable as saved;
+TuteeDex does not invent schedules or add subjects to them. Use, for example,
+`edit 1 s/Maths day/MON time/15:30` to supply a real lesson schedule. Profiles without
+subjects remain in the normal list and TOTAL/PAID counts but have no entry in `list -subjects`.
+
 Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time/TIME [s/SUBJECT day/DAY time/TIME]... [o/OUTSTANDING_AMOUNT] [t/TAG]... [notes/NOTE]`
 
 <box type="tip" seamless>
@@ -103,7 +115,7 @@ Format: `add n/NAME a/ADDRESS p/PHONE_NUMBER d/START_DATE s/SUBJECT day/DAY time
 **Note:** `START_DATE` must be a valid calendar date in `DD-MMM` format, for example `10-Aug`.
 Month names are case-insensitive. `29-Feb` is allowed because no year is specified; `31-Feb` and unknown months are rejected.
 
-**Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places. Do not include a currency symbol, sign, separator, or exponent.
+**Note:** `OUTSTANDING_AMOUNT` is optional and defaults to `0`. It must be a nonnegative number with no more than two decimal places, and at most `1000000` (SGD 1,000,000.00). Do not include a currency symbol, sign, separator, or exponent.
 
 **Note:** At least one subject lesson is required for new profiles. Enter each lesson as
 `s/SUBJECT day/DAY time/TIME`, in that order. `DAY` is one of `MON`, `TUE`, `WED`, `THU`,
@@ -373,7 +385,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   Surrounding whitespace is trimmed; internal spacing, punctuation, display case, and Unicode text are preserved.
   Specify `notes/` only once. The prefix rules below also apply inside notes: a recognized field prefix starts
   another field, while an unknown prefix-shaped token is rejected. URLs such as `https://example.com` remain note text.
-* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places.
+* Field values use the same validation rules as `add`: names contain alphabetic characters and spaces, addresses are nonblank, phone numbers contain exactly eight digits, start dates must be valid calendar dates in `DD-MMM` format (`29-Feb` is allowed), and outstanding amounts are nonnegative numbers with at most two decimal places and at most `1000000`.
 * Use `o/0` to reset the outstanding amount to zero. Blank values for the five scalar fields, including `o/`, are invalid.
 * Leading and trailing spaces around values are ignored. Tags are normalized to lowercase;
   other text case and internal spaces are preserved.
@@ -385,7 +397,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   and outstanding amount match another profile. Tags, subjects, and notes do not distinguish
   duplicates. Amounts are compared numerically, so `20`, `20.0`, and `20.00` are equivalent.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
-* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and returns to the full active contact list. Editing preserves the student's archive status; use `list -archived` to view archived students again. The changes are saved automatically.
+* A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and keeps the current search or subject/tag filter and sort order. A profile that no longer matches disappears from the filtered list; a changed sort key can move it. When the edited student's index changes or disappears, feedback asks you to check the displayed indexes before your next command. Editing in `list -archived` keeps that view and the student's archive status; use `unarchive` to restore the student to the active list. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
 
 Errors:
@@ -420,6 +432,7 @@ Format: `paid INDEX [AMOUNT]`
 
 * `paid INDEX` clears the student's outstanding balance.
 * `paid INDEX AMOUNT` reduces the balance by `AMOUNT`. The amount must be positive and have at most two decimal places.
+  Otherwise TuteeDex shows `Amount must be a positive number with at most two decimal places, such as 50 or 20.50.`
 * A payment larger than the current balance is rejected, and the profile is unchanged.
 * The index refers to the currently displayed student list.
 
@@ -435,7 +448,9 @@ Adds a charge to a student's outstanding balance.
 Format: `charge INDEX AMOUNT`
 
 * `AMOUNT` is required, must be positive, and may have at most two decimal places.
-* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly.
+* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly, for example with
+  `Amount must be a positive number with at most two decimal places, such as 50 or 20.50.`
+* A balance cannot go above SGD 1,000,000.00. A charge that would do so is rejected and the balance is unchanged.
 * The index refers to the currently displayed student list.
 
 Example: `charge 1 50` adds SGD 50.00 to the first displayed student's balance.
@@ -522,6 +537,7 @@ Format: `clear` or `clear confirm`
 * `clear` only shows how many students would be deleted, for example `This will permanently delete all 6
   student(s), including archived students. There is no undo. Type 'clear confirm' to continue.` Nothing changes.
 * `clear confirm` deletes them and shows `Deleted all 6 student(s) from TuteeDex.`
+* If there are no students, both `clear` and `clear confirm` show `There are no students to delete.`
 * Anything else after `clear`, such as `clear 3` or `clear Confirm`, is rejected without deleting anything.
 * Consider running `export` first, so you keep a copy of your students.
 
@@ -533,7 +549,9 @@ Format: `exit`
 
 ### Saving the data
 
-TuteeDex automatically saves data after every command. You do not need to save manually.
+TuteeDex automatically saves your students after every command that changes them. You do not need to save manually.
+If a change cannot be saved, for example because the data file is read-only, TuteeDex shows an error and undoes
+that change, so you can fix the problem and try the same command again.
 
 ### Reopening where you left off
 
@@ -544,10 +562,10 @@ first.
 
 * `view`, `help`, `export`, `exit`, bare `sort` and commands that fail do not change what is remembered.
 * `sort reset` clears the remembered order, so TuteeDex opens in the default order.
-* `delete`, and an `edit` that changes nothing, keep the students you were looking at, so TuteeDex still opens on
+* `delete` and `edit` keep the students you were looking at, so TuteeDex still opens on
   that view. For example, after `find Alex`, `delete 1`, and `delete confirm`, TuteeDex opens on `find Alex` again.
-* Commands that switch back to the normal list, such as `add`, `edit`, `archive` or `import`, make TuteeDex open on
-  the normal list next time. So does a confirmed `delete` from the subject groups, which shows the normal list afterwards.
+* Commands that switch back to the normal list, such as `add`, `archive` or `import`, make TuteeDex open on
+  the normal list next time. So does an `edit` or a confirmed `delete` from the subject groups, which shows the normal list afterwards.
   The sort order is kept.
 * When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
   Type `list` to see all students.
@@ -570,7 +588,7 @@ student entry is invalid and triggers the loading recovery described below.
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, TuteeDex starts with an empty address book at the next run. The invalid file remains on disk until you run a command (TuteeDex saves after every command). Still, we recommend backing up the file before editing it.<br>
+If your changes make the data file invalid, TuteeDex starts with an empty address book at the next run. The invalid file stays on disk until you run a command that changes your students, such as `add` or `edit`. Commands that only show information, such as `list`, `find`, `view`, `help` and `export`, leave it untouched. Still, we recommend backing up the file before editing it.<br>
 Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 

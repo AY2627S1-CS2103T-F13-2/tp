@@ -20,8 +20,10 @@ public class ClearCommandTest {
         Model model = new ModelManager();
         Model expectedModel = new ModelManager();
 
-        assertCommandSuccess(new ClearCommand(true), model, String.format(ClearCommand.MESSAGE_SUCCESS, 0),
-                expectedModel);
+        CommandResult expectedResult = new CommandResult(ClearCommand.MESSAGE_NO_STUDENTS, false, false,
+                CommandResult.ListPresentation.UNCHANGED);
+        assertCommandSuccess(new ClearCommand(true), model, expectedResult, expectedModel);
+        assertCommandSuccess(new ClearCommand(false), model, expectedResult, expectedModel);
     }
 
     @Test

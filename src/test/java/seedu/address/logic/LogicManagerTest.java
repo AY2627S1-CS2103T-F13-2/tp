@@ -8,7 +8,6 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.START_DATE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 import static seedu.address.testutil.TypicalPersons.BOB;
@@ -30,6 +29,7 @@ import javafx.collections.ListChangeListener;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -174,8 +174,68 @@ public class LogicManagerTest {
     public void execute_commandThatChangesFilter_clearsLastView() throws Exception {
         model.addPerson(AMY);
         logic.execute("find Amy");
-        logic.execute("edit 1 p/" + VALID_PHONE_BOB);
+        logic.execute("archive 1");
         assertEquals("", model.getLastViewCommand());
+    }
+
+    @Test
+    public void execute_editAfterFind_nextChargeTargetsSameStudent() throws Exception {
+        Person zed = new PersonBuilder(AMY).withName("Zed Test").withOutstandingAmount("10").build();
+        Person amy = new PersonBuilder(BOB).withName("Amy Test").withOutstandingAmount("10").build();
+        model.addPerson(zed);
+        model.addPerson(amy);
+        logic.execute("sort n/asc");
+        logic.execute("find Zed");
+        logic.execute("edit 1 notes/Updated");
+        assertEquals(List.of(new PersonBuilder(zed).withNotes("Updated").build()), logic.getFilteredPersonList());
+        assertEquals("find Zed", logic.getLastViewCommand());
+        logic.execute("charge 1 5");
+        assertEquals("15", logic.getFilteredPersonList().getFirst().getOutstandingAmount().toPlainString());
+        assertEquals(amy, model.getAddressBook().getPersonList().get(1));
+    }
+
+    @Test
+    public void reopen_afterFilteredEdits_restoresRecomputedViewAndSort() throws Exception {
+        for (String view : List.of("find Amy", "list s/Maths t/Exam", "list -archived")) {
+            model = new ModelManager();
+            logic = new LogicManager(model, storage);
+            model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").withTags("Exam").build());
+            model.addPerson(new PersonBuilder(BOB).withSubjects("Maths").withTags("Exam").build());
+            if (view.equals("list -archived")) {
+                logic.execute("archive 1");
+            }
+            logic.execute("sort n/asc");
+            logic.execute(view);
+            logic.execute("edit 1 notes/Updated");
+            assertEquals(view, logic.getLastViewCommand());
+            if (view.equals("find Amy")) {
+                assertEquals("Edited contact: Zed Test" + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 n/Zed Test").getFeedbackToUser());
+            } else if (view.startsWith("list s/")) {
+                assertEquals("Edited contact: Zed Test" + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 n/Zed Test").getFeedbackToUser());
+                assertEquals("Zed Test", logic.getFilteredPersonList().getLast().getName().fullName);
+                assertEquals("Edited contact: " + BOB.getName() + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 t/Other").getFeedbackToUser());
+                assertEquals(1, logic.getFilteredPersonList().size());
+                assertEquals("Edited contact: Zed Test" + EditCommand.MESSAGE_INDEXES_CHANGED,
+                        logic.execute("edit 1 s/Physics day/MON time/09:00").getFeedbackToUser());
+            }
+            if (!view.equals("list -archived")) {
+                assertEquals(List.of(), logic.getFilteredPersonList());
+                assertThrows(CommandException.class, () -> logic.execute("charge 1 5"));
+            }
+            List<Person> shown = List.copyOf(logic.getFilteredPersonList());
+            storage.saveUserPrefs(model.getUserPrefs());
+            Model reopened = new ModelManager(storage.readAddressBook().orElseThrow(),
+                    storage.readUserPrefs().orElseThrow());
+            Logic reopenedLogic = new LogicManager(reopened, storage);
+            reopenedLogic.execute(reopenedLogic.getLastSortCommand());
+            reopenedLogic.execute(reopenedLogic.getLastViewCommand());
+            assertEquals(shown, reopenedLogic.getFilteredPersonList());
+            assertEquals(model.getSortOrder(), reopened.getSortOrder());
+            assertEquals(view, reopenedLogic.getLastViewCommand());
+        }
     }
 
     @Test
@@ -460,13 +520,46 @@ public class LogicManagerTest {
     @Test
     public void execute_storageThrowsIoException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_IO_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage())
+                + LogicManager.MESSAGE_CHANGES_UNDONE);
     }
 
     @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage())
+                + LogicManager.MESSAGE_CHANGES_UNDONE);
+    }
+
+    @Test
+    public void execute_retryAfterFailedSave_chargesOnce() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withOutstandingAmount("10").build());
+        boolean[] isSaveFailing = {true};
+        logic = new LogicManager(model, storageWithSave(addressBook -> {
+            if (isSaveFailing[0]) {
+                throw DUMMY_IO_EXCEPTION;
+            }
+        }));
+
+        assertThrows(CommandException.class, () -> logic.execute("charge 1 5"));
+        assertEquals(new OutstandingAmount("10"), model.getFilteredPersonList().get(0).getOutstandingAmount());
+
+        isSaveFailing[0] = false;
+        logic.execute("charge 1 5");
+        assertEquals(new OutstandingAmount("15"), model.getFilteredPersonList().get(0).getOutstandingAmount());
+    }
+
+    @Test
+    public void execute_commandsThatOnlyShowInformation_doNotSave() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withSubjects("Maths").build());
+        logic = new LogicManager(model, storageWithSave(addressBook -> {
+            throw DUMMY_IO_EXCEPTION;
+        }));
+
+        // Saving would fail, and would overwrite a data file that could not be loaded
+        logic.execute("help");
+        logic.execute("view 1");
+        logic.execute("exit");
     }
 
     @Test
@@ -527,6 +620,23 @@ public class LogicManagerTest {
         assertEquals(expectedModel, model);
     }
 
+    /** Functional interface for a stubbed save that may throw. */
+    private interface SaveAction {
+        void save(ReadOnlyAddressBook addressBook) throws IOException;
+    }
+
+    private StorageManager storageWithSave(SaveAction saveAction) {
+        JsonAddressBookStorage addressBookStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("StubAddressBook.json")) {
+                    @Override
+                    public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                        saveAction.save(addressBook);
+                    }
+                };
+        return new StorageManager(addressBookStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("StubUserPrefs.json")));
+    }
+
     /**
      * Tests the Logic component's handling of an {@code IOException} thrown by the Storage component.
      *
@@ -550,12 +660,9 @@ public class LogicManagerTest {
 
         logic = new LogicManager(model, storage);
 
-        // Triggers the saveAddressBook method by executing an add command
+        // Triggers the saveAddressBook method by executing an add command, which is undone when saving fails
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
                 + ADDRESS_DESC_AMY + START_DATE_DESC_AMY + " s/Maths day/MON time/09:00";
-        Person expectedPerson = new PersonBuilder(AMY).withSubjects("Maths").build();
-        ModelManager expectedModel = new ModelManager();
-        expectedModel.addPerson(expectedPerson);
-        assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
+        assertCommandFailure(addCommand, CommandException.class, expectedMessage, new ModelManager());
     }
 }

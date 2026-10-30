@@ -21,6 +21,7 @@ import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Person;
 import seedu.address.model.sort.LessonRow;
 import seedu.address.model.sort.SortOrder;
@@ -34,6 +35,8 @@ public class LogicManager implements Logic {
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
             "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+
+    public static final String MESSAGE_CHANGES_UNDONE = " Nothing was changed, so you can try the command again.";
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -66,9 +69,11 @@ public class LogicManager implements Logic {
             }
             command = previousPreview;
         }
-        AddressBook beforeDelete = command instanceof DeleteCommand && command.requiresAddressBookSave()
-                ? new AddressBook(model.getAddressBook()) : null;
         Predicate<? super Person> filterBeforeCommand = model.getFilteredPersonListPredicate();
+        // Kept so that a change which cannot be saved can be undone
+        ReadOnlyAddressBook addressBookBeforeCommand = command.requiresAddressBookSave()
+                ? new AddressBook(model.getAddressBook())
+                : null;
         model.beginCommand();
         try {
             commandResult = command.execute(model);
@@ -79,26 +84,27 @@ public class LogicManager implements Logic {
             model.endCommand();
         }
         if (command.requiresAddressBookSave()) {
-            try {
-                saveAddressBook();
-            } catch (CommandException e) {
-                if (beforeDelete != null) {
-                    model.setAddressBook(beforeDelete);
-                }
-                throw e;
-            }
+            saveAddressBook(addressBookBeforeCommand);
         }
         saveLastView(command, commandText, commandResult, filterBeforeCommand);
         return commandResult;
     }
 
-    private void saveAddressBook() throws CommandException {
+    /**
+     * Saves the address book. If saving fails, restores {@code addressBookBeforeCommand} so that the
+     * students shown match the saved file, and a retried command is not applied twice.
+     */
+    private void saveAddressBook(ReadOnlyAddressBook addressBookBeforeCommand) throws CommandException {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (AccessDeniedException e) {
-            throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
+            model.setAddressBook(addressBookBeforeCommand);
+            throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage())
+                    + MESSAGE_CHANGES_UNDONE, e);
         } catch (IOException ioe) {
-            throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
+            model.setAddressBook(addressBookBeforeCommand);
+            throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage())
+                    + MESSAGE_CHANGES_UNDONE, ioe);
         }
     }
 
