@@ -150,6 +150,11 @@ public class MainWindow extends UiPart<Stage> {
         restoreLastView();
     }
 
+    /** Shows a warning when the saved data could not be loaded. */
+    void showDataLoadingWarning(String warning) {
+        resultDisplay.setFeedbackToUser(warning);
+    }
+
     /** Shows the sort order and the list or find view that were on screen when the app was last closed. */
     private void restoreLastView() {
         // Sort first, so the list or find view that follows is shown in the saved order.

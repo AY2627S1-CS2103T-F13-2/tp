@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -27,16 +28,19 @@ public class UiManager implements Ui {
     private Logic logic;
     private Path dataFilePath;
     private final Consumer<String> openBrowser;
+    private final Optional<String> dataLoadingWarning;
     private MainWindow mainWindow;
 
     /**
      * Creates a {@code UiManager} with the given {@code Logic} and the data file path
      * to show in the status bar.
      */
-    public UiManager(Logic logic, Path dataFilePath, Consumer<String> openBrowser) {
+    public UiManager(Logic logic, Path dataFilePath, Consumer<String> openBrowser,
+                     Optional<String> dataLoadingWarning) {
         this.logic = logic;
         this.dataFilePath = dataFilePath;
         this.openBrowser = openBrowser;
+        this.dataLoadingWarning = dataLoadingWarning;
     }
 
     @Override
@@ -50,6 +54,7 @@ public class UiManager implements Ui {
             mainWindow = new MainWindow(primaryStage, logic, dataFilePath, openBrowser);
             mainWindow.show(); //This should be called before creating other UI parts
             mainWindow.fillInnerParts();
+            dataLoadingWarning.ifPresent(mainWindow::showDataLoadingWarning);
 
         } catch (Throwable e) {
             logger.severe(StringUtil.getDetails(e));
