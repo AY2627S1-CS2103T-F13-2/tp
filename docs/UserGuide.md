@@ -202,8 +202,8 @@ Format: `import FILE_PATH [confirm]`
 * The first row must be the header that `export` writes. Each following row is one student with the same 9 columns:
   name, phone, address, start date, outstanding amount, subjects, tags, notes and archived (`true` or `false`).
 * Subjects are written as `SUBJECT (DAY HH:mm)` and separated by semicolons, for example
-  `Maths (Mon 09:00); H2 Chemistry (Wed 11:30)`. Tags are separated by semicolons. A blank outstanding amount
-  means `0`, and blank tags or notes mean none.
+  `Maths (Mon 09:00); H2 Chemistry (Wed 11:30)`. A blank Subjects cell means no subjects. Tags are separated by
+  semicolons. A blank outstanding amount means `0`, and blank tags or notes mean none.
 * Every value is checked with the same rules as `add`. Problems are listed by spreadsheet row number, for example
   `Row 4: Phone numbers should only contain numbers, and it should be 8 digits long.` Up to 10 problems are shown.
 * A row that is exactly the same as a student already in TuteeDex, or as an earlier row in the file, is skipped,

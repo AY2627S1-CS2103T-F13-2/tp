@@ -1,5 +1,6 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -111,5 +112,16 @@ public class CsvExporterTest {
         List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
 
         assertEquals(person, CsvPersonParser.parsePerson(fields));
+    }
+
+    @Test
+    public void format_emptySubjects_roundTripsWithOtherStudents() throws Exception {
+        Person withoutSubjects = new PersonBuilder().withName("Legacy Kid").withSubjects().build();
+        Person withSubjects = new PersonBuilder().withName("Current Kid").withSubjects("Maths").build();
+
+        List<List<String>> rows = CsvReader.read(CsvExporter.format(List.of(withoutSubjects, withSubjects)));
+
+        assertEquals(List.of(withoutSubjects, withSubjects), rows.stream().skip(1)
+                .map(row -> assertDoesNotThrow(() -> CsvPersonParser.parsePerson(row))).toList());
     }
 }
