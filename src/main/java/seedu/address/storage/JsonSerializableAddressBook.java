@@ -58,8 +58,7 @@ class JsonSerializableAddressBook {
                 throw new IllegalValueException(MESSAGE_NULL_PERSON);
             }
             Person person = jsonAdaptedPerson.toModelType();
-            if (originalPersons.stream().anyMatch(existing -> existing.isSamePerson(person)
-                    && existing.getOutstandingAmount().equals(person.getOutstandingAmount()))) {
+            if (originalPersons.stream().anyMatch(existing -> isLegacyDuplicate(existing, person))) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PERSON);
             }
             originalPersons.add(person);
@@ -80,6 +79,16 @@ class JsonSerializableAddressBook {
             addressBook.addPerson(person);
         }
         return addressBook;
+    }
+
+    // Older versions compared these five fields exactly, so only such matches mean the file itself is invalid.
+    // Records that differ only in letter case or spacing are kept and recovered like balance-only duplicates.
+    private static boolean isLegacyDuplicate(Person first, Person second) {
+        return first.getName().equals(second.getName())
+                && first.getPhone().equals(second.getPhone())
+                && first.getAddress().equals(second.getAddress())
+                && first.getStartDate().equals(second.getStartDate())
+                && first.getOutstandingAmount().equals(second.getOutstandingAmount());
     }
 
     private static boolean hasIdentity(List<Person> persons, Person candidate) {

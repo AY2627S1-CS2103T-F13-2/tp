@@ -135,6 +135,7 @@ public class Person {
 
     /**
      * Returns true if name, phone, address and start date match, regardless of balance or optional details.
+     * Letter case and repeated spaces are ignored, so {@code Amy  Bee} and {@code amy bee} are the same student.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -142,10 +143,14 @@ public class Person {
         }
 
         return otherPerson != null
-                && name.equals(otherPerson.name)
+                && hasSameText(name.fullName, otherPerson.name.fullName)
                 && phone.equals(otherPerson.phone)
-                && address.equals(otherPerson.address)
-                && startDate.equals(otherPerson.startDate);
+                && hasSameText(address.value, otherPerson.address.value)
+                && startDate.value.equalsIgnoreCase(otherPerson.startDate.value);
+    }
+
+    private static boolean hasSameText(String first, String second) {
+        return first.trim().replaceAll("\\s+", " ").equalsIgnoreCase(second.trim().replaceAll("\\s+", " "));
     }
 
     /**
