@@ -139,7 +139,8 @@ public class MainAppStartupTest {
                 primaryStage.getScene().getRoot().applyCss();
                 primaryStage.getScene().getRoot().layout();
                 String warning = ((Label) primaryStage.getScene().lookup("#wrappedFeedbackText")).getText();
-                assertTrue(warning.contains("could not load the data file at data/addressbook.json"));
+                Path dataFilePath = Path.of("data", "addressbook.json");
+                assertTrue(warning.contains("could not load the data file at " + dataFilePath));
                 assertTrue(warning.contains("may overwrite the existing file"));
             }
             input.setText("help");
