@@ -177,7 +177,7 @@ remaining profile details, or use `view INDEX` to display the complete profile.
 
 ### Exporting students: `export`
 
-Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the application's working directory.
+Exports all student contacts, including archived contacts, to a UTF-8 CSV file in the folder TuteeDex runs from (the folder with the JAR file).
 
 Format: `export`
 
@@ -248,13 +248,8 @@ Format: `list [-summary] [s/SUBJECT]... [t/TAG]...`, `list -archived`, or `list 
 * Each filter searches all stored students, rather than just the current search results.
   Results follow the current sort order, or stored order when sorting is reset. Indexes used by `view`, `edit`, and `delete` refer
   to the newly displayed list.
-* The status message reports the displayed count, for example `Listed 2 contacts.`
-  or `Listed 1 contact.` A subject filter with no matches shows
-  `No contacts match the specified subjects.`; a tag filter with no matches shows
-  `No contacts match the specified tags.` A mixed filter with no matches leaves an empty list
-  and shows TOTAL 0 / PAID 0 in the GUI. Its command/log feedback is
-  `No contacts match the specified subjects and tags.`
-  Plain `list` on an empty address book shows `No contacts stored. Use the add command to add one.`
+* After a successful `list`, the result box shows the TOTAL/PAID banner below instead of a text message.
+  An empty result, such as a filter with no matches, shows an empty list with **TOTAL 0 / PAID 0**.
 * Every successful List command shows the **TOTAL/PAID** banner. **TOTAL** is the number of
   displayed students; **PAID** counts those with an outstanding amount of zero.
   A subject or tag filter with no matches leaves the list empty and shows **TOTAL 0 / PAID 0**.
@@ -296,7 +291,7 @@ Students without subjects still count towards the totals, although they have no 
 If no active student has a subject, the group area shows `No subjects found for the active contacts.`;
 the banner still reports the active-student counts.
 
-`view`, `help`, and `export` preserve the current grouping and scroll position. Failed
+`view`, `help`, `export`, and the `delete` and `clear` previews preserve the current grouping and scroll position. Failed
 commands also leave the displayed list unchanged. Commands that change student records
 switch back to the normal contact list, as do successful `find` commands and all `list`
 options except `list -subjects`. This also applies when
@@ -355,7 +350,8 @@ returns to original stored order; the subject-grouped display returns to alphabe
 * Upcoming ordering refreshes on Sort, filter changes and profile changes. It does not move automatically as
   time passes; rerun Sort or List to refresh it. Bare `sort` and View do not refresh the reference time.
 * Invalid fields, directions, repeated fields or extra arguments reject the entire command without changing
-  the current order, filter or presentation. Bare `sort`, View, Help and Export preserve the displayed panel.
+  the current order, filter or presentation. Bare `sort`, View, Help, Export and the `delete` and `clear` previews
+  preserve the displayed panel.
   TuteeDex remembers the last applied sort when you close it (see [Reopening where you left off](#reopening-where-you-left-off)).
 
 Examples:
@@ -369,7 +365,7 @@ Examples:
 
 Updates one or more fields of an existing student profile in TuteeDex.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`
+Format: `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING_AMOUNT] [s/SUBJECT day/DAY time/TIME]... [t/TAG]... [notes/NOTE]`
 
 * Edits the student at the specified `INDEX`. The index refers to the index number shown in the displayed student list. The index **must be a positive integer** 1, 2, 3, ...
 * After a search such as `find Betsy`, `edit 1 ...` edits the first search result.
@@ -401,7 +397,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
   Changing only `o/`, or using `paid` or `charge`, keeps the student's identity.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
 * A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and keeps the current search or subject/tag filter and sort order. A profile that no longer matches disappears from the filtered list; a changed sort key can move it. When the edited student's index changes or disappears, feedback asks you to check the displayed indexes before your next command. Editing in `list -archived` keeps that view and the student's archive status; use `unarchive` to restore the student to the active list. The changes are saved automatically.
-* If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
+* If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved. From `list -subjects`, the normal contact list is shown instead.
 
 Errors:
 
@@ -436,6 +432,7 @@ Format: `paid INDEX [AMOUNT]`
 * `paid INDEX` clears the student's outstanding balance.
 * `paid INDEX AMOUNT` reduces the balance by `AMOUNT`. The amount must be positive and have at most two decimal places.
   Otherwise TuteeDex shows `Amount must be a positive number with at most two decimal places, such as 50 or 20.50.`
+  An amount of `0` shows `Amount must be greater than 0.`
 * A payment larger than the current balance is rejected, and the profile is unchanged.
 * The index refers to the currently displayed student list.
 
@@ -451,8 +448,10 @@ Adds a charge to a student's outstanding balance.
 Format: `charge INDEX AMOUNT`
 
 * `AMOUNT` is required, must be positive, and may have at most two decimal places.
-* Missing, malformed, zero, negative, or over-precision amounts are rejected explicitly, for example with
+* A malformed, negative or over-precision amount is rejected with
   `Amount must be a positive number with at most two decimal places, such as 50 or 20.50.`
+  An amount of `0` gives `Amount must be greater than 0.`, and a missing amount gives `Invalid command format!`
+  with the usage.
 * A balance cannot go above SGD 1,000,000.00. A charge that would do so is rejected and the balance is unchanged.
 * The index refers to the currently displayed student list.
 
@@ -478,7 +477,7 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 * Missing keywords cause an error without changing the current results or saved data.
 
 Examples:
-* `find John` returns `john` and `John Doe`
+* `find alex` returns `Alex Yeoh` from the sample data.
 * `find alex david` returns `Alex Yeoh` and `David Li` from the sample data.
 
 ### Deleting a student: `delete`
@@ -618,7 +617,9 @@ Furthermore, certain edits can cause TuteeDex to behave in unexpected ways (e.g.
 
 ## Known issues
 
-1. **Data created before the student-profile schema change is not compatible.** Delete the old address-book JSON file before starting this version of TuteeDex.
+1. **Data files from v1.4 that store subjects without a day and time cannot be loaded.** TuteeDex then
+   starts with an empty list. Copy the old `data/addressbook.json` somewhere safe before making any change,
+   because the next change overwrites it. Other older files load normally.
 
 --------------------------------------------------------------------------------------------------------------------
 

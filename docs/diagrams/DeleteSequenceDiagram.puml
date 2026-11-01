@@ -6,7 +6,8 @@ box Logic LOGIC_COLOR_T1
 participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
 participant ":DeleteCommandParser" as DeleteCommandParser LOGIC_COLOR
-participant "d:DeleteCommand" as DeleteCommand LOGIC_COLOR
+participant "c:DeleteCommand" as Confirmation LOGIC_COLOR
+participant "p:DeleteCommand" as Pending LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
@@ -18,10 +19,17 @@ box Storage STORAGE_COLOR_T1
 participant "s:Storage" as Storage STORAGE_COLOR
 end box
 
-[-> LogicManager : execute("delete 1")
+note over LogicManager, Pending
+  The previous command was "delete 1". Its preview
+  stored p, bound to the previewed Person, as pendingDelete.
+end note
+
+[-> LogicManager : execute("delete confirm")
 activate LogicManager
 
-LogicManager -> AddressBookParser : parseCommand("delete 1")
+LogicManager -> LogicManager : take and clear pendingDelete (p)
+
+LogicManager -> AddressBookParser : parseCommand("delete confirm")
 activate AddressBookParser
 
 create DeleteCommandParser
@@ -31,54 +39,49 @@ activate DeleteCommandParser
 DeleteCommandParser --> AddressBookParser
 deactivate DeleteCommandParser
 
-AddressBookParser -> DeleteCommandParser : parse(" 1")
+AddressBookParser -> DeleteCommandParser : parse(" confirm")
 activate DeleteCommandParser
 
-create DeleteCommand
-DeleteCommandParser -> DeleteCommand : DeleteCommand(index)
-activate DeleteCommand
+create Confirmation
+DeleteCommandParser -> Confirmation : DeleteCommand()
+activate Confirmation
 
-DeleteCommand --> DeleteCommandParser :
-deactivate DeleteCommand
+Confirmation --> DeleteCommandParser
+deactivate Confirmation
 
-DeleteCommandParser --> AddressBookParser : d
+DeleteCommandParser --> AddressBookParser : c
 deactivate DeleteCommandParser
-AddressBookParser --> LogicManager : d
+AddressBookParser --> LogicManager : c
 deactivate AddressBookParser
 
-LogicManager -> DeleteCommand : execute(m)
-activate DeleteCommand
-
-DeleteCommand -> Model : getFilteredPersonList()
-activate Model
-Model --> DeleteCommand : lastShownList
-deactivate Model
-
-note over DeleteCommand
-  Validate index against lastShownList.size().
-  personToDelete = lastShownList.get(0).
+note right of LogicManager
+  c is a confirmation, so it is
+  replaced by the stored p.
 end note
-
-DeleteCommand -> Model : deletePerson(personToDelete)
-activate Model
-
-Model --> DeleteCommand
-deactivate Model
-
-create CommandResult
-DeleteCommand -> CommandResult : CommandResult(feedback)
-activate CommandResult
-
-CommandResult --> DeleteCommand
-deactivate CommandResult
-
-DeleteCommand --> LogicManager : r
-deactivate DeleteCommand
 
 LogicManager -> Model : getAddressBook()
 activate Model
-Model --> LogicManager : addressBook
+Model --> LogicManager : addressBook (copied for rollback)
 deactivate Model
+
+LogicManager -> Pending : execute(m)
+activate Pending
+
+Pending -> Model : deletePerson(person)
+activate Model
+
+Model --> Pending
+deactivate Model
+
+create CommandResult
+Pending -> CommandResult : CommandResult(feedback)
+activate CommandResult
+
+CommandResult --> Pending
+deactivate CommandResult
+
+Pending --> LogicManager : r
+deactivate Pending
 
 LogicManager -> Storage : saveAddressBook(addressBook)
 activate Storage

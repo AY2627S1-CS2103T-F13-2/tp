@@ -10,15 +10,19 @@ package Logic as LogicPackage {
 class Logic <<interface>> {
     + execute(commandText: String): CommandResult
 }
-class LogicManager
+class LogicManager {
+    - pendingDelete: DeleteCommand
+}
 abstract class Command {
     {abstract} + execute(model: Model): CommandResult
+    + requiresAddressBookSave(): boolean
 }
 class DeleteCommand
 class CommandResult {
     - feedbackToUser: String
     - showHelp: boolean
     - exit: boolean
+    - listPresentation: ListPresentation
 }
 
 package "Parser Classes" {
@@ -37,6 +41,7 @@ class Storage <<interface>> STORAGE_COLOR
 show Logic methods
 show Command methods
 show CommandResult fields
+show LogicManager fields
 
 LogicManager .up.|> Logic
 LogicManager -left-> "1" Model : model

@@ -7,7 +7,7 @@
 
 We are a team based in the [School of Computing, National University of Singapore](http://www.comp.nus.edu.sg).
 
-You can reach us at the email `seer[at]comp.nus.edu.sg`
+You can reach us through the [TuteeDex issue tracker](https://github.com/AY2627S1-CS2103T-F13-2/tp/issues).
 
 ## Project team
 
@@ -15,7 +15,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/henry336.png" width="200px">
 
-[[github](https://github.com/Henry336)]
+[[github](https://github.com/Henry336)] [[portfolio](team/henry336.md)]
 
 
 * Role: Team Lead
@@ -26,7 +26,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 <img src="images/naymin-gif.png" width="200px">
 
 
-[[github](https://github.com/naymin-gif)]
+[[github](https://github.com/naymin-gif)] [[portfolio](team/naymin-gif.md)]
 
 
 * Role: Developer
@@ -37,7 +37,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/alpharion.png" width="200px">
 
-[[github](https://github.com/Alpharion)]
+[[github](https://github.com/Alpharion)] [[portfolio](team/alpharion.md)]
 
 * Role: Developer
 * Responsibilities: Code Quality, Integration and Releases
@@ -46,7 +46,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/thatli.png" width="200px">
 
-[[github](http://github.com/thatli)]
+[[github](https://github.com/ThatLi)] [[portfolio](team/thatli.md)]
 
 * Role: Developer
 * Responsibilities: Documentation & Testing, backup Scheduling & Tracking
@@ -55,7 +55,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/jimmylijy12.png" width="200px">
 
-[[github](http://github.com/jimmylijy12)]
+[[github](https://github.com/jimmylijy12)] [[portfolio](team/jimmylijy12.md)]
 
 * Role: Developer
 * Responsibilities: Integration and Releases, Code Quality
