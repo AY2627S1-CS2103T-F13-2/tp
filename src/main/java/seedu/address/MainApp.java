@@ -42,6 +42,7 @@ public class MainApp extends Application {
     protected Logic logic;
     protected Storage storage;
     protected Model model;
+    private Optional<String> dataLoadingWarning = Optional.empty();
 
     @Override
     public void init() throws Exception {
@@ -57,7 +58,8 @@ public class MainApp extends Application {
 
         logic = new LogicManager(model, storage);
 
-        ui = new UiManager(logic, storage.getAddressBookFilePath(), getHostServices()::showDocument);
+        ui = new UiManager(logic, storage.getAddressBookFilePath(), getHostServices()::showDocument,
+                dataLoadingWarning);
     }
 
     /**
@@ -80,6 +82,10 @@ public class MainApp extends Application {
         } catch (DataLoadingException e) {
             logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
                     + " Will be starting with an empty AddressBook.");
+            dataLoadingWarning = Optional.of("TuteeDex could not load the data file at "
+                    + storage.getAddressBookFilePath() + " and has started with an empty list. "
+                    + "Commands that modify data may overwrite the existing file. "
+                    + "Close TuteeDex and repair or back up the file before continuing.");
             initialData = new AddressBook();
         }
 

@@ -59,6 +59,15 @@ public class MainAppStartupTest {
         assertEquals(original, Files.readString(file));
     }
 
+    @Test
+    public void startup_invalidBook_warnsUserAndDoesNotOverwriteFile() throws Exception {
+        Path file = testFolder.resolve("data/addressbook.json");
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, "invalid json");
+        runStartup("invalid");
+        assertEquals("invalid json", Files.readString(file));
+    }
+
     private void runStartup(String scenario) throws Exception {
         List<String> command = new ArrayList<>();
         command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
@@ -122,9 +131,17 @@ public class MainAppStartupTest {
                 assertEquals(6, primaryStage.getScene().getRoot().lookupAll(".subject-student-row").size());
             } else if (scenario.equals("empty")) {
                 assertTrue(model.getAddressBook().getPersonList().isEmpty());
-            } else {
+            } else if (scenario.equals("legacy")) {
                 assertEquals(1, model.getAddressBook().getPersonList().size());
                 assertTrue(model.getAddressBook().getPersonList().get(0).getSubjects().isEmpty());
+            } else {
+                assertTrue(model.getAddressBook().getPersonList().isEmpty());
+                primaryStage.getScene().getRoot().applyCss();
+                primaryStage.getScene().getRoot().layout();
+                String warning = ((Label) primaryStage.getScene().lookup("#wrappedFeedbackText")).getText();
+                Path dataFilePath = Path.of("data", "addressbook.json");
+                assertTrue(warning.contains("could not load the data file at " + dataFilePath));
+                assertTrue(warning.contains("may overwrite the existing file"));
             }
             input.setText("help");
             input.fireEvent(new ActionEvent());
