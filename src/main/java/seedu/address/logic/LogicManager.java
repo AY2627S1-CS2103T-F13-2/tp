@@ -84,7 +84,7 @@ public class LogicManager implements Logic {
             model.endCommand();
         }
         if (command.requiresAddressBookSave()) {
-            saveAddressBook(addressBookBeforeCommand);
+            saveAddressBook(addressBookBeforeCommand, filterBeforeCommand);
         }
         saveLastView(command, commandText, commandResult, filterBeforeCommand);
         return commandResult;
@@ -94,15 +94,18 @@ public class LogicManager implements Logic {
      * Saves the address book. If saving fails, restores {@code addressBookBeforeCommand} so that the
      * students shown match the saved file, and a retried command is not applied twice.
      */
-    private void saveAddressBook(ReadOnlyAddressBook addressBookBeforeCommand) throws CommandException {
+    private void saveAddressBook(ReadOnlyAddressBook addressBookBeforeCommand,
+            Predicate<? super Person> filterBeforeCommand) throws CommandException {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (AccessDeniedException e) {
             model.setAddressBook(addressBookBeforeCommand);
+            model.updateFilteredPersonList(filterBeforeCommand::test);
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage())
                     + MESSAGE_CHANGES_UNDONE, e);
         } catch (IOException ioe) {
             model.setAddressBook(addressBookBeforeCommand);
+            model.updateFilteredPersonList(filterBeforeCommand::test);
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage())
                     + MESSAGE_CHANGES_UNDONE, ioe);
         }

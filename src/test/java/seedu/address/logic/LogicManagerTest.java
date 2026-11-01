@@ -532,6 +532,32 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_addSaveFailure_restoresFilterAndRememberedView() throws Exception {
+        Person archived = new PersonBuilder(BOB).withName("Archived Bob").build().withArchived(true);
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        model.addPerson(archived);
+        for (IOException failure : List.of(DUMMY_IO_EXCEPTION, DUMMY_AD_EXCEPTION)) {
+            logic = new LogicManager(model, storageWithSave(addressBook -> {
+                throw failure;
+            }));
+            logic.execute("sort n/desc");
+            for (String view : List.of("find Amy", "list -archived")) {
+                logic.execute(view);
+                List<Person> displayedBefore = List.copyOf(model.getFilteredPersonList());
+
+                assertThrows(CommandException.class, () -> logic.execute(
+                        "add n/New Guy p/94444444 a/A4 d/13-Aug s/Maths day/THU time/12:00"));
+
+                assertEquals(List.of(AMY, BOB, archived), model.getAddressBook().getPersonList());
+                assertEquals(displayedBefore, model.getFilteredPersonList());
+                assertEquals(view, model.getLastViewCommand());
+                assertEquals("sort n/desc", model.getLastSortCommand());
+            }
+        }
+    }
+
+    @Test
     public void execute_retryAfterFailedSave_chargesOnce() throws Exception {
         model.addPerson(new PersonBuilder(AMY).withOutstandingAmount("10").build());
         boolean[] isSaveFailing = {true};
