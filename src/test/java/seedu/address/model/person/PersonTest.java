@@ -41,9 +41,20 @@ public class PersonTest {
         editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
         assertFalse(ALICE.isSamePerson(editedAlice));
 
-        // name differs in case, all other attributes same -> returns false
+        // name differs in case, all other attributes same -> returns true
         Person editedBob = new PersonBuilder(BOB).withName(VALID_NAME_BOB.toLowerCase()).build();
-        assertFalse(BOB.isSamePerson(editedBob));
+        assertTrue(BOB.isSamePerson(editedBob));
+
+        // extra spaces in name and address, month in another case -> returns true
+        Person amy = new PersonBuilder().withName("Amy Bee").withAddress("Block 1").withStartDate("10-Aug").build();
+        Person spacedAmy = new PersonBuilder(amy).withName("Amy  Bee").withAddress("block  1").withStartDate("10-aug")
+                .build();
+        assertTrue(amy.isSamePerson(spacedAmy));
+        assertTrue(spacedAmy.isSamePerson(amy));
+        assertFalse(amy.equals(spacedAmy));
+
+        // spaces inside a word still make a different name -> returns false
+        assertFalse(amy.isSamePerson(new PersonBuilder(amy).withName("Amy B ee").build()));
 
         // different start date -> returns false
         editedBob = new PersonBuilder(BOB).withStartDate("20-Oct").build();

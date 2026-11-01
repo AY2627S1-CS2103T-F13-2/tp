@@ -35,6 +35,16 @@ public class JsonSerializableAddressBookTest {
     }
 
     @Test
+    public void toModelType_caseOrSpacingDuplicates_keepsBothWithRecoveredName() throws Exception {
+        Person first = new PersonBuilder().withName("John Doe").withOutstandingAmount("20").build();
+        Person variant = new PersonBuilder(first).withName("john  doe").build();
+        JsonSerializableAddressBook data = new JsonSerializableAddressBook(
+                List.of(new JsonAdaptedPerson(first), new JsonAdaptedPerson(variant)));
+        Person recovered = new PersonBuilder(variant).withName("john  doe Recovered").build();
+        assertEquals(List.of(first, recovered), data.toModelType().getPersonList());
+    }
+
+    @Test
     public void toModelType_typicalPersonsFile_success() throws Exception {
         JsonSerializableAddressBook dataFromFile = JsonUtil.readJsonFile(TYPICAL_PERSONS_FILE,
                 JsonSerializableAddressBook.class).get();

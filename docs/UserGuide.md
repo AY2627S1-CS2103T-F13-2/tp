@@ -150,6 +150,8 @@ Tags are optional descriptive labels, separate from subjects:
 
 An add command is rejected as a duplicate when name, phone, address and start date
 match an existing profile, even if outstanding amount, subjects, tags, notes or archive status differ.
+Letter case and extra spaces are ignored when matching, so `amy  bee` with `d/10-aug` matches an existing
+`Amy Bee` with `d/10-Aug`.
 Students may share a full name if their phone, address or start date differs.
 A duplicate produces `This contact already exists in TuteeDex` and
 does not add another profile.
@@ -399,6 +401,8 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [a/ADDRESS] [d/START_DATE] [o/OUTSTANDING
 * An edit is rejected as a duplicate if name, phone, address and start date match another profile.
   Outstanding amount, tags, subjects, notes and archive status do not distinguish duplicates.
   Changing only `o/`, or using `paid` or `charge`, keeps the student's identity.
+  Letter case and extra spaces are ignored, as in `add`, so `edit 1 n/amy bee` on `Amy Bee` only changes how
+  the name is written.
 * If any supplied field is invalid or the edit creates a duplicate, no fields are changed and the displayed list remains unchanged.
 * A changed profile produces `Edited contact: <updated contact name>`, refreshes its displayed values, and keeps the current search or subject/tag filter and sort order. A profile that no longer matches disappears from the filtered list; a changed sort key can move it. When the edited student's index changes or disappears, feedback asks you to check the displayed indexes before your next command. Editing in `list -archived` keeps that view and the student's archive status; use `unarchive` to restore the student to the active list. The changes are saved automatically.
 * If all supplied values match the existing values, the result is `No changes made to contact: <contact name>` and the current displayed list is preserved.
@@ -577,7 +581,8 @@ first.
 
 ### Editing the data file
 
-Older files may contain profiles differing only in outstanding amount. On loading these files,
+Older files may contain profiles differing only in outstanding amount, or only in the letter case or spacing of
+the name, address or month. On loading these files,
 TuteeDex keeps the first profile's name and appends ` Recovered` to each later duplicate's name.
 It repeats the suffix until the name avoids both existing and recovered profiles with the same
 phone, address and start date. Every balance and all other details are preserved; no balances are merged.
@@ -587,7 +592,8 @@ the recovered names are written on the next automatic save and remain stable on 
 Review these profiles with `view` and use `edit` to enter distinguishing real details.
 To restore the original name, first ensure phone, address or start date distinguishes the profiles.
 Delete a profile only after you have checked its balance and decided how to reconcile it.
-Records that also have identical balances violate the old duplicate rule and are still rejected as invalid.
+Records whose name, phone, address, start date and balance are all exactly the same violate the old duplicate
+rule and are still rejected as invalid.
 
 TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 

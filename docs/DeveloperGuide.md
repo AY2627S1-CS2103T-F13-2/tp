@@ -208,8 +208,9 @@ The `Storage` interface is implemented by `StorageManager`, which delegates stud
   a `Subject` with a non-null `LessonSlot` when data is loaded.
 * The `toModelType()` methods validate stored values and reconstruct the corresponding model objects.
   `JsonSerializableAddressBook.toModelType()` also rejects null student entries and duplicates under the
-  legacy five-field rule (name, phone, address, start date and amount). It then recovers balance-only
-  duplicates under the current four-field identity rule by appending ` Recovered` to later names,
+  legacy five-field rule (name, phone, address, start date and amount, compared exactly). It then recovers
+  duplicates under the current identity rule (balance-only, or differing only in letter case or spacing)
+  by appending ` Recovered` to later names,
   repeating until neither an original nor a recovered identity collides. All original identities are
   checked before recovery, so the suffix cannot take a name needed by a later record.
   Recovery logs a warning, preserves every balance and all other fields, and does not rewrite the
@@ -359,7 +360,9 @@ repeated tags, and produces an empty set when no tags are supplied. The shared c
 * `Person.getTags()` returns an immutable set. Repeated tags and case variants collapse into one value;
   order has no meaning. The five-argument constructor creates a profile without tags, while the
   six-argument constructor accepts a set of tags.
-* `Person.isSamePerson()` compares name, phone, address and start date. Outstanding amount, tags,
+* `Person.isSamePerson()` compares name, phone, address and start date. Name and address ignore letter
+  case and repeated spaces, and the start date ignores the case of the month, so `amy  bee` with `10-aug`
+  is the same student as `Amy Bee` with `10-Aug`. The stored spelling is kept as typed. Outstanding amount, tags,
   notes, subjects and archive state do not distinguish identity. `UniquePersonList`, Add, Edit and Import
   share this rule. Paid and Charge change only the balance and cannot create an identity collision.
   Full names alone need not be unique: different phone, address or start date distinguishes students.
@@ -673,7 +676,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Outstanding balance**: The amount, in Singapore dollars (SGD), that remains owed for a student's tuition. The amount cannot be negative. It represents the current balance, not a history of individual payments.
 * **Archived student**: A student hidden from the active list without being deleted. `list -archived` shows them, and `unarchive` makes them active again.
 * **Displayed index**: The one-based number shown beside a student in the current displayed list. After a search, the index refers to that search result list.
-* **Duplicate profile**: A profile with the same name, phone, address, start date and outstanding amount as an existing profile. TuteeDex rejects it even if subjects, tags or notes differ; two profiles may share a name if one of those five fields differs.
+* **Duplicate profile**: A profile with the same name, phone, address and start date as an existing profile, ignoring letter case and extra spaces. TuteeDex rejects it even if outstanding amount, subjects, tags, notes or archive status differ; two profiles may share a name if the phone, address or start date differs.
 
 --------------------------------------------------------------------------------------------------------------------
 
