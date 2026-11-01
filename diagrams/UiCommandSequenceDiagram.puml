@@ -32,8 +32,13 @@ activate resultDisplay
 resultDisplay --> mainWindow
 deactivate resultDisplay
 
-mainWindow -> mainWindow : showListSummary()
+mainWindow -> mainWindow : refreshPersonList(CONTACTS, true)
 activate mainWindow UI_COLOR_T2
+note right of mainWindow
+  Puts the contact list in the list area
+end note
+mainWindow -> mainWindow : showListSummary()
+activate mainWindow UI_COLOR_T3
 mainWindow -> logic : getFilteredPersonList()
 activate logic
 logic --> mainWindow : filtered persons
@@ -47,6 +52,7 @@ mainWindow -> resultDisplay : showSummary(total, paid)
 activate resultDisplay
 resultDisplay --> mainWindow
 deactivate resultDisplay
+deactivate mainWindow
 deactivate mainWindow
 
 mainWindow --> commandBox : commandResult

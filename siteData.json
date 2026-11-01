@@ -59,6 +59,8 @@
         "csv-import": "CSV import",
         "restoring-the-last-view": "Restoring the last view",
         "archiving-students": "Archiving students",
+        "keeping-the-view-after-an-edit": "Keeping the view after an edit",
+        "confirming-a-deletion": "Confirming a deletion",
         "balance-commands": "Balance commands",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
         "appendix-requirements": "Appendix: Requirements",
@@ -88,8 +90,7 @@
         "archiving-students-2": "Archiving students",
         "clearing-all-students": "Clearing all students",
         "restoring-the-last-view-2": "Restoring the last view",
-        "saving-data": "Saving data",
-        "single-student-deletion-confirmation": "Single-student deletion confirmation"
+        "saving-data": "Saving data"
       },
       "headingKeywords": {}
     },
@@ -183,8 +184,40 @@
       "headingKeywords": {}
     },
     {
-      "src": "team/johndoe.md",
-      "title": "John Doe's Project Portfolio Page",
+      "src": "team/alpharion.md",
+      "title": "Alpha's Project Portfolio Page",
+      "headings": {
+        "project-tuteedex": "Project: TuteeDex"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "team/henry336.md",
+      "title": "Hein Lin Htet's Project Portfolio Page",
+      "headings": {
+        "project-tuteedex": "Project: TuteeDex"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "team/jimmylijy12.md",
+      "title": "Jimmy Li's Project Portfolio Page",
+      "headings": {
+        "project-tuteedex": "Project: TuteeDex"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "team/naymin-gif.md",
+      "title": "Nay Min Thar's Project Portfolio Page",
+      "headings": {
+        "project-tuteedex": "Project: TuteeDex"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "team/thatli.md",
+      "title": "That Li's Project Portfolio Page",
       "headings": {
         "project-tuteedex": "Project: TuteeDex"
       },
