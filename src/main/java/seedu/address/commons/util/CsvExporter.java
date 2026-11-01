@@ -32,9 +32,10 @@ public final class CsvExporter {
                 escapePlainText(person.getAddress().toString()),
                 person.getStartDate().toString(),
                 person.getOutstandingAmount().toPlainString(),
-                person.getSubjects().stream().map(Object::toString).collect(Collectors.joining("; ")),
-                person.getTags().stream().map(Tag::toString).map(value -> value.substring(1, value.length() - 1))
-                        .sorted().collect(Collectors.joining("; ")),
+                escapePlainText(person.getSubjects().stream().map(Object::toString).collect(Collectors.joining("; "))),
+                escapePlainText(person.getTags().stream().map(Tag::toString)
+                        .map(value -> value.substring(1, value.length() - 1))
+                        .sorted().collect(Collectors.joining("; "))),
                 escapePlainText(person.getNotes().toString()),
                 Boolean.toString(person.isArchived()))
                 .map(CsvExporter::escape)

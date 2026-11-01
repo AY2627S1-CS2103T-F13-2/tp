@@ -69,6 +69,16 @@ public class CsvPersonParserTest {
     }
 
     @Test
+    public void parsePerson_unescapedSubjectsAndTags_preservesValues() throws Exception {
+        Person person = CsvPersonParser.parsePerson(withColumn(withColumn(VALID_ROW, 5,
+                "+Maths (Mon 09:00); -Physics (Tue 10:00); 'Chemistry (Wed 11:30)"), 6, "-1-1; a-tag"));
+
+        assertEquals(List.of("+Maths", "-Physics", "'Chemistry"),
+                person.getSubjects().stream().map(subject -> subject.value).toList());
+        assertEquals(Set.of(new Tag("-1-1"), new Tag("a-tag")), person.getTags());
+    }
+
+    @Test
     public void parsePerson_wrongColumnCount_throwsParseException() {
         assertThrows(ParseException.class, String.format(CsvPersonParser.MESSAGE_WRONG_COLUMN_COUNT, 8), () ->
                 CsvPersonParser.parsePerson(VALID_ROW.subList(0, 8)));

@@ -185,6 +185,10 @@ The generated file is named `contacts-YYYYMMDD-HHMMSS-milliseconds.csv`. Each co
 contains the name, phone, address, start date, outstanding amount, subjects, tags, notes, and archive status. Multiple
 subjects or tags are joined with `; `.
 
+Address, subjects, tags and notes cells starting with `=`, `+`, `-`, `@` or an apostrophe are prefixed with an
+extra apostrophe so spreadsheet apps treat them as text. Importing removes this extra apostrophe to restore
+the original values.
+
 ### Importing students: `import`
 
 Adds students from a CSV file written by `export`, for example to move students from another computer or to
