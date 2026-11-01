@@ -13,6 +13,9 @@ Class HelpWindow
 Class ResultDisplay
 Class PersonListPanel
 Class PersonCard
+Class LessonListPanel
+Class SubjectGroupPanel
+Class SubjectGrouping
 Class CommandBox
 Class "<<interface>>\nCommandBox.CommandExecutor" as CommandExecutor
 Class "PersonListPanel.PersonListViewCell" as PersonListViewCell
@@ -33,13 +36,18 @@ UiManager .left.|> Ui
 UiManager -down-> "1" MainWindow
 MainWindow *-down->  "1" CommandBox
 MainWindow *-down-> "1" ResultDisplay
-MainWindow *-down-> "1" PersonListPanel
+MainWindow *-down-> "0..1" PersonListPanel
+MainWindow ..> LessonListPanel : creates for lesson sorts
+MainWindow ..> SubjectGroupPanel : creates for list -subjects
 MainWindow --> "1" HelpWindow
 MainWindow ..> CommandExecutor : supplies executeCommand callback
 CommandBox --> "1" CommandExecutor
 
 PersonListPanel ..> PersonListViewCell : creates
 PersonListViewCell ..> PersonCard : creates for non-empty cells
+LessonListPanel ..> PersonCard : creates
+SubjectGroupPanel ..> SubjectGrouping : groups students
+SubjectGroupPanel ..> PersonCard : creates
 
 MainWindow -left-|> UiPart
 

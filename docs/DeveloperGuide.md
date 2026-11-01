@@ -15,6 +15,7 @@
 
 * TuteeDex is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the [SE-EDU initiative](https://se-education.org).
 * Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit 5](https://github.com/junit-team/junit5).
+* Fonts bundled in `src/main/resources/fonts`: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by The Press Start 2P Project Authors, under the SIL Open Font License 1.1 (licence included as `PressStart2P-OFL.txt`), and [Pokemon Pixel Font](http://fontstruct.fontshop.com/fontstructions/show/299827) (`pokemon_pixel_font.ttf`) by SpyroSteak, under [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/). The interface theme is inspired by the Pokedex in Pokemon Black 2 and White 2.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -51,14 +52,14 @@ The bulk of the app's work is done by the following four components:
 
 **How the architecture components interact with each other**
 
-The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete confirm`, right after `delete 1` has previewed the first student.
 
 <puml src="diagrams/ArchitectureSequenceDiagram.puml" width="574" />
 
 Each of the four main components (also shown in the diagram above),
 
 * defines its *API* in an `interface` with the same name as the Component.
-* provides its functionality through a concrete `{Component Name}Manager` class that implements the corresponding API interface.
+* provides its functionality through a concrete manager class (`LogicManager`, `ModelManager`, `StorageManager` and `UiManager`) that implements the corresponding API interface.
 
 For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
@@ -79,11 +80,13 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 * The header contains the application title, the local date (`DD  -  MM`), and the local 24-hour time (`HH  :  MM`). A JavaFX `Timeline` refreshes the clock every second while the main window is shown and stops when it is hidden. The clock can be supplied in tests.
 * `ResultDisplay` shows either the TOTAL/PAID summary or command feedback, with line breaks replaced by ` | `. Feedback that exceeds the normal display width switches to a wrapping two-line display, with vertical scrolling for additional text. Resizing re-evaluates the available width. Result displays have no tooltip.
 * `PersonListPanel` displays the filtered `ObservableList<Person>` obtained from `Logic`. Its custom `PersonListViewCell` creates a `PersonCard` for each non-empty cell, so changes to the observable list update the displayed students.
+* `MainWindow` puts one of three panels in the list area, based on the `ListPresentation` of each `CommandResult`. `PersonListPanel` is the normal list. `SubjectGroupPanel` shows `list -subjects`; it uses `SubjectGrouping` to group the displayed students under each subject, and each student keeps one shared index. `LessonListPanel` replaces the normal list when the current sort uses `slot/`, with one row per student showing that student's next lesson. Both are rebuilt from `Logic` after each command that changes the list.
 * `PersonCard` shows a three-digit, zero-padded list index, the student's name, and subjects. Long names and subject text are abbreviated; tooltips expose the full profile and subjects, and accessible text includes the profile details.
-* `CommandBox` accepts commands at the bottom of the window. The FIND button calls `prepareFind()`, which inserts `find ` only when the input is blank, then focuses the input and moves the caret to its end without executing a command.
+* `CommandBox` accepts commands at the bottom of the window. The FIND button calls `prepareFind()`, which turns the current input into a `find` command: blank input becomes `find `, existing text such as `Amy` becomes `find Amy`, and input that already starts with `find ` is kept. It then focuses the input and moves the caret to its end without executing a command.
+* `CommandBox` also keeps a history of the commands entered in this session. Up shows the previous command and Down the next one; going past the newest command restores the text that was being typed. A command is not added again if it repeats the one before it. The history is not saved when the app closes.
 * The exit button and `exit` command close the application window. Help is available through the `help` command and F1, using a `HelpWindow` created with `MainWindow` and reused when requested.
 
-`MainWindow`, `CommandBox`, `ResultDisplay`, `PersonListPanel`, `PersonCard`, and `HelpWindow` inherit from the abstract `UiPart<T>` class. `UiPart` loads an FXML layout, sets the controller, and exposes the root JavaFX object through `getRoot()`. `StatusBarFooter` and its FXML file remain in the source tree, but the current `MainWindow` does not instantiate or display a status bar; it is omitted from the diagram above.
+`MainWindow`, `CommandBox`, `ResultDisplay`, `PersonListPanel`, `PersonCard`, and `HelpWindow` inherit from the abstract `UiPart<T>` class. `SubjectGroupPanel` and `LessonListPanel` build their JavaFX nodes in code and reuse `PersonCard` for each student. `UiPart` loads an FXML layout, sets the controller, and exposes the root JavaFX object through `getRoot()`. `StatusBarFooter` and its FXML file remain in the source tree, but the current `MainWindow` does not instantiate or display a status bar; it is omitted from the diagram above.
 
 The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) defines the main layout and loads `TuteeDex.css`, while `PersonListCard.fxml` defines the layout for `PersonCard`. The main window also loads the bundled pixel fonts. `HelpWindow` has its own FXML layout and stylesheet.
 
@@ -125,34 +128,43 @@ Invalid List input follows the exception path instead: error feedback is shown a
 
 The partial class diagram below shows the command-execution boundary of the `Logic` component.
 `LogicManager` implements `Logic` and keeps one reference each to `AddressBookParser`, `Model`, and `Storage`.
-It parses command text into a `Command`, executes the command against the model, and saves the address book.
+It parses command text into a `Command`, executes the command against the model, and saves the address book when
+`Command#requiresAddressBookSave()` returns true. Commands that only show information, such as `view`, `help`,
+`export`, `list`, `find`, `sort` and the `delete` and `clear` previews, return false, so they never write the data file.
 
 <puml src="diagrams/LogicClassDiagram.puml" width="800" alt="Partial class diagram of the Logic component"/>
 
 `DeleteCommand` represents the concrete command subclasses in this diagram; its note lists other examples.
-Command-specific parser classes and utility classes are omitted here. `CommandResult` carries feedback and the
-`showHelp` and `exit` flags, which the UI uses after a successful execution.
+Command-specific parser classes and utility classes are omitted here. `CommandResult` carries feedback, the
+`showHelp` and `exit` flags, and a `ListPresentation` (`CONTACTS`, `SUBJECT_GROUPS`, `UNCHANGED` or `REFRESH`)
+that tells `MainWindow` which list panel to show. `LogicManager` also holds `pendingDelete`, the deletion
+previewed by the previous command, if any.
 
-The sequence diagram below follows a successful `execute("delete 1")` call. It assumes that the displayed list
-contains at least one student and that saving succeeds. `index` is an `Index` object with a one-based value of 1.
+Deleting a student takes two commands. `delete 1` only previews: `DeleteCommand` checks the index, returns the
+student's details with `ListPresentation.UNCHANGED`, and does not save. `LogicManager` then stores a
+`DeleteCommand` bound to that exact `Person` as `pendingDelete`. Every later command clears `pendingDelete` before
+it is parsed, so only an immediately following `delete confirm` can use it.
+
+The sequence diagram below follows a successful `execute("delete confirm")` call right after `delete 1`.
+It assumes that saving succeeds.
 
 <puml src="diagrams/DeleteSequenceDiagram.puml" alt="Successful Delete command execution and saving through Logic" />
 
 How the `Logic` component works:
 
-1. `LogicManager.execute(commandText)` calls `AddressBookParser.parseCommand(commandText)`. For `delete 1`,
-   the parser creates `DeleteCommandParser`, which validates the argument and returns a `DeleteCommand`.
-2. `LogicManager` calls the command's `execute(model)` method. `DeleteCommand` reads the filtered person list
-   and checks that the requested index exists before selecting the `Person` to delete. The index therefore
-   refers to the currently displayed list, including search results or an archived list.
-3. The command passes that `Person` to `model.deletePerson(personToDelete)` and constructs a `CommandResult`
-   containing the success feedback. Message-formatting helpers and list-access calls are omitted from the
-   diagram to keep the component interactions readable.
-4. After the command returns, `LogicManager` obtains the address book from `Model` and calls
-   `Storage.saveAddressBook(addressBook)`. Only after saving succeeds does it return the result to the caller.
+1. `LogicManager.execute(commandText)` first takes `pendingDelete` and clears it. It then calls
+   `AddressBookParser.parseCommand(commandText)`, which creates `DeleteCommandParser`. For `delete confirm`, the
+   parser returns a confirmation `DeleteCommand`.
+2. Because the command is a confirmation, `LogicManager` replaces it with the stored pending command. If there was
+   no preview, it throws a `CommandException` instead.
+3. As the command saves, `LogicManager` copies the address book first. It then calls `execute(model)`. The
+   pending command checks that its `Person` is still displayed, passes it to `model.deletePerson(person)` and
+   returns a `CommandResult` with the success feedback.
+4. `LogicManager` calls `Storage.saveAddressBook(addressBook)`. Only after saving succeeds does it update the
+   remembered view and return the result to the caller.
 
 Invalid command syntax produces a `ParseException`; an out-of-range Delete index produces a `CommandException`
-before any student is deleted. These failure paths are omitted from the success sequence. A storage failure
+during the preview, before any student is deleted. These failure paths are omitted from the success sequence. A storage failure
 also becomes a `CommandException`. Before running a command that saves, `LogicManager` copies the address book,
 and if saving fails it puts that copy back with `Model#setAddressBook()`. The students shown then match the saved
 file, and retrying a command such as `charge 1 5` does not apply it twice.
@@ -163,7 +175,8 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 
 How the parsing works:
 * `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `ClearCommandParser`, `PaidCommandParser`, `ChargeCommandParser`, `FindCommandParser`, `ListCommandParser`, `SortCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, `ImportCommandParser`, and `ViewCommandParser`.
-* Commands without arguments (`exit` and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object.
+* Commands without arguments (`exit` and `help`) are constructed directly by `AddressBookParser`. All other supported command words are delegated to a parser that creates the corresponding concrete `Command` object. The diagram shows these parsers as `XYZCommandParser`.
+* `PaidCommandParser` and `ChargeCommandParser` share `BalanceCommandParser`, which reads an index and an amount. `SortCommandParser` passes sort criteria to `SortOrderParser`. `CsvPersonParser`, used by `ImportCommand`, reads one CSV row rather than command text, so it is not part of this diagram.
 * The command parsers implement the generic `Parser<T extends Command>` interface. Prefix-based parsers use `CliSyntax` and `Prefix` to identify fields, `ArgumentTokenizer` to split the input, and `ArgumentMultimap` to collect repeated values. `ParserUtil` validates and converts values such as indexes, subjects, tags, notes, names, and contact fields before the command is created.
 * Invalid command words, malformed arguments, unsupported prefixes, duplicate fields, and invalid field values result in a `ParseException`; the command is not executed.
 
@@ -179,7 +192,7 @@ The `Model` component,
 * stores each student's subjects as `Subject` objects. Each `Subject` owns one required `LessonSlot`,
   which records a `DayOfWeek` and a `LocalTime` start time.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
-* stores a `UserPrefs` object that represents the user’s preferences (the GUI settings and the last list view). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
+* stores a `UserPrefs` object that represents the user’s preferences (the GUI settings, the last list view and the last sort). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
 
 
@@ -253,7 +266,7 @@ combined day/time criterion; each lesson row associates that schedule with its s
 and independent directions. It rejects malformed arguments, unknown fields, repeated fields, and directions
 other than lowercase `asc` or `desc`. The criteria model and parser do not mutate profiles or user preferences.
 `SortCommandParser` handles the current-order query and reset, and the registered `SortCommand` applies
-criteria to the session's `ModelManager`. Saving and restoring state belongs to the separate persistence feature.
+criteria to the session's `ModelManager`. Saving and restoring the order is described in [Restoring the last view](#restoring-the-last-view).
 `SortCommand` overrides `Command#requiresAddressBookSave()` so `LogicManager` does not write profile JSON
 for apply, reset or query. A storage permission error therefore cannot make session-only sorting fail.
 Other commands keep their existing save behaviour; preference persistence remains separate.
@@ -314,9 +327,10 @@ remain part of the unique-student list and counts, but do not produce subject gr
 `CommandResult.ListPresentation.REFRESH` requests rebuilding the current presentation without selecting
 contacts or subject groups. Applying/resetting Sort uses this request; a bare Sort query uses `UNCHANGED`.
 `MainWindow` remembers the current grouped presentation and rebuilds the appropriate panel after an apply
-or reset. View, Help, Export and a bare Sort query preserve the existing panel and its scroll position.
+or reset. View, Help, Export, a bare Sort query and the `delete` and `clear` previews preserve the existing panel
+and its scroll position.
 Find, other List options and successful profile mutations select the ungrouped presentation, as before.
-The active sorting criteria remain available through Logic/Model for the separate persistence feature.
+The active sorting criteria remain available through Logic/Model, which is how the last sort is saved (see [Restoring the last view](#restoring-the-last-view)).
 
 ### Weekly subject lessons
 
@@ -335,6 +349,12 @@ and interleaved repeated values. It reuses `ParserUtil` validation and `PersonHa
 active-student visibility. Each category uses OR internally; an omitted category adds no restriction.
 The command updates the existing filtered list, so students appear once and the current sort order
 and displayed indexes still apply. Archived-only and subject-grouped modes remain standalone.
+
+`ListCommandParser` recognises one standalone `-summary` before, between, or after filter arguments.
+It removes only the flag before delegating subject/tag values to the existing validators.
+The flag must precede another prefix/summary flag or end the input, so a hyphenated value such as
+`t/Pre-summary` and text inside a multiword value such as `t/Needs -summary revision` are preserved.
+Repeated summary flags and combinations with the standalone `-archived` or `-subjects` modes are rejected.
 `Subject.normalizeName()` trims boundary whitespace and collapses runs of ordinary ASCII spaces before
 validation and construction; the 1–50 character limit applies to the normalized name. It preserves case
 and the lesson slot, and does not permit internal tabs or line breaks. `ParserUtil.parseSubjectName()`
@@ -436,7 +456,8 @@ they are preferences about the display rather than student data.
   A bare `sort` only reports the order (its result is `ListPresentation.UNCHANGED`), so nothing changes.
   Sorting keeps the current presentation, so it never changes the saved view.
 * A `ListCommand` or `FindCommand` saves its own command text.
-* A command whose result has `ListPresentation.UNCHANGED` (`view`, `help`, `export`), or that exits the app,
+* A command whose result has `ListPresentation.UNCHANGED` (`view`, `help`, `export`, and the `delete` and `clear`
+  previews), or that exits the app,
   keeps the saved view, because the display does not change.
 * Any other command clears the saved view only if it changed what is on screen. `LogicManager#execute()` reads
   `Model#getFilteredPersonListPredicate()` before the command runs, and `saveLastView()` compares it with the
@@ -483,6 +504,30 @@ filter to it. Edit keeps the current filter. Only `list -archived` shows the arc
 every filter automatically, but `edit`, `export`, `import` and duplicate checks would then have to look in two
 places. A flag on `Person` keeps one list and one duplicate check.
 
+### Keeping the view after an edit
+
+Edits keep the existing predicate and sort order. `ModelManager#setPerson()` updates the filtered and sorted
+lists and invalidates rendered rows; no index snapshot is retained. An edited student can disappear from the
+filter or move after a sort-key change. Edit feedback warns when that student's displayed index changes.
+Archived edits keep the archived filter and archive flag. Successful edits from subject groups still switch
+to contacts and clear the saved grouped presentation, as other contact-changing commands do.
+
+### Confirming a deletion
+
+`DeleteCommand` previews with `ListPresentation.UNCHANGED` and does not require a save.
+After a successful preview, `LogicManager` holds a confirmation bound to the exact immutable `Person`.
+Only an immediately following `delete confirm` uses it. Every command attempt clears the pending
+confirmation before parsing, so filter/sort changes, malformed input, and failures cancel it.
+Pending confirmations exist only in memory. Confirmed deletion uses the normal save path;
+`LogicManager` restores the address book snapshot on a save error, as for every saving command, and
+updates the saved view only on success.
+Binding the confirmation to the `Person` rather than to the index means a list that changed in between
+cannot make `delete confirm` remove a different student. The flow is shown in the [Logic component](#logic-component).
+
+**Alternatives considered.** A `delete INDEX confirm` form in one command would be shorter, but it would let a
+mistyped index delete the wrong student without the tutor seeing who it is. `clear` keeps its own one-command
+`clear confirm`, because it does not depend on an index.
+
 ### Balance commands
 
 The `paid` and `charge` commands use the index from the currently displayed student list. Their parsers validate
@@ -521,7 +566,7 @@ rather than the stored balance.
 * prefers desktop apps over other types of applications
 * is reasonably comfortable using CLI apps
 
-**Value proposition**: Organizes the chaos that comes with tutoring many students privately — track each student's contact details, lesson schedule, and fee payments in one place, so private tutors spend less time on admin and less time chasing missed payments.
+**Value proposition**: Organizes the chaos that comes with tutoring many students privately. Track each student's contact details, lesson schedule, and fee payments in one place, so private tutors spend less time on admin and less time chasing missed payments.
 
 
 ### User stories
@@ -536,13 +581,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | private tutor                              | view a student's profile     | quickly access the student's information                                                                               |
 | `* * *`  | private tutor                              | edit a student's details     | keep my records accurate when information changes                                                                      |
 | `* * *`  | private tutor                              | delete a student             | remove records that are no longer needed                                                                               |
-| `* * *`  | private tutor                              | check if a student has paid fees this month | track my payments in a timely manner                                                                                   |
+| `* * *`  | private tutor                              | see which students still owe me money | follow up on unpaid fees in a timely manner                                                                     |
 | `* * *`  | private tutor                              | search for a student by name | quickly find a student profile without scrolling                                                                       |
 | `* * *`  | private tutor                              | view the current outstanding balance on a student's profile | know exactly how much they owe me                                                                                      |
+| `* * *`  | private tutor                              | record each student's subjects with a weekly lesson day and time | know when I teach each student                                                                     |
 | `* *`    | private tutor                              | record a student's address   | know where they live, to travel to their home and give lessons / chase money                                           |
 | `* *`    | private tutor                              | import students from a file exported by TuteeDex | move my students to another computer without typing them in again                                                       |
 | `* *`    | private tutor                              | have TuteeDex open on the list I was last using | continue where I left off without typing the same `list`, `find` or `sort` again                                       |
-| `* * *`  | private tutor                              | record each student's subjects with a weekly lesson day and time | know when I teach each student                                                                     |
 | `* *`    | private tutor                              | list students by subject     | prepare for lessons of one subject at a time                                                                           |
 | `* *`    | private tutor                              | group students under their subjects | see who I teach for each subject at a glance                                                                    |
 | `* *`    | private tutor                              | tag students, such as `needs revision`, and list them by tag | focus on students who need the same kind of attention                                                  |
@@ -575,7 +620,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
     Use case resumes at step 1.
 
-* 2b. An identical profile already exists.
+* 2b. A profile with the same name, phone, address and start date already exists.
 
   * 2b1. TuteeDex rejects the duplicate and displays `This contact already exists in TuteeDex`.
 
@@ -655,15 +700,113 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
     Use case resumes at step 2.
 
+* 5a. Tutor enters any other command instead.
+
+  * 5a1. TuteeDex cancels the pending deletion and runs the other command.
+
+    Use case ends.
+
+**Use case: Record a payment or a new charge**
+
+**MSS**
+
+1. Tutor requests to list or search for students.
+2. TuteeDex displays the matching students.
+3. Tutor records a payment, or a charge for new lessons, for a student using the index shown in the displayed list.
+4. TuteeDex updates the student's outstanding balance, saves it and shows the new balance.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The index is invalid, or the amount is not a positive amount with at most two decimal places.
+
+  * 3a1. TuteeDex shows an error and leaves the balance unchanged.
+
+    Use case resumes at step 2.
+
+* 3b. The payment is larger than the outstanding balance, or the charge would take the balance above SGD 1,000,000.00.
+
+  * 3b1. TuteeDex rejects the amount and leaves the balance unchanged.
+
+    Use case resumes at step 2.
+
+* 3c. Tutor records a payment without an amount.
+
+  * 3c1. TuteeDex treats it as payment of the full outstanding balance.
+
+    Use case resumes at step 4.
+
+**Use case: Archive a student who has stopped lessons**
+
+**MSS**
+
+1. Tutor requests to list students.
+2. TuteeDex displays the active students.
+3. Tutor requests to archive a student using the index shown in the displayed list.
+4. TuteeDex marks the student as archived, saves it and removes the student from the active list.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The index is invalid or the student is already archived.
+
+  * 3a1. TuteeDex shows an error and leaves the student unchanged.
+
+    Use case resumes at step 2.
+
+* 4a. Later, the student resumes lessons.
+
+  * 4a1. Tutor lists archived students and requests to unarchive the student.
+  * 4a2. TuteeDex returns the student to the active list.
+
+    Use case ends.
+
+**Use case: Restore students from an exported file**
+
+**Preconditions:** The tutor has a CSV file exported by TuteeDex in the folder TuteeDex runs from.
+
+**MSS**
+
+1. Tutor requests to import the file.
+2. TuteeDex checks every row and previews the students that would be added, without changing any data.
+3. Tutor confirms the import.
+4. TuteeDex adds all new students together, saves them and reports how many were imported.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The file is missing, is not a CSV file, or is outside the folder TuteeDex runs from.
+
+  * 1a1. TuteeDex shows an error and imports nothing.
+
+    Use case ends.
+
+* 2a. One or more rows are invalid, or conflict with a stored student.
+
+  * 2a1. TuteeDex lists the problem rows and imports nothing.
+
+    Use case ends.
+
+* 2b. Every student in the file is already in TuteeDex.
+
+  * 2b1. TuteeDex reports that there is nothing new to import.
+
+    Use case ends.
+
 ### Non-Functional Requirements
 
 1.  **Platform compatibility:** TuteeDex should work on Windows, macOS, and Linux.
 2.  **Java version:** TuteeDex should run on a computer with Java 25 installed.
-3.  **Command-based usability:** A private tutor who types quickly should be able to complete most common student-management tasks faster with typed commands than with a GUI-only workflow.
+3.  **Command-based usability:** A tutor who types at least 40 words per minute should be able to add a student with one subject, or record a payment, in under 30 seconds using a single command.
 4.  **Screen-size usability:** The GUI should work well at resolutions of 1920 x 1080 or higher with 100% or 125% display scaling. It should remain usable at resolutions of 1280 x 720 or higher with 150% scaling.
 5.  **Single-user operation:** TuteeDex should support one private tutor using their own local data. It should not depend on shared data files or a multi-user service.
 6.  **Local, editable storage:** Student data should be stored locally in a human-editable text file and remain available after the application is restarted.
 7.  **Standalone distribution:** TuteeDex should work without an installer or a team-operated remote server. Its deliverable should be packaged as one JAR file no larger than 100 MB.
+8.  **Performance:** With up to 1000 students, each command should show its result within 1 second on a typical laptop.
+9.  **Offline use:** All features should work without an internet connection.
 
 ### Glossary
 
@@ -671,6 +814,10 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Student (tutee)**: A learner whose tutoring and contact information is recorded in TuteeDex.
 * **Student profile**: A record for one student. It contains the student's name, address, phone number, tuition start date, subjects with weekly lesson slots, outstanding balance, tags, notes, and archive status.
 * **Outstanding balance**: The amount, in Singapore dollars (SGD), that remains owed for a student's tuition. The amount cannot be negative. It represents the current balance, not a history of individual payments.
+* **Lesson slot**: The weekly day and start time of one subject's lesson, such as Monday 15:30.
+* **Subject group**: The students who take one subject, shown together by `list -subjects`.
+* **Tag**: A short label on a student, such as `needs revision`, used to find and filter students. Tags are separate from subjects.
+* **Sort criterion**: A field and direction used to order the displayed list, such as `o/desc` for largest balance first.
 * **Archived student**: A student hidden from the active list without being deleted. `list -archived` shows them, and `unarchive` makes them active again.
 * **Displayed index**: The one-based number shown beside a student in the current displayed list. After a search, the index refers to that search result list.
 * **Duplicate profile**: A profile with the same name, phone, address, start date and outstanding amount as an existing profile. TuteeDex rejects it even if subjects, tags or notes differ; two profiles may share a name if one of those five fields differs.
@@ -728,7 +875,7 @@ testers are expected to do more *exploratory* testing.
       restart and check that only that student was deleted.
 
    1. Test case: `delete 0`<br>
-      Expected: No student is deleted. The status message shows error details.
+      Expected: No student is deleted. The result box shows error details.
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
@@ -760,12 +907,6 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Amy and TOTAL 1 / PAID 1. Adding the optional flag does not change the visible result.
 
 ### Summary flag ordering
-
-`ListCommandParser` recognises one standalone `-summary` before, between, or after filter arguments.
-It removes only the flag before delegating subject/tag values to the existing validators.
-The flag must precede another prefix/summary flag or end the input, so a hyphenated value such as
-`t/Pre-summary` and text inside a multiword value such as `t/Needs -summary revision` are preserved.
-Repeated summary flags and combinations with the standalone `-archived` or `-subjects` modes are rejected.
 
 Using the profiles above:
 
@@ -838,12 +979,6 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
    Expected: Bob's phone is still `91234567` and outstanding amount is still `SGD 0.00`.
 
 ### Preserving edit context
-
-Edits keep the existing predicate and sort order. `ModelManager#setPerson()` updates the filtered and sorted
-lists and invalidates rendered rows; no index snapshot is retained. An edited student can disappear from the
-filter or move after a sort-key change. Edit feedback warns when that student's displayed index changes.
-Archived edits keep the archived filter and archive flag. Successful edits from subject groups still switch
-to contacts and clear the saved grouped presentation, as other contact-changing commands do.
 
 To check the next indexed action, add Zed Test and Amy Test with balances of SGD 10.00, run `sort n/asc`,
 `find Zed`, `edit 1 notes/Updated`, then `charge 1 5`. Only Zed should remain visible and owe SGD 15.00;
@@ -987,8 +1122,8 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 3. Run `clear confirm`, then `import contacts-20261024-175424-176.csv`.<br>
    Expected: A preview names Amy Bee and Bob Choo, and the list is still empty.
 4. Run `import contacts-20261024-175424-176.csv confirm`.<br>
-   Expected: `Imported 2 student(s) ...`. Amy is listed; `list -archived` shows Bob. `view 1` shows Amy's
-   subject `Maths (Mon 09:00)`, tag and note exactly as before.
+   Expected: `Imported 2 student(s) ...`. Amy is listed, and `view 1` shows Amy's
+   subject `Maths (Mon 09:00)`, tag and note exactly as before. Then `list -archived` shows Bob.
 5. Run the same confirm command again.<br>
    Expected: `No new students to import...`, and the list does not change.
 6. Open the file in a text editor, change Amy's phone to `123` and Bob's subjects to `Physics`, and save it as a
@@ -1071,13 +1206,3 @@ Use a disposable copy of the built JAR in an empty writable folder. Close the ap
 
 These checks stop before executing commands that save the address book; such commands can overwrite the data file.
 Keep a backup before editing or attempting to recover real student data.
-
-### Single-student deletion confirmation
-
-`DeleteCommand` previews with `ListPresentation.UNCHANGED` and does not require a save.
-After a successful preview, `LogicManager` holds a confirmation bound to the exact immutable `Person`.
-Only an immediately following `delete confirm` uses it. Every command attempt clears the pending
-confirmation before parsing, so filter/sort changes, malformed input, and failures cancel it.
-Pending confirmations exist only in memory. Confirmed deletion uses the normal save path;
-`LogicManager` restores the address book snapshot on a save error, as for every saving command, and
-updates the saved view only on success.
