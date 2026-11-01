@@ -55,11 +55,12 @@ public final class CsvPersonParser {
                 ? OutstandingAmount.ZERO : ParserUtil.parseOutstandingAmount(fields.get(4));
         return new Person(ParserUtil.parseName(fields.get(0)), ParserUtil.parsePhone(fields.get(1)),
                 ParserUtil.parseAddress(unescapePlainText(fields.get(2))), ParserUtil.parseStartDate(fields.get(3)),
-                outstandingAmount, parseTags(fields.get(6)), ParserUtil.parseNotes(unescapePlainText(fields.get(7))),
-                parseSubjects(fields.get(5)), parseArchived(fields.get(8)));
+                outstandingAmount, parseTags(unescapePlainText(fields.get(6))),
+                ParserUtil.parseNotes(unescapePlainText(fields.get(7))),
+                parseSubjects(unescapePlainText(fields.get(5))), parseArchived(fields.get(8)));
     }
 
-    /** Removes the reversible apostrophe encoding used for formula-like address values. */
+    /** Removes the reversible apostrophe encoding used for plain-text CSV cells. */
     private static String unescapePlainText(String value) {
         if (value.length() >= 2 && value.charAt(0) == '\'' && value.charAt(1) == '\'') {
             return value.substring(1);

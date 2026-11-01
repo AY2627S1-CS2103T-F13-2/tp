@@ -112,4 +112,48 @@ public class CsvExporterTest {
 
         assertEquals(person, CsvPersonParser.parsePerson(fields));
     }
+
+    @Test
+    public void format_formulaPrefixesInSubjects_exportsAsPlainTextAndRoundTrips() throws Exception {
+        for (String subject : List.of("+Maths", "-Maths")) {
+            Person person = new PersonBuilder().withSubjects(subject, "Physics").build();
+
+            List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
+
+            assertEquals("'" + subject + " (Mon 09:00); Physics (Mon 09:00)", fields.get(5));
+            assertEquals(person, CsvPersonParser.parsePerson(fields));
+        }
+    }
+
+    @Test
+    public void format_hyphenPrefixedTags_exportsSortedCellAsPlainTextAndRoundTrips() throws Exception {
+        Person person = new PersonBuilder().withSubjects("Maths").withTags("z-tag", "-1-1", "a-tag").build();
+
+        List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
+
+        assertEquals("'-1-1; a-tag; z-tag", fields.get(6));
+        assertEquals(person, CsvPersonParser.parsePerson(fields));
+    }
+
+    @Test
+    public void format_apostrophePrefixedSubjects_preservesLiteralApostrophesOnRoundTrip() throws Exception {
+        for (String subject : List.of("'Maths", "'+Maths", "'-Maths", "''Maths")) {
+            Person person = new PersonBuilder().withSubjects(subject, "+Physics").build();
+
+            List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
+
+            assertEquals("'" + subject + " (Mon 09:00); +Physics (Mon 09:00)", fields.get(5));
+            assertEquals(person, CsvPersonParser.parsePerson(fields));
+        }
+    }
+
+    @Test
+    public void format_emptySubjectsAndTags_preservesEmptyCells() throws Exception {
+        Person person = new PersonBuilder().build();
+
+        List<String> fields = CsvReader.read(CsvExporter.format(List.of(person))).get(1);
+
+        assertEquals("", fields.get(5));
+        assertEquals("", fields.get(6));
+    }
 }
