@@ -132,6 +132,18 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_unknownOrUppercasePrefix_failure() {
+        String student = " n/Amy Bee p/91234567 a/Block 1 d/10-Aug" + SUBJECT;
+        String[] arguments = {student + " x/what", student + " o/0 x/what", student + " P/123",
+            " n/Amy Bee p/91234567 a/Block 1 x/what d/10-Aug" + SUBJECT, student + " notes/hello x/what",
+            student + " notes/Works w/o calculator"};
+        for (String argument : arguments) {
+            assertParseFailure(parser, argument,
+                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
+        }
+    }
+
+    @Test
     public void parse_invalidStartDate_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                         + INVALID_START_DATE_DESC + SUBJECT,

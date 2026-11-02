@@ -137,7 +137,9 @@ Omitting it or supplying a blank value stores no note. Surrounding spaces are
 trimmed; internal spaces, punctuation, and display case are preserved.
 Specify `notes/` only once. Repeating it is an error and no profile is added.
 As with other Add values, recognised field prefixes preceded by a space mark
-the next field, rather than literal note text. Notes are saved automatically
+the next field, rather than literal note text. Any other letter-led word ending in `/`
+after a space, such as `x/` or `P/`, is an unknown prefix and the command is rejected,
+so write `w/o` as `without`. Notes are saved automatically
 and appear in `view INDEX`. Existing data without notes loads with empty notes.
 </box>
 
