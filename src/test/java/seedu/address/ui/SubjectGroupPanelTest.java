@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import javafx.collections.FXCollections;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
@@ -50,6 +51,31 @@ public class SubjectGroupPanelTest extends FxTestSupport {
                     .getChildren().get(1)).getText());
             assertTrue(entries.getChildren().stream().allMatch(node -> node.getStyleClass()
                     .contains("subject-student-row")));
+        });
+    }
+
+    @Test
+    public void lessonSlot_staysAtRightEdgeWhenRowResizes() throws Exception {
+        Person person = new PersonBuilder(ALICE)
+                .withScheduledSubjects(new Subject("Maths", new LessonSlot(DayOfWeek.MONDAY,
+                        LocalTime.of(9, 0))))
+                .build();
+        runOnFxThread(() -> {
+            SubjectGroupPanel panel = new SubjectGroupPanel(FXCollections.observableArrayList(person));
+            VBox groups = (VBox) ((ScrollPane) panel.getRoot()).getContent();
+            VBox section = (VBox) groups.getChildren().getFirst();
+            VBox entries = (VBox) section.getChildren().get(1);
+            HBox row = (HBox) entries.getChildren().getFirst();
+            Label slot = (Label) row.getChildren().get(1);
+            new Scene(groups);
+            groups.applyCss();
+            assertTrue(slot.prefWidth(-1) > 0);
+            for (int width : new int[] {600, 1000}) {
+                row.resize(width, 37);
+                row.layout();
+                assertEquals(width - row.getInsets().getRight(), slot.getBoundsInParent().getMaxX(), 0.01);
+                assertTrue(slot.getWidth() >= slot.prefWidth(-1));
+            }
         });
     }
 
