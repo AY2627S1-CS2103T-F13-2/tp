@@ -24,7 +24,7 @@ public class DeleteCommand extends Command {
     public static final String MESSAGE_INVALID_INDEX = "INDEX must be a positive integer! (e.g., 1, 2, 3, ...)";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "No matching contact found at the specified index.";
 
-    public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted person: %1$s";
+    public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted student: %1$s";
 
     public static final String MESSAGE_CONFIRM = "Permanently delete this student? %1$s\n"
             + "There is no undo. Type 'delete confirm' next to continue, or any other command to cancel.";
