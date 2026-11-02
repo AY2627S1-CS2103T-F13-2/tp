@@ -28,7 +28,7 @@ title: "Home"
     <figure class="landing-preview">
       <div class="landing-preview-label"><span class="landing-status-dot" aria-hidden="true"></span> TUTEEDEX / DESKTOP PREVIEW</div>
       <a href="images/TuteeDexLanding.png" aria-label="Open the full-size TuteeDex screenshot">
-        <img src="images/TuteeDexLanding.png" width="962" height="563"
+        <img src="images/TuteeDexLanding.png" width="960" height="760"
           alt="TuteeDex showing example students grouped by subject, with weekly lesson slots and a total and paid summary.">
       </a>
       <figcaption>The current desktop interface, with fictional example students. Click to enlarge.</figcaption>

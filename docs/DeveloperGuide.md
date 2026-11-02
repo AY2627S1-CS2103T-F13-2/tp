@@ -77,11 +77,11 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 `MainWindow` assembles the TuteeDex interface:
 
-* The header contains the application title, the local date (`DD  -  MM`), and the local 24-hour time (`HH  :  MM`). A JavaFX `Timeline` refreshes the clock every second while the main window is shown and stops when it is hidden. The clock can be supplied in tests.
+* The header contains the application title, the local date (`DD  -  MMM`, with an English month abbreviation), and the local 24-hour time (`HH  :  MM`). A JavaFX `Timeline` refreshes the clock every second while the main window is shown and stops when it is hidden. The clock can be supplied in tests.
 * `ResultDisplay` shows either the TOTAL/PAID summary or command feedback, with line breaks replaced by ` | `. Feedback that exceeds the normal display width switches to a wrapping two-line display, with vertical scrolling for additional text. Resizing re-evaluates the available width. Result displays have no tooltip.
 * `PersonListPanel` displays the filtered `ObservableList<Person>` obtained from `Logic`. Its custom `PersonListViewCell` creates a `PersonCard` for each non-empty cell, so changes to the observable list update the displayed students.
 * `MainWindow` puts one of three panels in the list area, based on the `ListPresentation` of each `CommandResult`. `PersonListPanel` is the normal list. `SubjectGroupPanel` shows `list -subjects`; it uses `SubjectGrouping` to group the displayed students under each subject, and each student keeps one shared index. `LessonListPanel` replaces the normal list when the current sort uses `slot/`, with one row per student showing that student's next lesson. Both are rebuilt from `Logic` after each command that changes the list.
-* `PersonCard` shows a three-digit, zero-padded list index, the student's name, and subjects. Long names and subject text are abbreviated; tooltips expose the full profile and subjects, and accessible text includes the profile details.
+* `PersonCard` shows a three-digit, zero-padded list index, the student's name, and subjects. After reserving the icon, index, spacing, and insets, width bindings divide the remaining space between the name and subject labels in a 3:2 ratio. JavaFX adds trailing `...` only when the text exceeds the label width; the underlying text remains complete. Tooltips expose the full profile and subjects, and accessible text includes the profile details. Grouped and lesson-sorted rows let the card grow while keeping the separate lesson-time label at the right edge.
 * `CommandBox` accepts commands at the bottom of the window. The FIND button calls `prepareFind()`, which turns the current input into a `find` command: blank input becomes `find `, existing text such as `Amy` becomes `find Amy`, and input that already starts with `find ` is kept. It then focuses the input and moves the caret to its end without executing a command.
 * `CommandBox` also keeps a history of the commands entered in this session. Up shows the previous command and Down the next one; going past the newest command restores the text that was being typed. A command is not added again if it repeats the one before it. The history is not saved when the app closes.
 * The exit button and `exit` command close the application window. Help is available through the `help` command and F1, using a `HelpWindow` created with `MainWindow` and reused when requested.
@@ -89,6 +89,16 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 `MainWindow`, `CommandBox`, `ResultDisplay`, `PersonListPanel`, `PersonCard`, and `HelpWindow` inherit from the abstract `UiPart<T>` class. `SubjectGroupPanel` and `LessonListPanel` build their JavaFX nodes in code and reuse `PersonCard` for each student. `UiPart` loads an FXML layout, sets the controller, and exposes the root JavaFX object through `getRoot()`. `StatusBarFooter` and its FXML file remain in the source tree, but the current `MainWindow` does not instantiate or display a status bar; it is omitted from the diagram above.
 
 The layouts are defined in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/resources/view/MainWindow.fxml) defines the main layout and loads `TuteeDex.css`, while `PersonListCard.fxml` defines the layout for `PersonCard`. The main window also loads the bundled pixel fonts. `HelpWindow` has its own FXML layout and stylesheet.
+
+The student-area background is anchored below the summary/feedback panel. One repeating
+green tile fills the area at a fixed scale; a separate 80-pixel-high region displays
+the original image's dark band without overlaying a second green grid. The outer
+`VBox` disables pixel snapping to avoid a bottom-edge gap from cumulative rounding
+at fractional display scales. FIND and exit are image-only buttons with transparent
+backgrounds, accessible labels, and tooltips. The application and documentation use
+the TuteeDex icon.
+
+![Current main window with the tiled background, responsive student fields, and image-only buttons](images/Ui.png)
 
 `HelpWindow` renders command formats as single-line JavaFX labels in a scroll pane,
 with full text in tooltips. Gradle bundles `docs/UserGuide.md` as a classpath resource;
@@ -1083,13 +1093,21 @@ Use a fresh copy of the app in an empty folder so these checks do not affect rea
 
 ### Header clock and command results
 
-1. Compare the header date and time with the computer's local clock. Expect a numeric
-   day/month and 24-hour time, with two spaces around the hyphen and colon.
+1. Compare the header date and time with the computer's local clock. Expect a two-digit
+   day, three-letter English month, and 24-hour time, with two spaces around the hyphen and colon.
    Leave the app open across a minute boundary; the time should update without a command.
 2. Run `view 1` for an existing student. Expect long feedback to wrap into a two-line
    display; scroll vertically to read the remainder. Hovering must not cover it with a tooltip.
 3. Resize the window. Feedback should switch between one line and the wrapping display
    according to the available width. Run `list` to restore the TOTAL/PAID summary.
+4. Resize the window with a long student name and subject displayed. Expect the name
+   and subject fields to retain a 3:2 width ratio, with trailing `...` only where text
+   does not fit. Widening the window reveals more text; hover tooltips retain the full text.
+5. Run `list -subjects`. Expect lesson days and times at the right edge of each row.
+6. Maximize and resize the window, including at 125% display scaling. Expect a continuous
+   green grid, a stationary dark band below the summary, and no green strip below the bottom bar.
+7. Select the pixel FIND button with `Alex` in the input. Expect `find Alex`, focused
+   and ready to edit or submit; the button must not execute the search itself.
 
 ### Sorting students
 
