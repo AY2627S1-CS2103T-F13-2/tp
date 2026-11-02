@@ -40,21 +40,27 @@
 }
 .result-display .content { -fx-background-color: #d9d9d9; -fx-padding: 3 24; -fx-background-radius: 0; }
 .result-display .scroll-pane { -fx-background-color: transparent; }
-.student-list-container { -fx-padding: 3 24 0 24; }
+.student-list-container {
+    -fx-background-image: url("../images/TuteeDex-bg.png");
+    -fx-background-size: 720px auto;
+    -fx-background-position: left top;
+    -fx-background-repeat: repeat-x;
+    -fx-padding: 3 24 0 24;
+}
 .subject-group-panel {
-    -fx-background-color: #08b57b;
+    -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-border-width: 0;
 }
 .subject-group-panel > .viewport {
-    -fx-background-color: #08b57b;
+    -fx-background-color: transparent;
 }
 .subject-group-panel .content {
-    -fx-background-color: #08b57b;
+    -fx-background-color: transparent;
     -fx-padding: 8 10 12 10;
 }
 .subject-group {
-    -fx-background-color: #08b57b;
+    -fx-background-color: transparent;
     -fx-padding: 0 0 8 0;
 }
 .subject-group-heading {
