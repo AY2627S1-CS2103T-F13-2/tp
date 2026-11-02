@@ -41,7 +41,7 @@ public class MainWindow extends UiPart<Stage> {
             "Showing the same view as when you last closed TuteeDex. Type list to see all students.";
 
     private static final String FXML = "MainWindow.fxml";
-    private static final DateTimeFormatter HEADER_DATE = DateTimeFormatter.ofPattern("dd  -  MM", Locale.ENGLISH);
+    private static final DateTimeFormatter HEADER_DATE = DateTimeFormatter.ofPattern("dd  -  MMM", Locale.ENGLISH);
     private static final DateTimeFormatter HEADER_TIME = DateTimeFormatter.ofPattern("HH  :  mm", Locale.ENGLISH);
     /** Height of the window title bar that must be visible for the saved position to be reused. */
     private static final double TITLE_BAR_HEIGHT = 30;

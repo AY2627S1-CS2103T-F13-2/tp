@@ -185,7 +185,7 @@ public class MainWindowTest extends FxTestSupport {
             root = window.getPrimaryStage().getScene().getRoot();
             Label date = (Label) root.lookup("#headerDate");
             Label time = (Label) root.lookup("#headerTime");
-            assertEquals("31  -  12", date.getText());
+            assertEquals("31  -  Dec", date.getText());
             assertEquals("23  :  59", time.getText());
             root.applyCss();
             assertEquals(Color.web("#08b57b"), date.getTextFill());
@@ -200,7 +200,7 @@ public class MainWindowTest extends FxTestSupport {
         });
         assertTrue(nextMinute.await(10, TimeUnit.SECONDS), "The header should refresh without a command");
         runOnFxThread(() -> {
-            assertEquals("01  -  01", ((Label) root.lookup("#headerDate")).getText());
+            assertEquals("01  -  Jan", ((Label) root.lookup("#headerDate")).getText());
             assertEquals("00  :  00", ((Label) root.lookup("#headerTime")).getText());
         });
     }
