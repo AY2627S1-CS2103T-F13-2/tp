@@ -8,9 +8,12 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import org.junit.jupiter.api.Test;
 
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -33,11 +36,7 @@ public class PersonCardTest extends FxTestSupport {
         runOnFxThread(() -> {
             assertSubjectsText(ALICE, "Not specified");
             assertSubjectsText(new PersonBuilder(ALICE).withSubjects("Maths", "H2 Chemistry").build(),
-                    "Maths (Mon 09..");
-            assertEquals("1234567890123456789012345678901",
-                    PersonCard.abbreviate("1234567890123456789012345678901", 31));
-            assertEquals("123456789012345678901234567890..",
-                    PersonCard.abbreviate("12345678901234567890123456789012", 31));
+                    "Maths (Mon 09:00), H2 Chemistry (Mon 09:00)");
             assertSummaryAndFeedback();
         });
     }
@@ -61,13 +60,46 @@ public class PersonCardTest extends FxTestSupport {
             PersonCard card = new PersonCard(student, 1);
             assertProfileDetails(card, "a-level, needs revision", longNote.trim());
             Label subjects = (Label) card.getRoot().lookup("#subjects");
-            assertEquals("Maths (Mon 09..", subjects.getText());
+            assertEquals("Maths (Mon 09:00), H2 Chemistry (Mon 09:00)", subjects.getText());
             assertEquals("Subjects: Maths (Mon 09:00), H2 Chemistry (Mon 09:00)",
                     subjects.getTooltip().getText());
             assertEquals(4, card.getRoot().getChildrenUnmodifiable().size(), "Keep the compact row layout");
 
             Person edited = new PersonBuilder(student).withTags("Updated").withNotes("Updated note").build();
             assertProfileDetails(new PersonCard(edited, 1), "updated", "Updated note");
+        });
+    }
+
+    @Test
+    public void fields_resizeInThreeToTwoRatioAndEllipsizeOnlyWhenNeeded() throws Exception {
+        Person person = new PersonBuilder(ALICE)
+                .withName("Alexandria Montgomery With A Very Long Student Name")
+                .withSubjects("Advanced Higher Mathematics", "Advanced Higher Chemistry").build();
+        runOnFxThread(() -> {
+            Region card = new PersonCard(person, 1).getRoot();
+            Scene scene = new Scene(card);
+            scene.getStylesheets().add(PersonCard.class.getResource("/view/TuteeDex.css").toExternalForm());
+            Label name = (Label) card.lookup("#name");
+            Label subjects = (Label) card.lookup("#subjects");
+            double previousNameWidth = 0;
+            for (int width : new int[] {600, 3000}) {
+                card.resize(width, 37);
+                card.applyCss();
+                card.layout();
+                card.layout();
+                assertEquals(1.5, name.getWidth() / subjects.getWidth(), 0.01);
+                assertTrue(name.getWidth() > previousNameWidth);
+                previousNameWidth = name.getWidth();
+                for (Label label : new Label[] {name, subjects}) {
+                    String displayed = ((Text) label.lookup(".text")).getText();
+                    if (width == 600) {
+                        assertTrue(displayed.endsWith("..."), displayed);
+                    } else {
+                        assertEquals(label.getText(), displayed);
+                    }
+                }
+            }
+            assertEquals(person.getName().fullName, name.getText());
         });
     }
 
