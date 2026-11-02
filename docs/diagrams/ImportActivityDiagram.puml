@@ -1,0 +1,31 @@
+@startuml
+skin rose
+skinparam ActivityFontSize 15
+skinparam ArrowFontSize 12
+start
+:Tutor enters import FILE_PATH,
+with or without confirm;
+:Read the file and check every row;
+
+'Since the beta syntax does not support placing the condition outside the
+'diamond we place it as the true branch instead.
+
+if () then ([file unreadable or any row invalid])
+    :Show the problems and import nothing;
+    stop
+else ([all rows valid])
+endif
+
+if () then ([no new students])
+    :Report that there is nothing new;
+    stop
+else ([some new students])
+endif
+
+if () then ([confirm given])
+    :Add all new students at once and save;
+else ([no confirm])
+    :Show a preview of the new students;
+endif
+stop
+@enduml

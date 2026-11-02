@@ -51,6 +51,10 @@ deactivate Confirmation
 
 DeleteCommandParser --> AddressBookParser : c
 deactivate DeleteCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+DeleteCommandParser -[hidden]-> AddressBookParser
+destroy DeleteCommandParser
+
 AddressBookParser --> LogicManager : c
 deactivate AddressBookParser
 
@@ -61,7 +65,7 @@ end note
 
 LogicManager -> Model : getAddressBook()
 activate Model
-Model --> LogicManager : addressBook (copied for rollback)
+Model --> LogicManager : backup (copied for rollback)
 deactivate Model
 
 LogicManager -> Pending : execute(m)
@@ -83,7 +87,12 @@ deactivate CommandResult
 Pending --> LogicManager : r
 deactivate Pending
 
-LogicManager -> Storage : saveAddressBook(addressBook)
+LogicManager -> Model : getAddressBook()
+activate Model
+Model --> LogicManager : updated
+deactivate Model
+
+LogicManager -> Storage : saveAddressBook(updated)
 activate Storage
 Storage --> LogicManager
 deactivate Storage
