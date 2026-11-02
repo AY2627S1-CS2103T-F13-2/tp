@@ -261,6 +261,23 @@ public class ParserUtil {
         return parsed;
     }
 
+    /**
+     * Rejects unknown prefix-shaped tokens before they can become part of a field value.
+     *
+     * @throws ParseException with {@code errorMessage} if {@code args} contains a prefix not in {@code knownPrefixes}
+     */
+    public static void verifyKnownPrefixes(String args, String errorMessage, Prefix... knownPrefixes)
+            throws ParseException {
+        requireNonNull(args);
+        List<Prefix> known = List.of(knownPrefixes);
+        Matcher matcher = PREFIX_PATTERN.matcher(args);
+        while (matcher.find()) {
+            if (!known.contains(new Prefix(matcher.group(1)))) {
+                throw new ParseException(errorMessage);
+            }
+        }
+    }
+
     /** Ensures each subject prefix is immediately followed by day and time prefixes. */
     public static void verifySubjectScheduleOrder(String args) throws ParseException {
         requireNonNull(args);

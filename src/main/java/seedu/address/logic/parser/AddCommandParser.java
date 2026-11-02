@@ -38,10 +38,11 @@ public class AddCommandParser implements Parser<AddCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public AddCommand parse(String args) throws ParseException {
-        ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_SUBJECT, PREFIX_LESSON_DAY, PREFIX_LESSON_TIME,
-                        PREFIX_TAG, PREFIX_NOTES);
+        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
+            PREFIX_OUTSTANDING_AMOUNT, PREFIX_SUBJECT, PREFIX_LESSON_DAY, PREFIX_LESSON_TIME, PREFIX_TAG, PREFIX_NOTES};
+        ParserUtil.verifyKnownPrefixes(args,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE), prefixes);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, prefixes);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE, PREFIX_START_DATE)
                 || !argMultimap.getPreamble().isEmpty()) {

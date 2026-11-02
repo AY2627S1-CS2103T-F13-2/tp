@@ -14,8 +14,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.EditCommand;
@@ -32,11 +30,6 @@ public class EditCommandParser implements Parser<EditCommand> {
             "Each contact field may be specified only once in an edit command.";
     public static final String MESSAGE_INVALID_FORMAT = "Invalid command format.\n" + EditCommand.MESSAGE_USAGE;
 
-    private static final Set<Prefix> SUPPORTED_PREFIXES = Set.of(
-            PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE, PREFIX_OUTSTANDING_AMOUNT,
-            PREFIX_TAG, PREFIX_SUBJECT, PREFIX_LESSON_DAY, PREFIX_LESSON_TIME, PREFIX_NOTES);
-    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|\\s)([a-zA-Z][a-zA-Z0-9_-]*/)");
-
     /**
      * Parses the given {@code String} of arguments in the context of the EditCommand
      * and returns an EditCommand object for execution.
@@ -44,11 +37,10 @@ public class EditCommandParser implements Parser<EditCommand> {
      */
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        verifyKnownPrefixes(args);
-        ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
-                        PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG, PREFIX_SUBJECT, PREFIX_LESSON_DAY,
-                        PREFIX_LESSON_TIME, PREFIX_NOTES);
+        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_START_DATE,
+            PREFIX_OUTSTANDING_AMOUNT, PREFIX_TAG, PREFIX_SUBJECT, PREFIX_LESSON_DAY, PREFIX_LESSON_TIME, PREFIX_NOTES};
+        ParserUtil.verifyKnownPrefixes(args, MESSAGE_INVALID_FORMAT, prefixes);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, prefixes);
 
         Index index;
 
@@ -106,17 +98,5 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
 
         return new EditCommand(index, editPersonDescriptor);
-    }
-
-    /**
-     * Rejects unknown prefix-shaped tokens before they can become part of a field value.
-     */
-    private void verifyKnownPrefixes(String args) throws ParseException {
-        Matcher matcher = PREFIX_PATTERN.matcher(args);
-        while (matcher.find()) {
-            if (!SUPPORTED_PREFIXES.contains(new Prefix(matcher.group(1)))) {
-                throw new ParseException(MESSAGE_INVALID_FORMAT);
-            }
-        }
     }
 }
