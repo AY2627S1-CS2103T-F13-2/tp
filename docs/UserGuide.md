@@ -404,7 +404,8 @@ Format: `edit INDEX [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [d/START_DATE] [o/OUTS
 * Use `o/0` to reset the outstanding amount to zero. A blank `n/`, `p/`, `a/`, `d/` or `o/` is invalid.
 * Spaces before and after values are ignored. Other text keeps its letter case and spacing, except tags (lowercase).
 * Fields may appear in any order after the index, but each subject's `s/`, `day/` and `time/` must stay together in that order.
-* Each field other than `t/` and `s/` may appear only once.
+* Single-value fields (`n/`, `p/`, `a/`, `d/`, `o/` and `notes/`) may appear only once. Tags may repeat `t/`, and
+  each extra subject repeats the whole `s/SUBJECT day/DAY time/TIME` group.
 
 How TuteeDex reads prefixes:
 
@@ -653,9 +654,6 @@ Import only adds students, so run `clear confirm` first if you do not want to ke
 1. **Data files from v1.4 that store subjects without a day and time cannot be loaded.** TuteeDex then
    starts with an empty list. Copy the old `data/addressbook.json` somewhere safe before making any change,
    because the next change overwrites it. Other older files load normally.
-1. **When using multiple screens**, if you move TuteeDex to a secondary screen and later switch to using only the
-   primary screen, the window will open off-screen. The remedy is to delete the `preferences.json` file next to the
-   JAR file before running TuteeDex again. This also clears the remembered view and sort.
 
 --------------------------------------------------------------------------------------------------------------------
 
