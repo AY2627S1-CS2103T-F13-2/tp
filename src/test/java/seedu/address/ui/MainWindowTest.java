@@ -27,8 +27,10 @@ import org.junit.jupiter.api.Test;
 
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -41,10 +43,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Scale;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -85,6 +92,69 @@ public class MainWindowTest extends FxTestSupport {
             window.fillInnerParts();
             root = window.getPrimaryStage().getScene().getRoot();
             input = (TextField) root.lookup("#commandTextField");
+        });
+    }
+
+    @Test
+    public void background_anchoredBelowSummary_keepsFixedTileSizeWhenWindowResizes() throws Exception {
+        runOnFxThread(() -> {
+            root.applyCss();
+            root.layout();
+            StackPane students = (StackPane) root.lookup("#personListPanelPlaceholder");
+            StackPane summary = (StackPane) root.lookup("#resultDisplayPlaceholder");
+            StackPane canvas = (StackPane) root.lookup(".student-background");
+            Region band = (Region) root.lookup(".student-background-band");
+            BackgroundImage background = band.getBackground().getImages().get(0);
+            assertFalse(background.getImage().isError());
+            assertTrue(background.getImage().getUrl().endsWith("/images/TuteeDex-bg.png"));
+            assertEquals(BackgroundRepeat.REPEAT, background.getRepeatX());
+            assertEquals(BackgroundRepeat.NO_REPEAT, background.getRepeatY());
+            assertFalse(background.getSize().isCover());
+            assertFalse(background.getSize().isContain());
+            assertEquals(720, background.getSize().getWidth());
+            assertEquals(-1, background.getSize().getHeight());
+            assertEquals(0, background.getPosition().getHorizontalPosition());
+            assertEquals(0, background.getPosition().getVerticalPosition());
+            BackgroundImage grid = canvas.getBackground().getImages().get(0);
+            assertFalse(grid.getImage().isError());
+            assertEquals(20.5, grid.getSize().getWidth());
+            assertEquals(20.5, grid.getSize().getHeight());
+            assertEquals(BackgroundRepeat.REPEAT, grid.getRepeatX());
+            assertEquals(BackgroundRepeat.REPEAT, grid.getRepeatY());
+            StackPane preview = new StackPane();
+            preview.setBackground(canvas.getBackground());
+            Region bandPreview = new Region();
+            bandPreview.setBackground(band.getBackground());
+            bandPreview.setMaxHeight(band.getMaxHeight());
+            StackPane.setAlignment(bandPreview, Pos.TOP_LEFT);
+            preview.getChildren().add(bandPreview);
+            preview.resize(1920, 900);
+            preview.layout();
+            var pixels = preview.snapshot(null, null).getPixelReader();
+            Color darkTile = background.getImage().getPixelReader().getColor(80, 40);
+            assertEquals(darkTile, pixels.getColor(20, 10));
+            assertEquals(80, bandPreview.getHeight());
+            // Two 20.5px tiles must repeat across the old image's bottom and right edges.
+            for (int offset = 0; offset < 100; offset++) {
+                assertEquals(pixels.getColor(700 + offset, 500), pixels.getColor(741 + offset, 541));
+            }
+            double initialWidth = students.getWidth();
+
+            root.resize(1920, 1080);
+            root.applyCss();
+            root.layout();
+
+            assertTrue(students.getWidth() > initialWidth);
+            assertEquals(background, band.getBackground().getImages().get(0));
+            assertEquals(grid, canvas.getBackground().getImages().get(0));
+            assertEquals(summary.getBoundsInParent().getMaxY(), canvas.getBoundsInParent().getMinY());
+
+            root.resize(600, 480);
+            root.layout();
+            assertTrue(students.getWidth() < initialWidth);
+            assertEquals(background, band.getBackground().getImages().get(0));
+            assertEquals(grid, canvas.getBackground().getImages().get(0));
+            assertEquals(summary.getBoundsInParent().getMaxY(), canvas.getBoundsInParent().getMinY());
         });
     }
 
@@ -193,6 +263,27 @@ public class MainWindowTest extends FxTestSupport {
         runOnFxThread(() -> {
             assertSummary("2", "1");
             assertNotNull(window.getPersonListPanel());
+        });
+    }
+
+    @Test
+    public void bottomBar_reachesWindowEdgeAcrossWindowHeights() throws Exception {
+        runOnFxThread(() -> {
+            Region bottomBar = (Region) root.lookup(".bottom-bar");
+            double scale = window.getPrimaryStage().getOutputScaleY();
+            SnapshotParameters snapshot = new SnapshotParameters();
+            snapshot.setTransform(new Scale(window.getPrimaryStage().getOutputScaleX(), scale));
+            for (int pixelHeight : new int[] {600, 750, 999, 1000, 1350}) {
+                double height = pixelHeight / scale;
+                root.resize(1000, height);
+                root.applyCss();
+                root.layout();
+                assertEquals(height, bottomBar.getBoundsInParent().getMaxY(), 0.001);
+                var rendered = root.snapshot(snapshot, null);
+                Color bottom = rendered.getPixelReader().getColor(500, (int) rendered.getHeight() - 1);
+                assertEquals(bottom.getRed(), bottom.getGreen(), 0.01);
+                assertEquals(bottom.getRed(), bottom.getBlue(), 0.01);
+            }
         });
     }
 

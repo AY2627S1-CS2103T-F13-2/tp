@@ -40,13 +40,20 @@
 }
 .result-display .content { -fx-background-color: #d9d9d9; -fx-padding: 3 24; -fx-background-radius: 0; }
 .result-display .scroll-pane { -fx-background-color: transparent; }
-.student-list-container {
+.student-background {
+    -fx-background-image: url("../images/TuteeDex-bg-tile.png");
+    -fx-background-size: 20.5px 20.5px;
+    -fx-background-position: left 14px top 80px;
+    -fx-background-repeat: repeat;
+}
+.student-background-band {
+    /* Clip the original image above its green tiles so only one green grid is drawn. */
     -fx-background-image: url("../images/TuteeDex-bg.png");
     -fx-background-size: 720px auto;
     -fx-background-position: left top;
     -fx-background-repeat: repeat-x;
-    -fx-padding: 3 24 0 24;
 }
+.student-list-container { -fx-padding: 3 24 0 24; }
 .subject-group-panel {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
