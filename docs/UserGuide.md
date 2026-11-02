@@ -59,6 +59,9 @@ in 24-hour format, updating automatically. Command results use one line when the
 longer results wrap into a two-line display. Scroll vertically to read any remaining
 text.
 
+Some command results refer to students as contacts, for example `Found 2 contacts.` or
+`No matching contact found at the specified index.` In TuteeDex, a contact always means a student.
+
 After every successful `list`, the result box shows a **TOTAL / PAID** banner instead of a text message.
 **TOTAL** is the number of students displayed and **PAID** is how many of them have an outstanding amount of zero.
 
@@ -516,7 +519,7 @@ _`delete 4` on the sample data previews David Li and asks you to type `delete co
 * The preview does not change or save student data. Any other command, including an invalid command, cancels it. For example, use `list` to cancel. After a filter or sort change, run `delete INDEX` again to check the target.
 * `delete confirm` requires a preview immediately beforehand; `delete INDEX confirm` is rejected. A preview is not retained after restart.
 * If saving a confirmed deletion fails, the student is restored in memory and an error is shown. Preview and confirm again to retry.
-* A successful command displays `Deleted person: <contact details>`.
+* A successful command displays `Deleted student: <student details>`.
 * If `INDEX` is invalid, the app explains that it must be a positive integer. If it is larger than the displayed list, the app reports that no matching contact was found.
 
 Examples:
