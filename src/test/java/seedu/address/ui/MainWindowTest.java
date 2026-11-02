@@ -292,8 +292,16 @@ public class MainWindowTest extends FxTestSupport {
         runOnFxThread(() -> {
             root.applyCss();
             root.layout();
-            assertButtonIcon("findButton", "/images/Search.png");
+            assertButtonIcon("findButton", "/images/find-pixel.png");
             assertButtonIcon("exitButton", "/images/close.png");
+            Button findButton = (Button) root.lookup("#findButton");
+            assertEquals("", findButton.getText());
+            assertEquals("Find students", findButton.getAccessibleText());
+            assertEquals(Color.TRANSPARENT, findButton.getBackground().getFills().get(0).getFill());
+            ImageView findIcon = (ImageView) findButton.getGraphic();
+            assertEquals(127.79, findIcon.getFitWidth());
+            assertEquals(39.32, findIcon.getFitHeight());
+            assertFalse(findIcon.isSmooth());
             Button exitButton = (Button) root.lookup("#exitButton");
             ImageView icon = (ImageView) exitButton.getGraphic();
             assertEquals(39.32, icon.getFitWidth());

@@ -38,12 +38,13 @@
         </StackPane>
         <StackPane fx:id="commandBoxPlaceholder" styleClass="command-container" />
         <HBox styleClass="bottom-bar" alignment="CENTER_LEFT">
-          <Button fx:id="findButton" text="FIND" styleClass="find-button" onAction="#handleFind">
+          <Button fx:id="findButton" styleClass="find-button" onAction="#handleFind" accessibleText="Find students">
             <graphic>
-              <ImageView fitWidth="30" fitHeight="30" preserveRatio="true">
-                <image><Image url="@/images/Search.png" /></image>
+              <ImageView fitWidth="127.79" fitHeight="39.32" preserveRatio="true" smooth="false">
+                <image><Image url="@/images/find-pixel.png" /></image>
               </ImageView>
             </graphic>
+            <tooltip><Tooltip text="Find students" /></tooltip>
           </Button>
           <Region HBox.hgrow="ALWAYS" />
           <Button fx:id="exitButton" styleClass="exit-button" onAction="#handleExit" accessibleText="Exit TuteeDex">

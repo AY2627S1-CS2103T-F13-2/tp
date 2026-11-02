@@ -147,27 +147,15 @@
 }
 .button { -fx-background-radius: 0; -fx-border-radius: 0; -fx-cursor: hand; }
 .button:focused { -fx-border-color: #94ef18; -fx-border-width: 2; }
-.find-button {
-    -fx-background-color: #7f7f7f;
-    -fx-text-fill: black;
-    -fx-font-size: 39.3px;
-    -fx-graphic-text-gap: 18;
-    -fx-padding: 0 22;
-    -fx-pref-width: 175;
-    -fx-min-height: 43;
-    -fx-pref-height: 43;
-}
-.find-icon { -fx-background-color: white; -fx-min-width: 30; -fx-pref-width: 30;
-    -fx-min-height: 30; -fx-pref-height: 30; }
-.exit-button {
+.find-button, .exit-button {
     -fx-background-color: transparent;
     -fx-padding: 0;
     -fx-border-color: transparent;
     -fx-border-width: 1;
     -fx-cursor: hand;
 }
-.exit-button:focused { -fx-border-color: #94ef18; -fx-border-width: 1; }
-.exit-button:hover { -fx-opacity: 0.8; }
+.find-button:focused, .exit-button:focused { -fx-border-color: #94ef18; -fx-border-width: 1; }
+.find-button:hover, .exit-button:hover { -fx-opacity: 0.8; }
 
 .result-display > .viewport { -fx-background-color: #d9d9d9; }
 .feedback-text { -fx-font-size: 39.3px; -fx-text-fill: black; -fx-padding: 0 24; }
