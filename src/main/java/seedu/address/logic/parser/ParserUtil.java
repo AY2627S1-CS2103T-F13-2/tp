@@ -53,6 +53,7 @@ public class ParserUtil {
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
      * trimmed.
      * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
+     * @throws NullPointerException if {@code oneBasedIndex} is null.
      */
     public static Index parseIndex(String oneBasedIndex) throws ParseException {
         String trimmedIndex = oneBasedIndex.trim();
@@ -63,10 +64,10 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String name} into a {@code Name}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses a name, trimming leading and trailing whitespace.
      *
      * @throws ParseException if the given {@code name} is invalid.
+     * @throws NullPointerException if {@code name} is null.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
@@ -78,10 +79,10 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String phone} into a {@code Phone}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses a phone number, trimming leading and trailing whitespace.
      *
      * @throws ParseException if the given {@code phone} is invalid.
+     * @throws NullPointerException if {@code phone} is null.
      */
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
@@ -93,10 +94,10 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String address} into an {@code Address}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses an address, trimming leading and trailing whitespace.
      *
      * @throws ParseException if the given {@code address} is invalid.
+     * @throws NullPointerException if {@code address} is null.
      */
     public static Address parseAddress(String address) throws ParseException {
         requireNonNull(address);
@@ -107,7 +108,12 @@ public class ParserUtil {
         return new Address(trimmedAddress);
     }
 
-    /** Parses a valid calendar month and day, trimming leading and trailing whitespace. */
+    /**
+     * Parses a valid calendar month and day, trimming leading and trailing whitespace.
+     *
+     * @throws ParseException if the value is invalid or represents an impossible date.
+     * @throws NullPointerException if {@code startDate} is null.
+     */
     public static StartDate parseStartDate(String startDate) throws ParseException {
         requireNonNull(startDate);
         String trimmedStartDate = startDate.trim();
@@ -123,7 +129,12 @@ public class ParserUtil {
         return new StartDate(trimmedStartDate);
     }
 
-    /** Parses an outstanding amount, trimming leading and trailing whitespace. */
+    /**
+     * Parses an outstanding amount, trimming leading and trailing whitespace.
+     *
+     * @throws ParseException if the value is invalid or exceeds the maximum amount.
+     * @throws NullPointerException if {@code outstandingAmount} is null.
+     */
     public static OutstandingAmount parseOutstandingAmount(String outstandingAmount) throws ParseException {
         requireNonNull(outstandingAmount);
         String trimmedOutstandingAmount = outstandingAmount.trim();
@@ -140,16 +151,18 @@ public class ParserUtil {
     /**
      * Parses optional free-text notes, trimming only surrounding whitespace.
      * Blank input represents no note.
+     *
+     * @throws NullPointerException if {@code notes} is null.
      */
     public static Notes parseNotes(String notes) {
         return new Notes(notes);
     }
 
     /**
-     * Parses a {@code String email} into an {@code Email}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses an email address, trimming leading and trailing whitespace.
      *
      * @throws ParseException if the given {@code email} is invalid.
+     * @throws NullPointerException if {@code email} is null.
      */
     public static Email parseEmail(String email) throws ParseException {
         requireNonNull(email);
@@ -161,10 +174,10 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String tag} into a {@code Tag}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Parses a tag, trimming leading and trailing whitespace.
      *
      * @throws ParseException if the given {@code tag} is invalid.
+     * @throws NullPointerException if {@code tag} is null.
      */
     public static Tag parseTag(String tag) throws ParseException {
         requireNonNull(tag);
@@ -176,7 +189,10 @@ public class ParserUtil {
     }
 
     /**
-     * Parses {@code Collection<String> tags} into a {@code Set<Tag>}.
+     * Parses tags into a new mutable set; duplicate tags are retained only once.
+     *
+     * @throws ParseException if any tag is invalid.
+     * @throws NullPointerException if {@code tags} or an element is null.
      */
     public static Set<Tag> parseTags(Collection<String> tags) throws ParseException {
         requireNonNull(tags);
@@ -187,7 +203,12 @@ public class ParserUtil {
         return tagSet;
     }
 
-    /** Parses and validates a subject name after normalizing its spaces. */
+    /**
+     * Parses and validates a subject name after normalizing its spaces.
+     *
+     * @throws ParseException if the normalized subject is blank or invalid.
+     * @throws NullPointerException if {@code subject} is null.
+     */
     public static String parseSubjectName(String subject) throws ParseException {
         requireNonNull(subject);
         String normalized = Subject.normalizeName(subject);
@@ -200,7 +221,12 @@ public class ParserUtil {
         return normalized;
     }
 
-    /** Parses a weekly lesson day using the documented three-letter names. */
+    /**
+     * Parses a weekly lesson day using its three-letter name, ignoring case and surrounding whitespace.
+     *
+     * @throws ParseException if the day is not a valid three-letter day name.
+     * @throws NullPointerException if {@code day} is null.
+     */
     public static DayOfWeek parseLessonDay(String day) throws ParseException {
         requireNonNull(day);
         return switch (day.trim().toUpperCase(Locale.ROOT)) {
@@ -215,7 +241,12 @@ public class ParserUtil {
         };
     }
 
-    /** Parses a lesson start time in strict 24-hour HH:mm format. */
+    /**
+     * Parses a lesson start time in strict 24-hour {@code HH:mm} format.
+     *
+     * @throws ParseException if the time is not in the required format.
+     * @throws NullPointerException if {@code time} is null.
+     */
     public static LocalTime parseLessonTime(String time) throws ParseException {
         requireNonNull(time);
         String trimmed = time.trim();
@@ -225,7 +256,12 @@ public class ParserUtil {
         return LocalTime.parse(trimmed);
     }
 
-    /** Parses aligned subject, day, and time values into scheduled subjects. */
+    /**
+     * Parses aligned subject, day, and time values into a new mutable set of scheduled subjects.
+     *
+     * @throws ParseException if the lists are empty, misaligned, contain invalid values, or duplicate subjects.
+     * @throws NullPointerException if any list or element is null.
+     */
     public static Set<Subject> parseScheduledSubjects(List<String> subjects, List<String> days, List<String> times)
             throws ParseException {
         requireNonNull(subjects);
@@ -247,7 +283,12 @@ public class ParserUtil {
         return parsed;
     }
 
-    /** Parses subject names used by filters, retaining unique values case-insensitively. */
+    /**
+     * Parses subject names into a new mutable set, retaining unique values case-insensitively.
+     *
+     * @throws ParseException if any subject name is invalid.
+     * @throws NullPointerException if {@code subjects} or an element is null.
+     */
     public static Set<String> parseSubjectNames(Collection<String> subjects) throws ParseException {
         requireNonNull(subjects);
         Set<String> parsed = new LinkedHashSet<>();
@@ -265,6 +306,7 @@ public class ParserUtil {
      * Rejects unknown prefix-shaped tokens before they can become part of a field value.
      *
      * @throws ParseException with {@code errorMessage} if {@code args} contains a prefix not in {@code knownPrefixes}
+     * @throws NullPointerException if any argument is null.
      */
     public static void verifyKnownPrefixes(String args, String errorMessage, Prefix... knownPrefixes)
             throws ParseException {
@@ -278,7 +320,12 @@ public class ParserUtil {
         }
     }
 
-    /** Ensures each subject prefix is immediately followed by day and time prefixes. */
+    /**
+     * Ensures each subject prefix is immediately followed by day and time prefixes.
+     *
+     * @throws ParseException if the subject, day, and time prefixes are not correctly ordered.
+     * @throws NullPointerException if {@code args} is null.
+     */
     public static void verifySubjectScheduleOrder(String args) throws ParseException {
         requireNonNull(args);
         List<String> prefixes = new java.util.ArrayList<>();
