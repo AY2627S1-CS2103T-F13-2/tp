@@ -92,38 +92,47 @@ public class Person {
         this.archived = archived;
     }
 
+    /** Returns this person's non-null name. */
     public Name getName() {
         return name;
     }
 
+    /** Returns this person's non-null phone number. */
     public Phone getPhone() {
         return phone;
     }
 
+    /** Returns this person's non-null address. */
     public Address getAddress() {
         return address;
     }
 
+    /** Returns this person's non-null start date. */
     public StartDate getStartDate() {
         return startDate;
     }
 
+    /** Returns this person's non-null outstanding amount. */
     public OutstandingAmount getOutstandingAmount() {
         return outstandingAmount;
     }
 
+    /** Returns an immutable set snapshot of this person's subjects. */
     public Set<Subject> getSubjects() {
         return subjects;
     }
 
+    /** Returns this person's non-null notes. */
     public Notes getNotes() {
         return notes;
     }
 
+    /** Returns an immutable set snapshot of this person's tags. */
     public Set<Tag> getTags() {
         return tags;
     }
 
+    /** Returns whether this person is archived. */
     public boolean isArchived() {
         return archived;
     }
