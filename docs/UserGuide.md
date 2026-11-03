@@ -26,7 +26,7 @@ TuteeDex is a **desktop application for private tutors to keep student details, 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar "TuteeDex.jar"`.<br>
    Use this command rather than double-clicking the JAR file, which might not work on some computers.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Ui](images/Ui.png)
+   ![TuteeDex showing six sample students with the updated tiled background and pixel buttons](images/Ui.png)
 
    On a first launch without a data file, six fictional sample students demonstrate weekly
    Maths, English and Science lessons, tags, notes and mixed balances. The result box shows
@@ -54,7 +54,7 @@ TuteeDex is a **desktop application for private tutors to keep student details, 
 
 ## Features
 
-The header shows your computer's local date as `DD  -  MM` and its time as `HH  :  MM`
+The header shows your computer's local date as `DD  -  MMM` (for example, `03  -  Nov`) and its time as `HH  :  MM`
 in 24-hour format, updating automatically. Command results use one line when they fit;
 longer results wrap into a two-line display. Scroll vertically to read any remaining
 text.
@@ -67,9 +67,16 @@ After every successful `list`, the result box shows a **TOTAL / PAID** banner in
 
 The bar at the bottom of the window has two buttons:
 
-* **FIND** puts `find ` at the start of the command box, keeping any text you already typed after it, and moves
-  the cursor to the end. Type the name keywords and press Enter. The button does not run the search by itself.
-* The red **X** button closes TuteeDex, the same as the `exit` command.
+* The pixel **FIND** button puts `find ` at the start of the command box, keeping any text you already typed
+  after it, and moves the cursor to the end. For example, type `Alex`, select **FIND**, then press Enter
+  to run `find Alex`. The button does not run the search by itself.
+* The red pixel **X** button closes TuteeDex, the same as the `exit` command.
+
+The student name and subject fields resize with the window, sharing their available
+width in a 3:2 ratio. Text that does not fit ends with `...`; widen the window to see
+more text, or hover over a name or subject to read its full tooltip. Subjects and
+lesson times are aligned to the right. The tiled background stays at a fixed scale
+as the window is resized.
 
 <box type="info" seamless>
 
@@ -297,14 +304,13 @@ Examples (these work on the sample data):
 with `-summary`, `-archived`, or `s/`/`t/` filters.
 
 * Each group lists the students taking that subject, with each student's own lesson day and start time.
-  Students taking the same subject at different times share one group.
+  Lesson days and times are aligned to the right. Students taking the same subject at different times share one group.
 * Subject headings are in alphabetical order. Students in a group are alphabetical, unless a `sort` is applied.
 * Archived students are not shown.
 * The TOTAL/PAID banner counts each active student once, even if they appear under several subjects.
   Students without subjects still count, although they appear in no group.
 * If no active student has a subject, the group area shows `No subjects found for the active contacts.`
-
-![List grouped by subject](images/ListSubjects.png)
+![Students grouped by subject, with each student's lesson day and time aligned to the right](images/ListSubjects.png)
 
 _`list -subjects` on the sample data: students grouped under the English, Maths and Science headings._
 

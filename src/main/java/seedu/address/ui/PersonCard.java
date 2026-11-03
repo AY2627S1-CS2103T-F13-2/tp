@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -29,6 +31,8 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private HBox cardPane;
     @FXML
+    private Region studentIcon;
+    @FXML
     private Label name;
     @FXML
     private Label id;
@@ -47,8 +51,15 @@ public class PersonCard extends UiPart<Region> {
         super(FXML);
         this.person = person;
         id.setText(String.format(java.util.Locale.ROOT, "%03d", displayedIndex));
-        name.setText(abbreviate(person.getName().fullName, 31));
-        subjects.setText(abbreviate(subject == null ? Messages.formatSubjects(person) : subject.value, 14));
+        name.setText(person.getName().fullName);
+        subjects.setText(subject == null ? Messages.formatSubjects(person) : subject.value);
+        DoubleBinding fieldsWidth = Bindings.createDoubleBinding(() -> Math.max(0,
+                cardPane.getWidth() - cardPane.getInsets().getLeft() - cardPane.getInsets().getRight()
+                        - studentIcon.getWidth() - id.getWidth() - cardPane.getSpacing() * 3),
+                cardPane.widthProperty(), cardPane.insetsProperty(), cardPane.spacingProperty(),
+                studentIcon.widthProperty(), id.widthProperty());
+        name.prefWidthProperty().bind(fieldsWidth.multiply(0.6));
+        subjects.prefWidthProperty().bind(fieldsWidth.multiply(0.4));
         String profileDetails = Messages.format(person) + "; Tags: " + Messages.formatTags(person)
                 + "; Notes: " + person.getNotes();
         Tooltip profileTooltip = new Tooltip(profileDetails);
@@ -61,9 +72,4 @@ public class PersonCard extends UiPart<Region> {
         cardPane.setAccessibleText(displayedIndex + ". " + profileDetails);
     }
 
-    /** Replaces the final character slot with two dots when the design's limit is exceeded. */
-    static String abbreviate(String text, int limit) {
-        int length = text.codePointCount(0, text.length());
-        return length <= limit ? text : text.substring(0, text.offsetByCodePoints(0, limit - 1)) + "..";
-    }
 }

@@ -4,8 +4,9 @@
 <?import javafx.scene.layout.Region?>
 <HBox fx:id="cardPane" styleClass="person-card" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1">
-  <Region styleClass="student-icon" />
+  <Region fx:id="studentIcon" styleClass="student-icon" />
   <Label fx:id="id" minWidth="39" />
-  <Label fx:id="name" minWidth="0" maxWidth="Infinity" HBox.hgrow="ALWAYS" textOverrun="CLIP" />
-  <Label fx:id="subjects" minWidth="0" prefWidth="156" maxWidth="156" textOverrun="CLIP" alignment="CENTER_RIGHT" />
+  <Label fx:id="name" minWidth="0" maxWidth="-Infinity" textOverrun="ELLIPSIS" ellipsisString="..." />
+  <Label fx:id="subjects" minWidth="0" maxWidth="-Infinity" textOverrun="ELLIPSIS" ellipsisString="..."
+         alignment="CENTER_RIGHT" />
 </HBox>

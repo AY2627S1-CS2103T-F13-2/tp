@@ -8,6 +8,8 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.person.Person;
 import seedu.address.model.sort.LessonRow;
@@ -35,6 +37,9 @@ public class SubjectGroupPanel {
                 PersonCard card = new PersonCard(entry.person(), entry.displayedIndex(), entry.subject());
                 Label lessonSlot = new Label(entry.subject().getLessonSlot().toString());
                 lessonSlot.getStyleClass().add("subject-lesson-slot");
+                lessonSlot.setMinWidth(Region.USE_PREF_SIZE);
+                card.getRoot().setMinWidth(0);
+                HBox.setHgrow(card.getRoot(), Priority.ALWAYS);
                 HBox row = new HBox(8, card.getRoot(), lessonSlot);
                 row.setAlignment(Pos.CENTER_LEFT);
                 row.getStyleClass().add("subject-student-row");
