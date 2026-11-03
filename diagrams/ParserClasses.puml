@@ -41,17 +41,8 @@ ParserUtil ..> Prefix
 XYZCommand -up-|> Command
 
 note right of XYZCommandParser
-  XYZ stands for Add, Edit, Delete, Clear, Paid,
-  Charge, Find, List, Sort, Archive, Unarchive,
-  Export, Import and View.
-  PaidCommandParser and ChargeCommandParser share
-  BalanceCommandParser; SortCommandParser uses
-  SortOrderParser.
+  XYZ stands for a command word,
+  such as Add, Edit or Find.
 end note
 
-note bottom of AddressBookParser
-  exit and help take no arguments,
-  so AddressBookParser creates
-  ExitCommand and HelpCommand directly.
-end note
 @enduml
