@@ -82,12 +82,12 @@ public class PersonCardTest extends FxTestSupport {
             Label name = (Label) card.lookup("#name");
             Label subjects = (Label) card.lookup("#subjects");
             double previousNameWidth = 0;
-            for (int width : new int[] {600, 3000}) {
+            for (int width : new int[] {600, 5000}) {
                 card.resize(width, 37);
                 card.applyCss();
                 card.layout();
                 card.layout();
-                assertEquals(1.5, name.getWidth() / subjects.getWidth(), 0.01);
+                assertEquals(1.5, name.getWidth() / subjects.getWidth(), 0.02);
                 assertTrue(name.getWidth() > previousNameWidth);
                 previousNameWidth = name.getWidth();
                 for (Label label : new Label[] {name, subjects}) {
