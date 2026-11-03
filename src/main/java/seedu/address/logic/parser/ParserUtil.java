@@ -306,7 +306,8 @@ public class ParserUtil {
      * Rejects unknown prefix-shaped tokens before they can become part of a field value.
      *
      * @throws ParseException with {@code errorMessage} if {@code args} contains a prefix not in {@code knownPrefixes}
-     * @throws NullPointerException if any argument is null.
+     * @throws NullPointerException if {@code args}, {@code knownPrefixes}, or an element of {@code knownPrefixes}
+     *         is null.
      */
     public static void verifyKnownPrefixes(String args, String errorMessage, Prefix... knownPrefixes)
             throws ParseException {
