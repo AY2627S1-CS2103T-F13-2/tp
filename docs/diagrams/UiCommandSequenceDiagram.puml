@@ -58,6 +58,8 @@ deactivate mainWindow
 mainWindow --> commandBox : commandResult
 deactivate mainWindow
 commandBox -> commandBox : commandTextField.setText("")
+activate commandBox UI_COLOR_T3
+deactivate commandBox
 deactivate commandBox
 deactivate commandBox
 @enduml

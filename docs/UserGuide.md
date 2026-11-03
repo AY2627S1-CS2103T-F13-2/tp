@@ -25,6 +25,9 @@ TuteeDex is a **desktop application for private tutors to keep student details, 
 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar "TuteeDex.jar"`.<br>
    Use this command rather than double-clicking the JAR file, which might not work on some computers.<br>
+   TuteeDex keeps its files (`data/addressbook.json`, `preferences.json` and exports) in the folder the terminal is in
+   when you start it. Starting it this way makes that the home folder. If you start it from another folder, for example
+   with `java -jar C:\Apps\TuteeDex.jar`, it uses that other folder instead.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![TuteeDex showing six sample students with the updated tiled background and pixel buttons](images/Ui.png)
 
@@ -201,7 +204,7 @@ remaining profile details, or use `view INDEX` to display the complete profile.
 
 ### Exporting students: `export`
 
-Exports all students, including archived students, to a UTF-8 CSV file in the folder TuteeDex runs from (the folder with the JAR file).
+Exports all students, including archived students, to a UTF-8 CSV file in the home folder (the folder TuteeDex was started from).
 
 Format: `export`
 
@@ -222,7 +225,7 @@ Format: `import FILE_PATH [confirm]`
 
 * Without `confirm`, TuteeDex only checks the file and shows which students would be added. Nothing changes.
 * Add `confirm` at the end to add them. If any row has a problem, nothing is imported, so a file is never half imported.
-* The file must be inside the folder TuteeDex runs from (the folder with the JAR file), or a folder inside it.
+* The file must be inside the home folder (the folder TuteeDex was started from), or a folder inside it.
   This is where `export` saves its files. For safety, TuteeDex does not read files anywhere else, so move or copy
   the file into that folder first.
 * `FILE_PATH` is relative to that folder, for example `students.csv` or `term 4/students.csv`. Paths with spaces
@@ -609,12 +612,12 @@ first.
   The sort order is kept.
 * When TuteeDex reopens on a `find`, the result box says so, in case no students match any more.
   Type `list` to see all students.
-* The view and order are saved in `preferences.json`, next to the JAR file, when you close TuteeDex. If that file
+* The view and order are saved in `preferences.json` in the home folder when you close TuteeDex. If that file
   is edited so that a saved command is not a valid `list`, `find` or `sort` command, TuteeDex ignores it.
 
 ### Editing the data file
 
-TuteeDex data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+TuteeDex data is saved automatically as a JSON file `data/addressbook.json` inside the home folder. Advanced users are welcome to update data directly by editing that data file.
 
 * The file must contain a JSON object whose `persons` array holds the students. A file with no students is
   `{"persons":[]}`. A root value of `null`, a missing or null `persons` array, or a null student entry is invalid
