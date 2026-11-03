@@ -15,7 +15,7 @@
 
 * TuteeDex is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the [SE-EDU initiative](https://se-education.org).
 * Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit 5](https://github.com/junit-team/junit5).
-* Fonts bundled in `src/main/resources/fonts`: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by The Press Start 2P Project Authors, under the SIL Open Font License 1.1 (licence included as `PressStart2P-OFL.txt`), and [Pokemon Pixel Font](http://fontstruct.fontshop.com/fontstructions/show/299827) (`pokemon_pixel_font.ttf`) by SpyroSteak, under [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/). The interface theme is inspired by the Pokedex in Pokemon Black 2 and White 2.
+* Fonts bundled in `src/main/resources/fonts`: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by The Press Start 2P Project Authors, under the SIL Open Font License 1.1 (licence included as `PressStart2P-OFL.txt`), and [Pokemon Pixel Font](https://fontstruct.com/fontstructions/show/299827/pokemon_pixel_font) (`pokemon_pixel_font.ttf`) by SpyroSteak, under [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/). The interface theme is inspired by the Pokedex in Pokemon Black 2 and White 2.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -179,7 +179,7 @@ file, and retrying a command such as `charge 1 5` does not apply it twice.
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
-<puml src="diagrams/ParserClasses.puml" width="600"/>
+<puml src="diagrams/ParserClasses.puml" alt="Classes used to parse a user command"/>
 
 How the parsing works:
 * `AddressBookParser` first separates the command word from its arguments and dispatches the input to the matching command parser. The current command-specific parsers are `AddCommandParser`, `EditCommandParser`, `DeleteCommandParser`, `ClearCommandParser`, `PaidCommandParser`, `ChargeCommandParser`, `FindCommandParser`, `ListCommandParser`, `SortCommandParser`, `ArchiveCommandParser`, `UnarchiveCommandParser`, `ExportCommandParser`, `ImportCommandParser`, and `ViewCommandParser`.
@@ -191,7 +191,7 @@ How the parsing works:
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-F13-2/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<puml src="diagrams/ModelClassDiagram.puml" width="450" />
+<puml src="diagrams/ModelClassDiagram.puml" alt="Class diagram of the Model component" />
 
 
 The `Model` component,
