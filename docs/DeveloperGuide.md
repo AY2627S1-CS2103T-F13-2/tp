@@ -16,6 +16,11 @@
 * TuteeDex is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the [SE-EDU initiative](https://se-education.org).
 * Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit 5](https://github.com/junit-team/junit5).
 * Fonts bundled in `src/main/resources/fonts`: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by The Press Start 2P Project Authors, under the SIL Open Font License 1.1 (licence included as `PressStart2P-OFL.txt`), and [Pokemon Pixel Font](https://fontstruct.com/fontstructions/show/299827/pokemon_pixel_font) (`pokemon_pixel_font.ttf`) by SpyroSteak, under [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/). The interface theme is inspired by the Pokedex in Pokemon Black 2 and White 2.
+* Notable uses of AI:
+  * OpenAI Codex and Anthropic Claude were used for preliminary PR reviews, code quality checks, and checking the UG and DG against the product.
+  * Codex and Claude were used to help write and fix parts of the code and tests.
+  * ChatGPT was used to discuss design options, such as how subjects and lesson slots are modelled.
+  * Claude was used to draft and update parts of the UG and DG, and to generate screenshots and diagrams.
 
 --------------------------------------------------------------------------------------------------------------------
 
